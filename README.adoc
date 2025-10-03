@@ -1,0 +1,3 @@
+= EazyPortal - gradle plugins project
+
+This project contains various EazyPortal plugins.
