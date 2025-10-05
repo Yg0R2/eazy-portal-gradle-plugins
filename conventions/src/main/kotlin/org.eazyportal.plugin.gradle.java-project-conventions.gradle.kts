@@ -1,11 +1,18 @@
+import org.eazyportal.plugin.gradle.convetions.libs
+import org.eazyportal.plugin.gradle.convetions.version
+
 plugins {
     java
     `java-test-fixtures`
 }
 
+repositories {
+    gradlePluginPortal()
+}
+
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(libs.version("java"))
     }
 }
 
