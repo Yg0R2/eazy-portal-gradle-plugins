@@ -2,6 +2,7 @@ import org.eazyportal.plugin.gradle.convetions.libs
 import org.eazyportal.plugin.gradle.convetions.version
 
 plugins {
+    idea
     java
     `java-test-fixtures`
 }
@@ -13,6 +14,12 @@ repositories {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(libs.version("java"))
+    }
+}
+
+idea {
+    module {
+        testSources.from(sourceSets.findByName("integrationTest")?.java?.srcDirs)
     }
 }
 

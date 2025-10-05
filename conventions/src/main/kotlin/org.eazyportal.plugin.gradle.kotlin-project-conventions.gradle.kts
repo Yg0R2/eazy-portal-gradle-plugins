@@ -3,6 +3,7 @@ import org.eazyportal.plugin.gradle.convetions.libs
 
 plugins {
     idea
+
     id("org.gradle.kotlin.kotlin-dsl")
 
     id("org.eazyportal.plugin.gradle.java-project-conventions")
@@ -10,6 +11,12 @@ plugins {
 
 repositories {
     gradlePluginPortal()
+}
+
+idea {
+    module {
+        testSources.from(sourceSets.findByName("integrationTest")?.kotlin?.srcDirs)
+    }
 }
 
 dependencies {
