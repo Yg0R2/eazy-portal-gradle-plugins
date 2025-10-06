@@ -2,6 +2,7 @@
     id("java-library")
 
     id("org.eazyportal.plugin.gradle.java-project-conventions")
+    id("org.eazyportal.plugin.gradle.publish-conventions")
 }
 
 repositories {
