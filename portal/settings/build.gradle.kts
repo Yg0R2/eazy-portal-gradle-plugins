@@ -10,8 +10,20 @@ gradlePlugin {
     plugins {
         create("eazy-portal-settings") {
             id = "${project.group}.portal.settings"
-            implementationClass = "org.eazyportal.plugin.gradle.portal.EazyPortalSettingsPlugin"
-            tags = listOf("gradle", "eazy-portal", "settings")
+            implementationClass = "org.eazyportal.plugin.gradle.portal.settings.EazyPortalSettingsPlugin"
+            tags = listOf("eazy-portal", "gradle", "settings")
         }
     }
+}
+
+dependencies {
+    implementation(project(":portal-common"))
+    implementation(project(":portal-project"))
+
+    testImplementation(platform(libs.assertj))
+    testImplementation(platform(libs.junit))
+
+    testImplementation("org.assertj:assertj-core")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

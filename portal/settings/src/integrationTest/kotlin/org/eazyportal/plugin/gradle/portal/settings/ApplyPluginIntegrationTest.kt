@@ -1,0 +1,25 @@
+package org.eazyportal.plugin.gradle.portal.settings
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+
+class ApplyPluginIntegrationTest : BaseIntegrationTest() {
+
+    @BeforeAll
+    fun initialize() {
+        projectDir.initializeGradleProject()
+    }
+
+    @Test
+    fun test_applyPlugin() {
+        // GIVEN
+        // WHEN
+        // THEN
+        val actual = createGradleRunner(projectDir, "listPlugins")
+            .build()
+
+        assertThat(actual.output.lines()).contains("org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin")
+    }
+
+}

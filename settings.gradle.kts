@@ -3,6 +3,7 @@ rootProject.name = "gradle-plugins"
 includeBuild("conventions")
 
 listOf(
+    "common",
     "project",
     "settings",
 ).forEach {
