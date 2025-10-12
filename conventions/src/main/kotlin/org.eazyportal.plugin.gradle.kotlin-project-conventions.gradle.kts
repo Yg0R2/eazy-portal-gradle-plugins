@@ -1,6 +1,3 @@
-import org.eazyportal.plugin.gradle.convetions.library
-import org.eazyportal.plugin.gradle.convetions.libs
-
 plugins {
     idea
 
@@ -19,9 +16,4 @@ idea {
             testSources.from(it)
         }
     }
-}
-
-dependencies {
-    // Platform dependencies
-    implementation(platform(libs.library("kotlinx-coroutines")))
 }

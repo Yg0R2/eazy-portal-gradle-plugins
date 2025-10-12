@@ -1,12 +1,6 @@
 [versions]
-java = "21"
 
 [libraries]
-# plugins
-kotlin-dsl = { group = "org.gradle.kotlin.kotlin-dsl", name = "org.gradle.kotlin.kotlin-dsl.gradle.plugin", version = "6.2.0" }
-
-# dependencies
-kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-bom", version = "1.10.2" }
 
 [plugins]
 

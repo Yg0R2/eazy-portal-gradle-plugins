@@ -9,5 +9,5 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.kotlin.dsl)
+    implementation("org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:6.2.0")
 }

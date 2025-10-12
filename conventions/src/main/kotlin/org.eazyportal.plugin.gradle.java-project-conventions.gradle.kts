@@ -1,6 +1,3 @@
-import org.eazyportal.plugin.gradle.convetions.libs
-import org.eazyportal.plugin.gradle.convetions.version
-
 plugins {
     idea
     java
@@ -13,7 +10,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(libs.version("java"))
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
