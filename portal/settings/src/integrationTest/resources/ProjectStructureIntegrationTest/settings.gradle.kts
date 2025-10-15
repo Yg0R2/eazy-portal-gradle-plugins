@@ -1,3 +1,5 @@
+import org.eazyportal.plugin.gradle.portal.common.model.ApplicationTypes
+
 rootProject.name = "dummy-project"
 
 plugins {
@@ -13,3 +15,7 @@ include(
     "dummy-service",
     "dummy-web",
 )
+
+eazyPortal {
+    applicationType = ApplicationTypes.SPRING_BOOT
+}

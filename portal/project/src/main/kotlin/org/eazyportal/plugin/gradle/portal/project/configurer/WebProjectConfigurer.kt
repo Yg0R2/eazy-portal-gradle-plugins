@@ -6,14 +6,16 @@ import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestImplementat
 import org.eazyportal.plugin.gradle.portal.common.extension.findSubProject
 import org.eazyportal.plugin.gradle.portal.common.extension.getSubProject
 import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
+import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.plugins.PluginContainer
 
 class WebProjectConfigurer(
+    parameters: EazyPortalServiceParameters,
     private val project: Project,
-) : GradleProjectConfigurer(project) {
+) : GradleProjectConfigurer(parameters, project) {
 
     override fun PluginContainer.configure() {
         apply("org.eazyportal.plugin.gradle.integration-test-conventions")
