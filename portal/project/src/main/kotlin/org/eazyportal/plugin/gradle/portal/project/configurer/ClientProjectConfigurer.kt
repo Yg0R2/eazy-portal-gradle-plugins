@@ -23,6 +23,11 @@ class ClientProjectConfigurer(
     }
 
     override fun DependencyHandler.configure() {
+        runWhenApplyCoreDependenciesEnabled {
+            addCoreDependency(ProjectTypes.CLIENT)
+            addCoreDependency(ProjectTypes.COMMON)
+        }
+
         val apiProject = project.getSubProject(ProjectTypes.API)
         val commonProject = project.findSubProject(ProjectTypes.COMMON)
 

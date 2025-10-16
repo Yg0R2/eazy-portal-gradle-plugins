@@ -8,6 +8,7 @@ plugins {
 
 include(
     "dummy-api",
+    "dummy-application",
     "dummy-behemoth",
     "dummy-client",
     "dummy-common",

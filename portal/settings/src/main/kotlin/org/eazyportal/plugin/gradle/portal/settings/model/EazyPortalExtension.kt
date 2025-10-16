@@ -7,4 +7,8 @@ interface EazyPortalExtension {
 
     val applicationType: Property<ApplicationTypes>
 
+    val applyCoreDependencies: Property<Boolean>
+
+    val coreVersion: Property<String>
+
 }

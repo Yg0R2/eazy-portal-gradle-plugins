@@ -1,11 +1,7 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsCompileOnly
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesImplementation
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestImplementation
 import org.eazyportal.plugin.gradle.portal.common.extension.findSubProject
 import org.eazyportal.plugin.gradle.portal.common.extension.getSubProject
-import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
 import org.gradle.api.Project
@@ -24,25 +20,15 @@ class WebProjectConfigurer(
     }
 
     override fun DependencyHandler.configure() {
-        val apiProject = project.getSubProject(ProjectTypes.API)
-        val daoProject = project.findSubProject(ProjectTypes.DAO)
-        val commonProject = project.findSubProject(ProjectTypes.COMMON)
-        val serviceProject = project.getSubProject(ProjectTypes.SERVICE)
+        runWhenApplyCoreDependenciesEnabled {
+            addCoreDependency(ProjectTypes.COMMON)
+            addCoreDependency(ProjectTypes.WEB)
+        }
 
-        addAsCompileOnly(apiProject)
-        addAsCompileOnly(daoProject)
-        addAsCompileOnly(commonProject)
-        addAsCompileOnly(serviceProject)
-
-        addAsTestFixturesImplementation(testFixtures(apiProject))
-        addAsTestFixturesImplementation(testFixtures(daoProject))
-        addAsTestFixturesImplementation(testFixtures(commonProject))
-        addAsTestFixturesImplementation(testFixtures(serviceProject))
-
-        addAsTestImplementation(apiProject)
-        addAsTestImplementation(daoProject)
-        addAsTestImplementation(commonProject)
-        addAsTestImplementation(serviceProject)
+        addProjectDependency(project.getSubProject(ProjectTypes.API))
+        addProjectDependency(project.findSubProject(ProjectTypes.COMMON))
+        addProjectDependency(project.findSubProject(ProjectTypes.DAO))
+        addProjectDependency(project.getSubProject(ProjectTypes.SERVICE))
     }
 
 }

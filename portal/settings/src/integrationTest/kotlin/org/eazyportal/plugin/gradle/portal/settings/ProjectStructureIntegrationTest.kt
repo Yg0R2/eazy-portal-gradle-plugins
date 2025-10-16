@@ -37,6 +37,7 @@ class ProjectStructureIntegrationTest : BaseIntegrationTest() {
     companion object {
         private val SUBPROJECT_NAMES = listOf(
             "dummy-api",
+            "dummy-application",
             "dummy-behemoth",
             "dummy-client",
             "dummy-common",

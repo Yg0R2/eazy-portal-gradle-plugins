@@ -1,10 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsCompileOnly
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesImplementation
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestImplementation
 import org.eazyportal.plugin.gradle.portal.common.extension.findSubProject
-import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
 import org.gradle.api.Project
@@ -23,21 +19,14 @@ class ServiceProjectConfigurer(
     }
 
     override fun DependencyHandler.configure() {
-        val apiProject = project.findSubProject(ProjectTypes.API)
-        val daoProject = project.findSubProject(ProjectTypes.DAO)
-        val commonProject = project.findSubProject(ProjectTypes.COMMON)
+        runWhenApplyCoreDependenciesEnabled {
+            addCoreDependency(ProjectTypes.COMMON)
+            addCoreDependency(ProjectTypes.SERVICE)
+        }
 
-        addAsCompileOnly(apiProject)
-        addAsCompileOnly(daoProject)
-        addAsCompileOnly(commonProject)
-
-        addAsTestFixturesImplementation(testFixtures(apiProject))
-        addAsTestFixturesImplementation(testFixtures(daoProject))
-        addAsTestFixturesImplementation(testFixtures(commonProject))
-
-        addAsTestImplementation(apiProject)
-        addAsTestImplementation(daoProject)
-        addAsTestImplementation(commonProject)
+        addProjectDependency(project.findSubProject(ProjectTypes.API))
+        addProjectDependency(project.findSubProject(ProjectTypes.COMMON))
+        addProjectDependency(project.findSubProject(ProjectTypes.DAO))
     }
 
 }

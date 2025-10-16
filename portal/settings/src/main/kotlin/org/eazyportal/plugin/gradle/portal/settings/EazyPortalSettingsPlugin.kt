@@ -19,7 +19,11 @@ class EazyPortalSettingsPlugin : Plugin<Settings> {
             EAZY_PORTAL_SHARED_SERVICE_NAME,
             EazyPortalSharedService::class.java
         ) {
-            parameters.applicationType.set(eazyPortalExtension.applicationType)
+            parameters {
+                applicationType.set(eazyPortalExtension.applicationType)
+                applyCoreDependencies.set(eazyPortalExtension.applyCoreDependencies)
+                coreVersion.set(eazyPortalExtension.coreVersion)
+            }
         }
 
         target.gradle.allprojects {

@@ -3,7 +3,7 @@ package org.eazyportal.plugin.gradle.portal.common.model
 import org.gradle.api.Project
 
 enum class ProjectTypes(
-    private val suffix: String,
+    val suffix: String,
 ) {
 
     API("-api"),
