@@ -16,7 +16,7 @@ class ProjectStructureIntegrationTest : BaseIntegrationTest() {
         // GIVEN
         // WHEN
         // THEN
-        val actual = createGradleRunner(projectDir, "projects", "-Pversion=0.0.1-SNAPSHOT")
+        val actual = createGradleRunner(projectDir, "projects")
             .build()
 
         val expectedSubprojects = SUBPROJECT_NAMES.withIndex()

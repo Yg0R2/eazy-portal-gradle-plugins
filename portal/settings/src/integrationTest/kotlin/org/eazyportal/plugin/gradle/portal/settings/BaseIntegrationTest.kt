@@ -50,7 +50,8 @@ abstract class BaseIntegrationTest {
             .withArguments(
                 "--stacktrace",
                 "--warning-mode=all",
-                *arguments
+                "-Pversion=0.0.1-SNAPSHOT",
+                *arguments,
             ).withPluginClasspath()
             .withGradleVersion("9.1.0")
             .withProjectDir(projectFile)
