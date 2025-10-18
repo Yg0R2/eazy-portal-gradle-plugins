@@ -2,18 +2,17 @@ package org.eazyportal.plugin.gradle.portal.project.configurer
 
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
-import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes.Companion.isTypeOf
+import org.eazyportal.plugin.gradle.portal.project.model.EazyPortalExtension
 import org.gradle.api.Project
 
 object ProjectConfigurerFactory {
 
     fun createProjectConfigurer(
         parameters: EazyPortalServiceParameters,
+        extension: EazyPortalExtension,
         project: Project,
-    ): ProjectConfigurer {
-        val type = ProjectTypes.entries.firstOrNull { project.isTypeOf(it) }
-
-        return when (type) {
+    ): ProjectConfigurer =
+        when (extension.projectTypeMap.get()[project]) {
             ProjectTypes.API -> ApiProjectConfigurer(parameters, project)
             ProjectTypes.APPLICATION -> ApplicationProjectConfigurer(parameters, project)
             ProjectTypes.BEHEMOTH -> BehemothProjectConfigurer(parameters, project)
@@ -25,6 +24,5 @@ object ProjectConfigurerFactory {
             ProjectTypes.WEB -> WebProjectConfigurer(parameters, project)
             else -> GradleProjectConfigurer(parameters, project)
         }
-    }
 
 }

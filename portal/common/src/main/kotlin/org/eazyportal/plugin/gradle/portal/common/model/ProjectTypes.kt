@@ -1,7 +1,5 @@
 package org.eazyportal.plugin.gradle.portal.common.model
 
-import org.gradle.api.Project
-
 enum class ProjectTypes(
     val suffix: String,
 ) {
@@ -12,12 +10,8 @@ enum class ProjectTypes(
     CLIENT("-client"),
     COMMON("-common"),
     DAO("-dao"),
+    ROOT(""),
     SERVICE("-service"),
     WEB("-web");
-
-    companion object {
-        fun Project.isTypeOf(projectType: ProjectTypes): Boolean =
-            project.name.endsWith(projectType.suffix)
-    }
 
 }
