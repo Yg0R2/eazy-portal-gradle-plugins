@@ -52,6 +52,7 @@ abstract class BaseIntegrationTest {
                 "--warning-mode=all",
                 *arguments
             ).withPluginClasspath()
+            .withGradleVersion("9.1.0")
             .withProjectDir(projectFile)
 
     protected fun File.initializeGradleProject(
