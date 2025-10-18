@@ -20,6 +20,7 @@ object ProjectConfigurerFactory {
             ProjectTypes.CLIENT -> ClientProjectConfigurer(parameters, project)
             ProjectTypes.COMMON -> CommonProjectConfigurer(parameters, project)
             ProjectTypes.DAO -> DaoProjectConfigurer(parameters, project)
+            ProjectTypes.ROOT -> RootProjectConfigurer(parameters, project)
             ProjectTypes.SERVICE -> ServiceProjectConfigurer(parameters, project)
             ProjectTypes.WEB -> WebProjectConfigurer(parameters, project)
             else -> GradleProjectConfigurer(parameters, project)

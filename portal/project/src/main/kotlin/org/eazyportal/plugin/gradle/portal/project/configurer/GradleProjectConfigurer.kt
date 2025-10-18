@@ -1,9 +1,8 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsCompileOnly
 import org.eazyportal.plugin.gradle.portal.common.extension.addAsImplementation
+import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesApi
 import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesImplementation
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestImplementation
 import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
@@ -44,11 +43,9 @@ open class GradleProjectConfigurer(
     }
 
     protected fun DependencyHandler.addProjectDependency(target: Project?) {
-        addAsCompileOnly(target)
+        addAsImplementation(target)
 
-        addAsTestFixturesImplementation(testFixtures(target))
-
-        addAsTestImplementation(target)
+        addAsTestFixturesApi(testFixtures(target))
     }
 
     protected fun runWhenApplyCoreDependenciesEnabled(block: () -> Unit) {

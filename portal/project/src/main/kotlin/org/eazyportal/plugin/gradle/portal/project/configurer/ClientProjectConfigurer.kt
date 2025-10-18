@@ -1,10 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsImplementation
-import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesImplementation
-import org.eazyportal.plugin.gradle.portal.common.extension.findSubProject
-import org.eazyportal.plugin.gradle.portal.common.extension.getSubProject
-import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
+import org.eazyportal.plugin.gradle.portal.common.extension.*
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
 import org.gradle.api.Project
@@ -34,8 +30,8 @@ class ClientProjectConfigurer(
         addAsImplementation(apiProject)
         addAsImplementation(commonProject)
 
-        addAsTestFixturesImplementation(testFixtures(apiProject))
-        addAsTestFixturesImplementation(testFixtures(commonProject))
+        addAsTestFixturesApi(testFixtures(apiProject))
+        addAsTestFixturesApi(testFixtures(commonProject))
     }
 
 }

@@ -3,7 +3,6 @@ package org.eazyportal.plugin.gradle.portal.project.configurer
 import org.eazyportal.plugin.gradle.portal.common.extension.*
 import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
-import org.eazyportal.plugin.gradle.portal.project.CoreDependencyNotationFactory.createCoreDependencyNotation
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.plugins.PluginContainer
@@ -28,7 +27,7 @@ class ApplicationProjectConfigurer(
         val commonProject = project.findSubProject(ProjectTypes.COMMON)
         val daoProject = project.findSubProject(ProjectTypes.DAO)
         val serviceProject = project.getSubProject(ProjectTypes.SERVICE)
-        val webProject = project.findSubProject(ProjectTypes.SERVICE)
+        val webProject = project.findSubProject(ProjectTypes.WEB)
 
         addAsImplementation(apiProject)
         addAsImplementation(commonProject)
@@ -36,11 +35,11 @@ class ApplicationProjectConfigurer(
         addAsImplementation(serviceProject)
         addAsImplementation(webProject)
 
-        addAsTestFixturesImplementation(testFixtures(apiProject))
-        addAsTestFixturesImplementation(testFixtures(commonProject))
-        addAsTestFixturesImplementation(testFixtures(daoProject))
-        addAsTestFixturesImplementation(testFixtures(serviceProject))
-        addAsTestFixturesImplementation(testFixtures(webProject))
+        addAsTestFixturesApi(testFixtures(apiProject))
+        addAsTestFixturesApi(testFixtures(commonProject))
+        addAsTestFixturesApi(testFixtures(daoProject))
+        addAsTestFixturesApi(testFixtures(serviceProject))
+        addAsTestFixturesApi(testFixtures(webProject))
     }
 
 }

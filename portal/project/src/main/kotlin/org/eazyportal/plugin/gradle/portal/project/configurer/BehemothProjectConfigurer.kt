@@ -34,10 +34,10 @@ class BehemothProjectConfigurer(
         addAsImplementation(daoProject)
         addAsImplementation(serviceProject)
 
-        addAsTestFixturesImplementation(testFixtures(apiProject))
-        addAsTestFixturesImplementation(testFixtures(commonProject))
-        addAsTestFixturesImplementation(testFixtures(daoProject))
-        addAsTestFixturesImplementation(testFixtures(serviceProject))
+        addAsTestFixturesApi(testFixtures(apiProject))
+        addAsTestFixturesApi(testFixtures(commonProject))
+        addAsTestFixturesApi(testFixtures(daoProject))
+        addAsTestFixturesApi(testFixtures(serviceProject))
     }
 
 }
