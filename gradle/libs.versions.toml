@@ -1,8 +1,6 @@
 [versions]
 
 [libraries]
-assertj = { group = "org.assertj", name = "assertj-bom", version = "3.27.6" }
-junit = { group = "org.junit", name = "junit-bom", version = "6.0.0" }
 
 [plugins]
 

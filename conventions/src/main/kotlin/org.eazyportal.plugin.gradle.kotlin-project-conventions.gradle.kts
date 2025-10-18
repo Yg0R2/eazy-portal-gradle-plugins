@@ -17,3 +17,8 @@ idea {
         }
     }
 }
+
+dependencies {
+    // Test dependencies
+    testImplementation("io.mockk:mockk:1.14.6")
+}

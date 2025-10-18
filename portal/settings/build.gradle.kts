@@ -19,11 +19,4 @@ gradlePlugin {
 dependencies {
     implementation(project(":portal-common"))
     implementation(project(":portal-project"))
-
-    testImplementation(platform(libs.assertj))
-    testImplementation(platform(libs.junit))
-
-    testImplementation("org.assertj:assertj-core")
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
