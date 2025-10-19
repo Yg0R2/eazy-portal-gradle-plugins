@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.model.EazyPortalServiceParameters
+import org.eazyportal.plugin.gradle.portal.project.model.ProjectServiceParameters
 import org.gradle.api.Project
 import org.gradle.api.plugins.PluginContainer
 import org.gradle.api.tasks.TaskContainer
@@ -8,9 +8,9 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 
 class RootProjectConfigurer(
-    parameters: EazyPortalServiceParameters,
+    projectParameters: ProjectServiceParameters,
     private val project: Project,
-) : GradleProjectConfigurer(parameters, project) {
+) : GradleProjectConfigurer(projectParameters, project) {
 
     override fun PluginContainer.configure() {
         apply("org.eazyportal.plugin.gradle.kotlin-project-conventions")
@@ -26,4 +26,5 @@ class RootProjectConfigurer(
             enabled = false
         }
     }
+
 }

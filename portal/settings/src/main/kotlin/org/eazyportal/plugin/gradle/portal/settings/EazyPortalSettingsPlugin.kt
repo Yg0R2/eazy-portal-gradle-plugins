@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
-import org.eazyportal.plugin.gradle.portal.common.EazyPortalSharedService
-import org.eazyportal.plugin.gradle.portal.common.EazyPortalSharedService.Companion.EAZY_PORTAL_SHARED_SERVICE_NAME
+import org.eazyportal.plugin.gradle.portal.common.EazyPortalSettingsSharedService
+import org.eazyportal.plugin.gradle.portal.common.EazyPortalSettingsSharedService.Companion.EAZY_PORTAL_SETTINGS_SHARED_SERVICE_NAME
 import org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin
 import org.eazyportal.plugin.gradle.portal.settings.model.EazyPortalExtension
 import org.gradle.api.Plugin
@@ -16,8 +16,8 @@ class EazyPortalSettingsPlugin : Plugin<Settings> {
         )
 
         target.gradle.sharedServices.registerIfAbsent(
-            EAZY_PORTAL_SHARED_SERVICE_NAME,
-            EazyPortalSharedService::class.java
+            EAZY_PORTAL_SETTINGS_SHARED_SERVICE_NAME,
+            EazyPortalSettingsSharedService::class.java
         ) {
             parameters {
                 applicationType.set(eazyPortalExtension.applicationType)
