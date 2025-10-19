@@ -17,6 +17,10 @@ gradlePlugin {
 }
 
 dependencies {
+    // dependencies
     implementation(project(":portal-common"))
     implementation(project(":portal-project"))
+
+    // Test dependencies
+    testImplementation(testFixtures(project(":portal-common")))
 }

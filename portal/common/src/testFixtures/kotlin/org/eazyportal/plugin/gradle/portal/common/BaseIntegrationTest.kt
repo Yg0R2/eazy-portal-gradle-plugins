@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.portal.project
+package org.eazyportal.plugin.gradle.portal.common
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
@@ -50,8 +50,11 @@ abstract class BaseIntegrationTest {
             .withArguments(
                 "--stacktrace",
                 "--warning-mode=all",
-                *arguments
+                "-Pversion=0.0.1-SNAPSHOT",
+                "--no-configuration-cache",
+                *arguments,
             ).withPluginClasspath()
+            .withGradleVersion("9.1.0")
             .withProjectDir(projectFile)
 
     protected fun File.initializeGradleProject(
