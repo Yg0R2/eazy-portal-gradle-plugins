@@ -1,7 +1,7 @@
 [versions]
+assertj = "3.27.6"
+junit = "6.0.0"
 
 [libraries]
-
-[plugins]
-
-[bundles]
+assertj-bom = { group = "org.assertj", name = "assertj-bom", version.ref = "assertj" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
