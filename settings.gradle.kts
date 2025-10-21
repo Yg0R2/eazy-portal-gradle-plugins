@@ -1,6 +1,9 @@
 rootProject.name = "gradle-plugins"
 
-includeBuild("conventions")
+pluginManagement {
+    includeBuild("build-logic")
+    includeBuild("conventions")
+}
 
 listOf(
     "common",

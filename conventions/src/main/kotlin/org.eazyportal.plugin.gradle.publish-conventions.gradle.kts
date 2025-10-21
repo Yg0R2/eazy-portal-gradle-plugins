@@ -24,10 +24,10 @@ configure<PublishingExtension> {
     }
 
     repositories {
-        if (project.version.toString().endsWith("-SNAPSHOT")) {
-            mavenLocal()
-        } else {
+        if (project.version.toString().matches("^\\d+\\.\\d+\\.\\d+$".toRegex())) {
             TODO("add github packages")
+        } else {
+            mavenLocal()
         }
     }
 }

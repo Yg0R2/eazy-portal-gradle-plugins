@@ -1,7 +1,5 @@
 plugins {
-    id("org.eazyportal.plugin.gradle.integration-test-conventions")
-    id("org.eazyportal.plugin.gradle.kotlin-lib-conventions")
-    id("org.eazyportal.plugin.gradle.repositories-conventions")
+    id("gradle-plugins-conventions")
 
     `java-gradle-plugin`
 }
