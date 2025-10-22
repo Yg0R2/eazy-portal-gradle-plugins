@@ -16,10 +16,10 @@ class ProjectStructureIntegrationTest : BaseIntegrationTest() {
     fun test_applyPlugin() {
         // GIVEN
         // WHEN
-        // THEN
         val actual = createGradleRunner(projectDir, "projects")
             .build()
 
+        // THEN
         val expectedSubprojects = SUBPROJECT_NAMES.withIndex()
             .map{ (index, subprojectName) ->
                 if (index < SUBPROJECT_NAMES.size - 1) {

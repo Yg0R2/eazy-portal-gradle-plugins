@@ -16,10 +16,10 @@ class ApplyPluginIntegrationTest : BaseIntegrationTest() {
     fun test_applyPlugin() {
         // GIVEN
         // WHEN
-        // THEN
         val actual = createGradleRunner(projectDir, "listPlugins")
             .build()
 
+        // THEN
         assertThat(actual.output.lines()).contains("org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin")
     }
 
