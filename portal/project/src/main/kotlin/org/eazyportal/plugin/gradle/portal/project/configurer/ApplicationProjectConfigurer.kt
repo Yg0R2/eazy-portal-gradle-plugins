@@ -1,6 +1,10 @@
 package org.eazyportal.plugin.gradle.portal.project.configurer
 
-import org.eazyportal.plugin.gradle.portal.common.extension.*
+import org.eazyportal.plugin.gradle.portal.common.extension.addAsImplementation
+import org.eazyportal.plugin.gradle.portal.common.extension.addAsTestFixturesApi
+import org.eazyportal.plugin.gradle.portal.common.extension.findSubProject
+import org.eazyportal.plugin.gradle.portal.common.extension.getSubProject
+import org.eazyportal.plugin.gradle.portal.common.extension.testFixtures
 import org.eazyportal.plugin.gradle.portal.common.model.ProjectTypes
 import org.eazyportal.plugin.gradle.portal.project.model.ProjectServiceParameters
 import org.gradle.api.Project
