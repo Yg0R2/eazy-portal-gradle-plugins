@@ -1,8 +1,8 @@
  plugins {
     id("java-library")
 
-    id("org.eazyportal.plugin.gradle.java-project-conventions")
-    id("org.eazyportal.plugin.gradle.publish-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.java-project-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.publish-conventions")
 }
 
 repositories {

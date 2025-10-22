@@ -2,7 +2,9 @@ plugins {
     `kotlin-dsl`
 }
 
-apply(from = "./src/main/kotlin/org.eazyportal.plugin.gradle.publish-conventions.gradle.kts")
+group = "org.eazyportal.plugin.gradle"
+
+apply(from = "./src/main/kotlin/org.eazyportal.plugin.gradle.conventions.publish-conventions.gradle.kts")
 
 repositories {
     gradlePluginPortal()

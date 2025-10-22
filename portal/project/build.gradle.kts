@@ -4,10 +4,12 @@ plugins {
     `java-gradle-plugin`
 }
 
+group = "org.eazyportal.plugin.gradle.portal"
+
 gradlePlugin {
     plugins {
         create("eazy-portal-project") {
-            id = "${project.group}.portal.project"
+            id = "${project.group}.${project.name}"
             implementationClass = "org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin"
             tags = listOf("eazy-portal", "gradle", "project")
         }
@@ -17,8 +19,8 @@ gradlePlugin {
 dependencies {
     // dependencies
     implementation(project(":conventions"))
-    implementation(project(":portal-common"))
+    implementation(project(":common"))
 
     // Test dependencies
-    testImplementation(testFixtures(project(":portal-common")))
+    testImplementation(testFixtures(project(":common")))
 }

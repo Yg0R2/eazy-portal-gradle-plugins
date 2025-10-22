@@ -1,7 +1,7 @@
 plugins {
-    id("org.eazyportal.plugin.gradle.integration-test-conventions")
-    id("org.eazyportal.plugin.gradle.kotlin-lib-conventions")
-    id("org.eazyportal.plugin.gradle.repositories-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.integration-test-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.kotlin-lib-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.repositories-conventions")
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

@@ -3,7 +3,7 @@ plugins {
 
     id("org.gradle.kotlin.kotlin-dsl")
 
-    id("org.eazyportal.plugin.gradle.java-project-conventions")
+    id("org.eazyportal.plugin.gradle.conventions.java-project-conventions")
 }
 
 repositories {

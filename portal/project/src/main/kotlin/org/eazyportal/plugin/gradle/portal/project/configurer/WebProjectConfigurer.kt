@@ -14,9 +14,9 @@ class WebProjectConfigurer(
 ) : GradleProjectConfigurer(projectParameters, project) {
 
     override fun PluginContainer.configure() {
-        apply("org.eazyportal.plugin.gradle.integration-test-conventions")
-        apply("org.eazyportal.plugin.gradle.kotlin-lib-conventions")
-        apply("org.eazyportal.plugin.gradle.repositories-conventions")
+        apply("org.eazyportal.plugin.gradle.conventions.integration-test-conventions")
+        apply("org.eazyportal.plugin.gradle.conventions.kotlin-lib-conventions")
+        apply("org.eazyportal.plugin.gradle.conventions.repositories-conventions")
     }
 
     override fun DependencyHandler.configure() {

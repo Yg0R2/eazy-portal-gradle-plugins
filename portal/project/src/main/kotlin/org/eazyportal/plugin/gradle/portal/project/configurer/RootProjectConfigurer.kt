@@ -13,8 +13,8 @@ class RootProjectConfigurer(
 ) : GradleProjectConfigurer(projectParameters, project) {
 
     override fun PluginContainer.configure() {
-        apply("org.eazyportal.plugin.gradle.kotlin-project-conventions")
-        apply("org.eazyportal.plugin.gradle.repositories-conventions")
+        apply("org.eazyportal.plugin.gradle.conventions.kotlin-project-conventions")
+        apply("org.eazyportal.plugin.gradle.conventions.repositories-conventions")
     }
 
     override fun TaskContainer.configure() {
