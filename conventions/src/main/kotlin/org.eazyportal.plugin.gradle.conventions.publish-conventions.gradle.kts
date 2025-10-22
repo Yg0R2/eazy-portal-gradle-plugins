@@ -1,9 +1,9 @@
 plugins.apply("maven-publish")
 
-configure<PublishingExtension> {
+extensions.configure<PublishingExtension>(PublishingExtension.NAME) {
     publications {
-        if (isKotlinDslPluginPublishEnabled().not()) {
-            create("maven", MavenPublication::class) {
+        if (!isJavaGradlePluginPublishEnabled()) {
+            register("maven", MavenPublication::class) {
                 groupId = project.group.toString()
                 artifactId = project.name
                 version = project.version.toString()
@@ -32,7 +32,7 @@ configure<PublishingExtension> {
     }
 }
 
-fun isKotlinDslPluginPublishEnabled(): Boolean =
+fun isJavaGradlePluginPublishEnabled(): Boolean =
     extensions.findByType<GradlePluginDevelopmentExtension>()
         ?.isAutomatedPublishing
         ?: false

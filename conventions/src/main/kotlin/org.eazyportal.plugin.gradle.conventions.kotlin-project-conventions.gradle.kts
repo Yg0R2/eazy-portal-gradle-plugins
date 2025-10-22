@@ -1,7 +1,7 @@
 plugins {
     idea
 
-    id("org.gradle.kotlin.kotlin-dsl")
+    id("org.jetbrains.kotlin.jvm")
 
     id("org.eazyportal.plugin.gradle.conventions.java-project-conventions")
 }
