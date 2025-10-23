@@ -5,8 +5,6 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "org.eazyportal.plugin.gradle.portal"
-
 gradlePlugin {
     isAutomatedPublishing = false
 
@@ -22,8 +20,8 @@ gradlePlugin {
 dependencies {
     // dependencies
     implementation(project(":conventions"))
-    implementation(project(":common"))
+    implementation(project(":portal-common"))
 
     // Test dependencies
-    testImplementation(testFixtures(project(":common")))
+    testImplementation(testFixtures(project(":portal-common")))
 }

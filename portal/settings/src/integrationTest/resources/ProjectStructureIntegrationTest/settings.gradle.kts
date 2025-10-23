@@ -3,7 +3,7 @@ import org.eazyportal.plugin.gradle.portal.common.model.ApplicationTypes
 rootProject.name = "dummy-project"
 
 plugins {
-    id("org.eazyportal.plugin.gradle.portal.settings")
+    id("org.eazyportal.plugin.gradle.portal-settings")
 }
 
 include(

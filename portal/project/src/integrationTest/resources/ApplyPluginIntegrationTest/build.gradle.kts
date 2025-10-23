@@ -1,5 +1,5 @@
 plugins {
-    id("org.eazyportal.plugin.gradle.portal.project")
+    id("org.eazyportal.plugin.gradle.portal-project")
 }
 
 tasks {

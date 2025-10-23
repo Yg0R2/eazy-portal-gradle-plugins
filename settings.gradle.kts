@@ -10,6 +10,6 @@ listOf(
     "project",
     "settings",
 ).forEach {
-    include(it)
-    project(":$it").projectDir = file("./portal/$it")
+    include("portal-$it")
+    project(":portal-$it").projectDir = file("./portal/$it")
 }
