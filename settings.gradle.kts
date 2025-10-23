@@ -13,3 +13,11 @@ listOf(
     include("portal-$it")
     project(":portal-$it").projectDir = file("./portal/$it")
 }
+
+listOf(
+    "core",
+    "gradle",
+).forEach {
+    include("release-$it")
+    project(":release-$it").projectDir = file("./release/$it")
+}

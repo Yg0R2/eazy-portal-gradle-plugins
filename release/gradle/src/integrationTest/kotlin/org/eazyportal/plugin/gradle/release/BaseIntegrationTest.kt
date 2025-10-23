@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.portal.common
+package org.eazyportal.plugin.gradle.release
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
@@ -54,7 +54,7 @@ abstract class BaseIntegrationTest {
                 "--no-configuration-cache",
                 *arguments,
             ).withPluginClasspath()
-            .withGradleVersion("9.1.0")
+//            .withGradleVersion("9.1.0")
             .withProjectDir(projectFile)
 
     protected fun File.initializeGradleProject(
