@@ -3,17 +3,14 @@ package org.eazyportal.plugin.gradle.portal.settings
 import org.eazyportal.plugin.gradle.portal.common.EazyPortalSettingsSharedService
 import org.eazyportal.plugin.gradle.portal.common.EazyPortalSettingsSharedService.Companion.EAZY_PORTAL_SETTINGS_SHARED_SERVICE_NAME
 import org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin
-import org.eazyportal.plugin.gradle.portal.settings.model.EazyPortalExtension
+import org.eazyportal.plugin.gradle.portal.settings.model.EazyPortalSettingsPluginExtension
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 
 class EazyPortalSettingsPlugin : Plugin<Settings> {
 
     override fun apply(target: Settings) {
-        val eazyPortalExtension = target.extensions.create(
-            "eazyPortal",
-            EazyPortalExtension::class.java,
-        )
+        val eazyPortalExtension = target.extensions.create("eazyPortal", EazyPortalSettingsPluginExtension::class.java)
 
         target.gradle.sharedServices.registerIfAbsent(
             EAZY_PORTAL_SETTINGS_SHARED_SERVICE_NAME,
