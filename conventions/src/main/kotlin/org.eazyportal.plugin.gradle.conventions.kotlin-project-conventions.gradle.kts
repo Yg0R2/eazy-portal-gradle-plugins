@@ -12,8 +12,8 @@ repositories {
 
 idea {
     module {
-        sourceSets.findByName("integrationTest")?.kotlin?.srcDirs?.let {
-            testSources.from(it)
+        sourceSets.findByName("integrationTest")?.kotlin?.srcDirs?.run {
+            testSources.setFrom(this)
         }
     }
 }

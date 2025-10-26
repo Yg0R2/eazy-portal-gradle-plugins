@@ -16,8 +16,8 @@ java {
 
 idea {
     module {
-        sourceSets.findByName("integrationTest")?.java?.srcDirs?.let {
-            testSources.from(it)
+        sourceSets.findByName("integrationTest")?.java?.srcDirs?.run {
+            testSources.setFrom(this)
         }
     }
 }
