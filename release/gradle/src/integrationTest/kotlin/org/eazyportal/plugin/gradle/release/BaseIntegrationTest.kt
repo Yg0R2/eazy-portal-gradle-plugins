@@ -5,8 +5,8 @@ import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.gradle.release.core.project.ProjectActions
 import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
 import org.eazyportal.plugin.gradle.release.core.scm.GitActions
-import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig.Companion.FEATURE_BRANCH
-import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig.Companion.MAIN_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll

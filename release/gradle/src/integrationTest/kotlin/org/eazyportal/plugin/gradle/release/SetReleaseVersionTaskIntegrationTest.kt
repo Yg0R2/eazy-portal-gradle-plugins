@@ -5,7 +5,7 @@ import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.RELEASE_0
 import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.RELEASE_010
 import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.RELEASE_100
 import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.SNAPSHOT_001
-import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig.Companion.FEATURE_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.junit.jupiter.api.AfterEach

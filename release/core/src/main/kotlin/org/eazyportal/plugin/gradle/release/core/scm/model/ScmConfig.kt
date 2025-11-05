@@ -1,5 +1,9 @@
 package org.eazyportal.plugin.gradle.release.core.scm.model
 
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.REMOTE
+
 data class ScmConfig(
     val featureBranch: String,
     val releaseBranch: String,
@@ -7,8 +11,8 @@ data class ScmConfig(
 ) {
 
     companion object {
-        val GIT_FLOW = ScmConfig("dev", "main", "origin")
-        val TRUNK_BASED_FLOW = ScmConfig("main", "main", "origin")
+        val GIT_FLOW = ScmConfig(FEATURE_BRANCH, MAIN_BRANCH, REMOTE)
+        val TRUNK_BASED_FLOW = ScmConfig(MAIN_BRANCH, MAIN_BRANCH, REMOTE)
     }
 
 }

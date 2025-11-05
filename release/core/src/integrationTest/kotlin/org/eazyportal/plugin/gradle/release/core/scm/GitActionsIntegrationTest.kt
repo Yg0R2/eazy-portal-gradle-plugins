@@ -10,6 +10,8 @@ import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.RELEASE_0
 import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.RELEASE_003
 import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.gradle.release.core.scm.GitActions.Companion.GIT_EXECUTABLE
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -21,7 +23,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
 
     @BeforeEach
     fun setUpRepository() {
-        assertThat(git("init", "--initial-branch=main"))
+        assertThat(git("init", "--initial-branch=$MAIN_BRANCH"))
             .contains("Initialized empty Git repository in ${projectFile.getFile().absolutePath}")
 
         projectFile
@@ -56,11 +58,11 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
             .contains("On branch tmp")
 
         // WHEN
-        underTest.checkout(projectFile, "main")
+        underTest.checkout(projectFile, MAIN_BRANCH)
 
         // THEN
         assertThat(git("status").split(LINE_BREAK_REGEX))
-            .contains("On branch main")
+            .contains("On branch $MAIN_BRANCH")
     }
 
     @Test
@@ -120,10 +122,10 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         commandExecutor
             .execute(originProjectFile, GIT_EXECUTABLE, "branch")
             .split(LINE_BREAK_REGEX)
-            .run { assertThat(this).containsExactly("main", "* tmp") }
+            .run { assertThat(this).containsExactly(MAIN_BRANCH, "* tmp") }
 
         // and GIVEN (add remote origin)
-        git("remote", "add", "origin", originProjectFile.getFile().absolutePath)
+        git("remote", "add", REMOTE, originProjectFile.getFile().absolutePath)
 
         assertThat(git("remote", "-v").split(LINE_BREAK_REGEX))
             .containsExactly(
@@ -140,12 +142,12 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
             .containsExactly("initial commit")
 
         // WHEN
-        underTest.fetch(projectFile, "origin")
+        underTest.fetch(projectFile, REMOTE)
 
         // THEN
         git("branch")
             .split(LINE_BREAK_REGEX)
-            .run { assertThat(this).containsExactly("* main") }
+            .run { assertThat(this).containsExactly("* $MAIN_BRANCH") }
 
         git("tag")
             .split(LINE_BREAK_REGEX)
@@ -263,7 +265,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
             .let(::FileSystemProjectFile)
 
         commandExecutor
-            .execute(originProjectFile, GIT_EXECUTABLE, "init", "-b", "main")
+            .execute(originProjectFile, GIT_EXECUTABLE, "init", "-b", MAIN_BRANCH)
             .run {
                 assertThat(this)
                     .contains("Initialized empty Git repository in ${originProjectFile.getFile().absolutePath}")
@@ -363,7 +365,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         git("add", ".")
         git("commit", "-m", "docs: add README")
 
-        git("checkout", "main")
+        git("checkout", MAIN_BRANCH)
 
         // WHEN
         underTest.mergeNoCommit(projectFile, "tmp")
@@ -371,7 +373,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         // THEN
         assertThat(git("status").split(LINE_BREAK_REGEX))
             .contains(
-                "On branch main",
+                "On branch $MAIN_BRANCH",
                 "All conflicts fixed but you are still merging.",
                 "Changes to be committed:",
                 "\tnew file:   README.adoc",
@@ -386,7 +388,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
             .also { it.mkdir() }
             .let(::FileSystemProjectFile)
 
-        commandExecutor.execute(originProjectFile, GIT_EXECUTABLE, "init", "--bare", "-b", "main")
+        commandExecutor.execute(originProjectFile, GIT_EXECUTABLE, "init", "--bare", "-b", MAIN_BRANCH)
 
         // and GIVEN (another local repository)
         val validateProjectFile = workingDir
@@ -402,7 +404,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         )
 
         // and GIVEN (add remote origin)
-        git("remote", "add", "origin", originProjectFile.getFile().absolutePath)
+        git("remote", "add", REMOTE, originProjectFile.getFile().absolutePath)
 
         assertThat(git("remote", "-v").split(LINE_BREAK_REGEX))
             .containsExactly(
@@ -426,14 +428,14 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         git("commit", "-m", "build: add gradle.properties")
 
         // WHEN & THEN (push tags only)
-        underTest.push(projectFile, "origin")
+        underTest.push(projectFile, REMOTE)
 
         assertThatThrownBy {
-            commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "pull", "--tags", "origin")
+            commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "pull", "--tags", REMOTE)
         }.isInstanceOf(CliExecutionException::class.java)
             .hasMessageContaining(
                 " * [new tag]         $RELEASE_001      -> $RELEASE_001",
-                "Your configuration specifies to merge with the ref 'refs/heads/main'",
+                "Your configuration specifies to merge with the ref 'refs/heads/$MAIN_BRANCH'",
                 "from the remote, but no such ref was fetched.",
             )
 
@@ -444,12 +446,12 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         assertThatThrownBy {
             commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "log", "--pretty=format:%s")
         }.isInstanceOf(CliExecutionException::class.java)
-            .hasMessage("fatal: your current branch 'main' does not have any commits yet")
+            .hasMessage("fatal: your current branch '$MAIN_BRANCH' does not have any commits yet")
 
         // WHEN & THEN (push also branch)
-        underTest.push(projectFile, "origin", "main")
+        underTest.push(projectFile, REMOTE, MAIN_BRANCH)
 
-        commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "pull", "--tags", "origin")
+        commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "pull", "--tags", REMOTE)
 
         commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "tag")
             .split(LINE_BREAK_REGEX)
