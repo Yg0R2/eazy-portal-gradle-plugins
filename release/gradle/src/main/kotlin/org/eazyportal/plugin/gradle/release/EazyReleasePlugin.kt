@@ -55,7 +55,8 @@ class EazyReleasePlugin : Plugin<Project> {
     ): ReleaseActionContext<File> = ReleaseActionContext(
         conventionalCommitTypes = {
             eazyReleaseExtension.conventionalCommitTypes
-                .getOrElse(ConventionalCommitType.DEFAULT_TYPES)
+                .get()
+                .ifEmpty { ConventionalCommitType.DEFAULT_TYPES }
         },
         isForceRelease = {
             target.providers
