@@ -10,6 +10,7 @@ import org.eazyportal.plugin.gradle.release.core.version.ReleaseVersionProvider
 import org.eazyportal.plugin.gradle.release.core.version.VersionIncrementProvider
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.SetReleaseVersionTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -38,7 +39,7 @@ class EazyReleasePlugin : Plugin<Project> {
         )
 
         return project.tasks.register(
-            "setReleaseVersion",
+            SET_RELEASE_VERSION_TASK_NAME,
             SetReleaseVersionTask::class.java,
             setReleaseVersionAction
         ).apply {

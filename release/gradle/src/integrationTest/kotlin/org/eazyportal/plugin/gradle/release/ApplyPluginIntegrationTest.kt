@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
@@ -22,7 +23,7 @@ class ApplyPluginIntegrationTest : BaseIntegrationTest() {
         assertThat(actual.output.lines())
             .contains(
                 "Eazy-release tasks",
-                "setReleaseVersion",
+                SET_RELEASE_VERSION_TASK_NAME,
             )
     }
 
