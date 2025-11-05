@@ -19,4 +19,7 @@ dependencies {
     // dependencies
     implementation(gradleApi())
     implementation(project(":release-core"))
+
+    // IntegrationTest dependencies
+    integrationTestImplementation(testFixtures(project(":release-core")))
 }

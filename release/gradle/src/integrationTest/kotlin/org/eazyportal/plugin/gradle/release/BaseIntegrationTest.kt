@@ -1,5 +1,13 @@
 package org.eazyportal.plugin.gradle.release
 
+import org.eazyportal.plugin.gradle.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.gradle.release.core.project.ProjectActions
+import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
+import org.eazyportal.plugin.gradle.release.core.scm.GitActions
+import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig.Companion.FEATURE_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig.Companion.MAIN_BRANCH
+import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
@@ -10,8 +18,14 @@ import java.nio.file.Files
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseIntegrationTest {
 
-    protected lateinit var workingDir: File
+    protected val gitActions = GitActions(CommandLineExecutor())
+
+    protected lateinit var projectFile: ProjectFile<File>
     protected lateinit var projectDir: File
+    protected lateinit var workingDir: File
+
+    protected val projectActions: ProjectActions<File>
+        get() = GradleProjectActions(projectFile)
 
     @BeforeAll
     fun setUpBaseIntegrationTest(
@@ -21,6 +35,8 @@ abstract class BaseIntegrationTest {
 
         projectDir = workingDir.resolve(PROJECT_NAME)
             .also { it.mkdirs() }
+
+        projectFile = FileSystemProjectFile(projectDir)
     }
 
     protected fun File.copyIntoFromResources(
@@ -56,6 +72,29 @@ abstract class BaseIntegrationTest {
             ).withPluginClasspath()
 //            .withGradleVersion("9.1.0")
             .withProjectDir(projectFile)
+
+    protected fun File.initializeGitAndGradleProject(
+        vararg subModuleNames: String,
+    ) {
+        initializeGradleProject(*subModuleNames)
+        initializeGitProject(*subModuleNames)
+
+        gitActions.add(projectFile, "*")
+        gitActions.commit(projectFile, "initialize project")
+
+        // TODO: maybe move it into `initializeGitProject`
+        gitActions.execute(projectFile, "branch", FEATURE_BRANCH)
+    }
+
+    protected fun File.initializeGitProject(
+        vararg subModuleNames: String,
+    ) {
+        projectDir.copyIntoFromResources("README.adoc")
+
+        gitActions.execute(projectFile, "init", "--initial-branch=$MAIN_BRANCH", )
+        gitActions.add(projectFile, ".gitattributes", ".gitignore", "README.adoc")
+        gitActions.commit(projectFile, "initial commit")
+    }
 
     protected fun File.initializeGradleProject(
         vararg subProjectNames: String,
