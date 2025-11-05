@@ -3,6 +3,7 @@ package org.eazyportal.plugin.gradle.release.model
 import org.eazyportal.plugin.gradle.release.core.scm.ScmActions
 import org.eazyportal.plugin.gradle.release.core.scm.model.ConventionalCommitType
 import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import java.io.File
@@ -10,7 +11,7 @@ import java.io.File
 interface EazyReleasePluginExtension {
 
     @get:Input
-    val conventionalCommitTypes: Property<List<ConventionalCommitType>>
+    val conventionalCommitTypes: ListProperty<ConventionalCommitType>
 
 //    @get:Input
 //    val releaseBuildTasks: List<String> = listOf("build", "publish")
