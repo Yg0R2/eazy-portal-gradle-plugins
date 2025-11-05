@@ -7,6 +7,8 @@ import org.eazyportal.plugin.gradle.release.core.project.exception.MissingProjec
 import org.eazyportal.plugin.gradle.release.core.project.exception.MultipleProjectVersionPropertyException
 import org.eazyportal.plugin.gradle.release.core.project.exception.ProjectVersionPropertyException
 import org.eazyportal.plugin.gradle.release.core.version.model.Version
+import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROJECT_FILES
+import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 
 class GradleProjectActions<T : Any>(
     private val projectFile: ProjectFile<T>
@@ -60,14 +62,6 @@ class GradleProjectActions<T : Any>(
     }
 
     companion object {
-        private val GRADLE_PROJECT_FILES = listOf(
-            "build.gradle",
-            "build.gradle.kts",
-            "settings.gradle",
-            "settings.gradle.kts"
-        )
-        private const val GRADLE_PROPERTIES_FILE_NAME = "gradle.properties"
-
         fun isGradleProject(projectFile: ProjectFile<*>): Boolean =
             GRADLE_PROJECT_FILES.any { projectFile.resolve(it).exists() }
 
