@@ -53,7 +53,7 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
                 "Ignoring missing Git tag from release version calculation.",
                 "Ignoring invalid commit: initialize project",
                 "Ignoring invalid commit: initial commit",
-                "Execution failed for task ':setReleaseVersion'.",
+                "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
             )
 
         assertThat(projectActions.getVersion())
@@ -62,7 +62,7 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
 
     @Order(1)
     @Test
-    fun `test 'run' should set release version when `() {
+    fun `test 'run' should set release version when release is forced`() {
         // GIVEN
         // WHEN
         createGradleRunner(projectDir, SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")

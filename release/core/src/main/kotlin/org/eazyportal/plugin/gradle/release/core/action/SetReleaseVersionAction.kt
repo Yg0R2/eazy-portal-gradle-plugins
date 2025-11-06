@@ -12,71 +12,63 @@ import org.slf4j.LoggerFactory
 
 class SetReleaseVersionAction<T : Any>(
     private val projectActionsFactory: ProjectActionsFactory<T>,
+    private val projectFile: ProjectFile<T>,
+    private val releaseActionContext: ReleaseActionContext<T>,
     private val releaseVersionProvider: ReleaseVersionProvider,
     private val versionIncrementProvider: VersionIncrementProvider,
-) : ReleaseAction<T> {
+) : ReleaseAction<T>(
+    projectFile,
+    releaseActionContext,
+) {
 
-    override fun execute(
-        projectFile: ProjectFile<T>,
-        releaseActionContext: ReleaseActionContext<T>,
-    ) {
-        val scmActions = releaseActionContext.scmActions()
+    override fun execute() {
+        LOGGER.info("Setting release version...")
 
-        val projectFiles = scmActions.getSubmodules(projectFile)
-            .map(projectFile::resolve)
-            .let { it + projectFile }
+        val releaseVersion = getReleaseVersion()
 
-        val releaseVersion = getReleaseVersion(releaseActionContext, projectFiles)
-        val scmConfig = releaseActionContext.scmConfig()
-        projectFiles.forEach {
-            if (scmConfig.releaseBranch != scmConfig.featureBranch) {
-                scmActions.checkout(it, scmConfig.releaseBranch)
-
-                scmActions.mergeNoCommit(it, scmConfig.featureBranch)
-            }
+        projectFiles.asSequence().forEach {
+            checkoutToReleaseBranch(it)
 
             projectActionsFactory.create(it)
                 .setVersion(releaseVersion)
         }
+
+        LOGGER.info("Release version set to: $releaseVersion")
     }
 
-    private fun getReleaseVersion(
-        releaseActionContext: ReleaseActionContext<T>,
-        projectFiles: List<ProjectFile<T>>,
-    ): Version =
-        projectFiles.asSequence()
-            .mapNotNull { projectFile ->
-                getVersionIncrement(releaseActionContext, projectFile)?.let {
-                    val currentVersion = projectActionsFactory.create(projectFile)
-                        .getVersion()
+    private fun checkoutToReleaseBranch(projectFile: ProjectFile<T>) {
+        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+            scmActions.checkout(projectFile, scmConfig.releaseBranch)
 
-                    releaseVersionProvider.provide(currentVersion, it)
-                }
-            }.maxWithOrNull(VersionComparator())
+            scmActions.mergeNoCommit(projectFile, scmConfig.featureBranch)
+        }
+    }
+
+    private fun getReleaseVersion(): Version =
+        projectFiles.asSequence().mapNotNull { projectFile ->
+            getVersionIncrement(projectFile)?.let {
+                val currentVersion = projectActionsFactory.create(projectFile)
+                    .getVersion()
+
+                releaseVersionProvider.provide(currentVersion, it)
+            }
+        }.maxWithOrNull(VersionComparator())
             ?: throw IllegalArgumentException("There are no acceptable commits.")
 
-    private fun getVersionIncrement(
-        releaseActionContext: ReleaseActionContext<T>,
-        projectFile: ProjectFile<T>,
-    ): VersionIncrement? =
-        getVersionIncrementFromScm(releaseActionContext, projectFile).run {
-            if ((this == null) || (this == VersionIncrement.NONE)) {
-                if (releaseActionContext.isForceRelease()) {
+    private fun getVersionIncrement(projectFile: ProjectFile<T>): VersionIncrement? =
+        getVersionIncrementFromScm(projectFile).let {
+            if ((it == null) || (it == VersionIncrement.NONE)) {
+                if (releaseActionContext.isForceReleaseProvider()) {
                     VersionIncrement.PATCH
                 } else {
                     null
                 }
             } else {
-                this
+                it
             }
         }
 
-    private fun getVersionIncrementFromScm(
-        releaseActionContext: ReleaseActionContext<T>,
-        projectFile: ProjectFile<T>,
-    ): VersionIncrement? {
-        val scmActions = releaseActionContext.scmActions()
-
+    private fun getVersionIncrementFromScm(projectFile: ProjectFile<T>): VersionIncrement? {
         val lastTag = runCatching {
             scmActions.getLastTag(projectFile)
         }.onFailure {
@@ -84,7 +76,7 @@ class SetReleaseVersionAction<T : Any>(
         }.getOrNull()
 
         return scmActions.getCommits(projectFile, lastTag)
-            .let { versionIncrementProvider.provide(it, releaseActionContext.conventionalCommitTypes()) }
+            .let { versionIncrementProvider.provide(it, releaseActionContext.conventionalCommitTypesProvider()) }
     }
 
     companion object {

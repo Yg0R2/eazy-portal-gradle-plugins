@@ -1,17 +1,22 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.gradle.release.core.action.SetReleaseVersionAction
+import org.eazyportal.plugin.gradle.release.core.action.SetSnapshotVersionAction
 import org.eazyportal.plugin.gradle.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.gradle.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.gradle.release.core.scm.GitActions
 import org.eazyportal.plugin.gradle.release.core.scm.model.ConventionalCommitType
 import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.gradle.release.core.version.ReleaseVersionProvider
+import org.eazyportal.plugin.gradle.release.core.version.SnapshotVersionProvider
 import org.eazyportal.plugin.gradle.release.core.version.VersionIncrementProvider
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.SetReleaseVersionTask
+import org.eazyportal.plugin.gradle.release.task.SetSnapshotVersionTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -22,53 +27,86 @@ class EazyReleasePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         val eazyReleaseExtension = target.extensions.create<EazyReleasePluginExtension>("eazyRelease")
-
         val releaseActionContext = createReleaseActionContext(eazyReleaseExtension, target)
 
-        val setReleaseVersionTask = configureSetReleaseVersionTask(releaseActionContext, target)
+        val projectActionsFactory = GradleProjectActionsFactory()
+        val projectFile = FileSystemProjectFile(target.projectDir)
+
+        val setReleaseVersionTask = configureSetReleaseVersionTask(
+            projectActionsFactory,
+            releaseActionContext,
+            target,
+            projectFile,
+        )
+        val setSnapshotVersionTask = configureSetSnapshotVersionTask(
+            projectActionsFactory,
+            releaseActionContext,
+            target,
+            projectFile,
+        )
     }
 
     private fun configureSetReleaseVersionTask(
+        projectActionsFactory: GradleProjectActionsFactory,
         releaseActionContext: ReleaseActionContext<File>,
         project: Project,
+        projectFile: FileSystemProjectFile
     ): TaskProvider<SetReleaseVersionTask> {
         val setReleaseVersionAction = SetReleaseVersionAction(
-            GradleProjectActionsFactory(),
+            projectActionsFactory,
+            projectFile,
+            releaseActionContext,
             ReleaseVersionProvider(),
-            VersionIncrementProvider()
+            VersionIncrementProvider(),
         )
 
         return project.tasks.register(
             SET_RELEASE_VERSION_TASK_NAME,
             SetReleaseVersionTask::class.java,
             setReleaseVersionAction
-        ).apply {
-            configure {
-                this.releaseActionContext.set(releaseActionContext)
-            }
-        }
+        )
+    }
+
+    private fun configureSetSnapshotVersionTask(
+        projectActionsFactory: GradleProjectActionsFactory,
+        releaseActionContext: ReleaseActionContext<File>,
+        project: Project,
+        projectFile: FileSystemProjectFile
+    ): TaskProvider<SetSnapshotVersionTask> {
+        val setSnapshotVersionAction = SetSnapshotVersionAction(
+            projectActionsFactory,
+            projectFile,
+            releaseActionContext,
+            SnapshotVersionProvider(),
+        )
+
+        return project.tasks.register(
+            SET_SNAPSHOT_VERSION_TASK_NAME,
+            SetSnapshotVersionTask::class.java,
+            setSnapshotVersionAction
+        )
     }
 
     private fun createReleaseActionContext(
         eazyReleaseExtension: EazyReleasePluginExtension,
         target: Project
     ): ReleaseActionContext<File> = ReleaseActionContext(
-        conventionalCommitTypes = {
+        conventionalCommitTypesProvider = {
             eazyReleaseExtension.conventionalCommitTypes
                 .get()
                 .ifEmpty { ConventionalCommitType.DEFAULT_TYPES }
         },
-        isForceRelease = {
+        isForceReleaseProvider = {
             target.providers
                 .systemProperty("forceRelease")
                 .orNull
                 .toBoolean()
         },
-        scmActions = {
+        scmActionsProvider = {
             eazyReleaseExtension.scmActions
                 .getOrElse(GitActions(CommandLineExecutor()))
         },
-        scmConfig = {
+        scmConfigProvider = {
             eazyReleaseExtension.scmConfig
                 .getOrElse(ScmConfig.GIT_FLOW)
         }
