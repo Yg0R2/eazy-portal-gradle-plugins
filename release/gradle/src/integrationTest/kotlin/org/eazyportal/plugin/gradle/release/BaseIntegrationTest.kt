@@ -78,21 +78,25 @@ abstract class BaseIntegrationTest {
         initializeGradleProject(*subModuleNames)
         initializeGitProject(*subModuleNames)
 
-        gitActions.add(projectFile, "*")
-        gitActions.commit(projectFile, "initialize project")
+        with(FileSystemProjectFile(this)) {
+            gitActions.add(this, "*")
+            gitActions.commit(this, "initialize project")
 
-        // TODO: maybe move it into `initializeGitProject`
-        gitActions.execute(projectFile, "branch", FEATURE_BRANCH)
+            // TODO: maybe move it into `initializeGitProject`
+            gitActions.execute(this, "branch", FEATURE_BRANCH)
+        }
     }
 
     protected fun File.initializeGitProject(
         vararg subModuleNames: String,
     ) {
-        projectDir.copyIntoFromResources("README.adoc")
+        copyIntoFromResources("README.adoc")
 
-        gitActions.execute(projectFile, "init", "--initial-branch=$MAIN_BRANCH")
-        gitActions.add(projectFile, ".gitattributes", ".gitignore", "README.adoc")
-        gitActions.commit(projectFile, "initial commit")
+        with(FileSystemProjectFile(this)) {
+            gitActions.execute(this, "init", "--initial-branch=$MAIN_BRANCH")
+            gitActions.add(this, ".gitattributes", ".gitignore", "README.adoc")
+            gitActions.commit(this, "initial commit")
+        }
     }
 
     protected fun File.initializeGradleProject(
