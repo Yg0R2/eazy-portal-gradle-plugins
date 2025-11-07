@@ -43,8 +43,7 @@ abstract class BaseIntegrationTest {
         fileName: String,
         resourceSubFolder: String = "",
     ): File {
-        val resourceFile = "${this@BaseIntegrationTest::class.java.simpleName}/$resourceSubFolder/$fileName"
-            .let(::getResourceFile)
+        val resourceFile = getResourceFile(fileName, resourceSubFolder)
 
         return resolve(fileName).also {
             it.parentFile.mkdirs()
@@ -91,7 +90,7 @@ abstract class BaseIntegrationTest {
     ) {
         projectDir.copyIntoFromResources("README.adoc")
 
-        gitActions.execute(projectFile, "init", "--initial-branch=$MAIN_BRANCH", )
+        gitActions.execute(projectFile, "init", "--initial-branch=$MAIN_BRANCH")
         gitActions.add(projectFile, ".gitattributes", ".gitignore", "README.adoc")
         gitActions.commit(projectFile, "initial commit")
     }
@@ -111,11 +110,17 @@ abstract class BaseIntegrationTest {
     }
 
     private fun getResourceFile(
-        name: String,
+        fileName: String,
+        resourceSubFolder: String = "",
     ): File =
-        BaseIntegrationTest::class.java.classLoader.getResource(name)
-            ?.let { File(it.toURI()) }
-            ?: throw IllegalArgumentException("Resource is not found in classpath: $name")
+        with(this@BaseIntegrationTest::class.java) {
+            val resource = classLoader.getResource(
+                "${this@BaseIntegrationTest::class.java.simpleName}/$resourceSubFolder/$fileName"
+            ) ?: classLoader.getResource("_common/$resourceSubFolder/$fileName")
+
+            resource?.let { File(it.toURI()) }
+                ?: throw IllegalArgumentException("Resource is not found in classpath: $name")
+        }
 
     companion object {
         protected const val PROJECT_NAME = "dummy-project"
