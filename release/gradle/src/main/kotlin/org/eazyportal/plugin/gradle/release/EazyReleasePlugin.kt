@@ -15,8 +15,7 @@ import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.task.SetReleaseVersionTask
-import org.eazyportal.plugin.gradle.release.task.SetSnapshotVersionTask
+import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -51,7 +50,7 @@ class EazyReleasePlugin : Plugin<Project> {
         releaseActionContext: ReleaseActionContext<File>,
         project: Project,
         projectFile: FileSystemProjectFile
-    ): TaskProvider<SetReleaseVersionTask> {
+    ): TaskProvider<ReleaseActionTask> {
         val setReleaseVersionAction = SetReleaseVersionAction(
             projectActionsFactory,
             projectFile,
@@ -62,8 +61,9 @@ class EazyReleasePlugin : Plugin<Project> {
 
         return project.tasks.register(
             SET_RELEASE_VERSION_TASK_NAME,
-            SetReleaseVersionTask::class.java,
-            setReleaseVersionAction
+            ReleaseActionTask::class.java,
+            setReleaseVersionAction,
+            SET_RELEASE_VERSION_TASK_NAME
         )
     }
 
@@ -72,7 +72,7 @@ class EazyReleasePlugin : Plugin<Project> {
         releaseActionContext: ReleaseActionContext<File>,
         project: Project,
         projectFile: FileSystemProjectFile
-    ): TaskProvider<SetSnapshotVersionTask> {
+    ): TaskProvider<ReleaseActionTask> {
         val setSnapshotVersionAction = SetSnapshotVersionAction(
             projectActionsFactory,
             projectFile,
@@ -82,8 +82,9 @@ class EazyReleasePlugin : Plugin<Project> {
 
         return project.tasks.register(
             SET_SNAPSHOT_VERSION_TASK_NAME,
-            SetSnapshotVersionTask::class.java,
-            setSnapshotVersionAction
+            ReleaseActionTask::class.java,
+            setSnapshotVersionAction,
+            SET_SNAPSHOT_VERSION_TASK_NAME,
         )
     }
 
