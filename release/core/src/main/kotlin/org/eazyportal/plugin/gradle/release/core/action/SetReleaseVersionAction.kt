@@ -26,7 +26,7 @@ class SetReleaseVersionAction<T : Any>(
 
         val releaseVersion = getReleaseVersion()
 
-        projectFiles.asSequence().forEach {
+        allProjectFiles.forEach {
             checkoutToReleaseBranch(it)
 
             projectActionsFactory.create(it)
@@ -45,7 +45,7 @@ class SetReleaseVersionAction<T : Any>(
     }
 
     private fun getReleaseVersion(): Version =
-        projectFiles.asSequence().mapNotNull { projectFile ->
+        allProjectFiles.asSequence().mapNotNull { projectFile ->
             getVersionIncrement(projectFile)?.let {
                 val currentVersion = projectActionsFactory.create(projectFile)
                     .getVersion()

@@ -24,7 +24,7 @@ class SetSnapshotVersionAction<T : Any>(
             .getVersion()
             .let(snapshotVersionProvider::provide)
 
-        projectFiles.asSequence().forEach {
+        allProjectFiles.asSequence().forEach {
             checkoutToFeatureBranch(it)
 
             projectActionsFactory.create(it)

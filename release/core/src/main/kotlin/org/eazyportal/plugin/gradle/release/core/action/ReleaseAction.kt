@@ -10,10 +10,13 @@ abstract class ReleaseAction<T : Any>(
     private val releaseActionContext: ReleaseActionContext<T>,
 ) {
 
-    protected val projectFiles: Set<ProjectFile<T>> by lazy {
+    protected val allProjectFiles: Set<ProjectFile<T>> by lazy {
+        setOf(projectFile) + subModuleProjectFiles
+    }
+
+    protected val subModuleProjectFiles: Set<ProjectFile<T>> by lazy {
         scmActions.getSubmodules(projectFile)
             .map(projectFile::resolve)
-            .let { it + projectFile }
             .toSet()
     }
 
