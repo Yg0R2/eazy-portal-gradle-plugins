@@ -9,6 +9,8 @@ interface ScmActions<T : Any> {
 
     fun checkout(projectFile: ProjectFile<T>, toRef: String)
 
+    fun clean(projectFile: ProjectFile<T>)
+
     fun commit(projectFile: ProjectFile<T>, message: String)
 
     fun fetch(projectFile: ProjectFile<T>, remote: String)

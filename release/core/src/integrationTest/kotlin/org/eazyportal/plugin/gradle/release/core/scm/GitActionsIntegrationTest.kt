@@ -66,6 +66,24 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun test_clean() {
+        // GIVEN
+        projectFile
+            .resolve("README.adoc")
+            .writeText("Hello World!")
+
+        // WHEN
+        underTest.clean(projectFile)
+
+        // THEN
+        assertThat(git("status"))
+            .contains("nothing to commit, working tree clean")
+        assertThat(git("log"))
+            .startsWith("commit")
+            .endsWith("initial commit")
+    }
+
+    @Test
     fun test_commit() {
         // GIVEN
         projectFile

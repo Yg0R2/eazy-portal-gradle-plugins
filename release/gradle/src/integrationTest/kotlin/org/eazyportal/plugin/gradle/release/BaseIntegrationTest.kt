@@ -7,6 +7,7 @@ import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
 import org.eazyportal.plugin.gradle.release.core.scm.GitActions
 import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.REMOTE
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
@@ -20,6 +21,8 @@ abstract class BaseIntegrationTest {
 
     protected val gitActions = GitActions(CommandLineExecutor())
 
+    protected lateinit var originProjectDir: File
+    protected lateinit var originProjectFile: ProjectFile<File>
     protected lateinit var projectFile: ProjectFile<File>
     protected lateinit var projectDir: File
     protected lateinit var workingDir: File
@@ -32,6 +35,11 @@ abstract class BaseIntegrationTest {
         @TempDir tempDir: File
     ) {
         workingDir = tempDir
+
+        originProjectDir = workingDir.resolve("$REMOTE/$PROJECT_NAME")
+            .also { it.mkdirs() }
+
+        originProjectFile = FileSystemProjectFile(originProjectDir)
 
         projectDir = workingDir.resolve(PROJECT_NAME)
             .also { it.mkdirs() }

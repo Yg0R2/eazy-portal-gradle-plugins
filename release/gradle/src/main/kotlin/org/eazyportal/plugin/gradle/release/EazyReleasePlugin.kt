@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
+import org.eazyportal.plugin.gradle.release.core.action.PrepareRepositoryForReleaseAction
 import org.eazyportal.plugin.gradle.release.core.action.SetReleaseVersionAction
 import org.eazyportal.plugin.gradle.release.core.action.SetSnapshotVersionAction
 import org.eazyportal.plugin.gradle.release.core.action.model.ReleaseActionContext
@@ -13,9 +14,11 @@ import org.eazyportal.plugin.gradle.release.core.version.SnapshotVersionProvider
 import org.eazyportal.plugin.gradle.release.core.version.VersionIncrementProvider
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
+import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -31,24 +34,40 @@ class EazyReleasePlugin : Plugin<Project> {
         val projectActionsFactory = GradleProjectActionsFactory()
         val projectFile = FileSystemProjectFile(target.projectDir)
 
-        val setReleaseVersionTask = configureSetReleaseVersionTask(
-            projectActionsFactory,
+        val prepareRepositoryForReleaseTask = target.configurePrepareRepositoryForReleaseTask(
             releaseActionContext,
-            target,
             projectFile,
         )
-        val setSnapshotVersionTask = configureSetSnapshotVersionTask(
+        val setReleaseVersionTask = target.configureSetReleaseVersionTask(
             projectActionsFactory,
             releaseActionContext,
-            target,
+            projectFile,
+        )
+        val setSnapshotVersionTask = target.configureSetSnapshotVersionTask(
+            projectActionsFactory,
+            releaseActionContext,
             projectFile,
         )
     }
 
-    private fun configureSetReleaseVersionTask(
+    private fun Project.configurePrepareRepositoryForReleaseTask(
+        releaseActionContext: ReleaseActionContext<File>,
+        projectFile: FileSystemProjectFile
+    ): TaskProvider<ReleaseActionTask> {
+        val prepareRepositoryForReleaseAction = PrepareRepositoryForReleaseAction(
+            projectFile,
+            releaseActionContext,
+        )
+
+        return tasks.registerReleaseActionTask(
+            PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME,
+            prepareRepositoryForReleaseAction,
+        )
+    }
+
+    private fun Project.configureSetReleaseVersionTask(
         projectActionsFactory: GradleProjectActionsFactory,
         releaseActionContext: ReleaseActionContext<File>,
-        project: Project,
         projectFile: FileSystemProjectFile
     ): TaskProvider<ReleaseActionTask> {
         val setReleaseVersionAction = SetReleaseVersionAction(
@@ -59,18 +78,15 @@ class EazyReleasePlugin : Plugin<Project> {
             VersionIncrementProvider(),
         )
 
-        return project.tasks.register(
+        return tasks.registerReleaseActionTask(
             SET_RELEASE_VERSION_TASK_NAME,
-            ReleaseActionTask::class.java,
             setReleaseVersionAction,
-            SET_RELEASE_VERSION_TASK_NAME
         )
     }
 
-    private fun configureSetSnapshotVersionTask(
+    private fun Project.configureSetSnapshotVersionTask(
         projectActionsFactory: GradleProjectActionsFactory,
         releaseActionContext: ReleaseActionContext<File>,
-        project: Project,
         projectFile: FileSystemProjectFile
     ): TaskProvider<ReleaseActionTask> {
         val setSnapshotVersionAction = SetSnapshotVersionAction(
@@ -80,11 +96,9 @@ class EazyReleasePlugin : Plugin<Project> {
             SnapshotVersionProvider(),
         )
 
-        return project.tasks.register(
+        return tasks.registerReleaseActionTask(
             SET_SNAPSHOT_VERSION_TASK_NAME,
-            ReleaseActionTask::class.java,
             setSnapshotVersionAction,
-            SET_SNAPSHOT_VERSION_TASK_NAME,
         )
     }
 

@@ -18,6 +18,10 @@ class GitActions<T: Any>(
         execute(projectFile, "checkout", toRef)
     }
 
+    override fun clean(projectFile: ProjectFile<T>) {
+        execute(projectFile, "clean", "-fdx")
+    }
+
     override fun commit(projectFile: ProjectFile<T>, message: String) {
         execute(projectFile, "commit", "-m", message)
     }
