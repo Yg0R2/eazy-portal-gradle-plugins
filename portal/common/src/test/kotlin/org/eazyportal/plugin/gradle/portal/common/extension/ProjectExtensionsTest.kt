@@ -50,7 +50,7 @@ class ProjectExtensionsTest {
                         }
 
                         if ((projectName == "dummy") && (projectType != ProjectTypes.ROOT)) {
-                            // WHEN / THEN
+                            // WHEN & THEN
                             assertThatThrownBy { project.isTypeOf(projectType) }
                                 .isInstanceOf(NoSuchElementException::class.java)
                         } else {

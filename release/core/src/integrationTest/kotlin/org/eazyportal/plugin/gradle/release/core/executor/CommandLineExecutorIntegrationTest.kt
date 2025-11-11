@@ -9,7 +9,7 @@ import org.eazyportal.plugin.gradle.release.core.utils.isWindows
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 
-class CliCommandExecutorIntegrationTest : BaseIntegrationTest() {
+class CommandLineExecutorIntegrationTest : BaseIntegrationTest() {
 
     private val underTest = CommandLineExecutor()
 
