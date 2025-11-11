@@ -6,7 +6,8 @@ interface ProjectActions<T: Any> {
 
     fun getVersion(): Version
 
-    fun scmFilesToCommit(): Array<String>
+    fun scmFilesToCommit(): Array<String> =
+        arrayOf(".")
 
     fun setVersion(version: Version)
 

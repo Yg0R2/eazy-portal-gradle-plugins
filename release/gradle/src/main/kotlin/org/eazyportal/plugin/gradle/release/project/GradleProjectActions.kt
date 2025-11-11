@@ -43,8 +43,6 @@ class GradleProjectActions<T : Any>(
         }
     }
 
-    override fun scmFilesToCommit(): Array<String> = arrayOf(".")
-
     override fun setVersion(version: Version) {
         val versionLines = gradlePropertiesFile.readLines()
             .filter { it.isVersionLine() }
