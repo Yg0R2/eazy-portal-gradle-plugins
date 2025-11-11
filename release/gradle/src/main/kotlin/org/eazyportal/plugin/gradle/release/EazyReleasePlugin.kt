@@ -2,11 +2,13 @@ package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
 import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
+import org.eazyportal.plugin.release.core.action.FinalizeReleaseVersionAction
 import org.eazyportal.plugin.release.core.action.PrepareRepositoryForReleaseAction
 import org.eazyportal.plugin.release.core.action.SetReleaseVersionAction
 import org.eazyportal.plugin.release.core.action.SetSnapshotVersionAction
@@ -38,6 +40,11 @@ class EazyReleasePlugin : Plugin<Project> {
             releaseActionContext,
             projectFile,
         )
+        val finalizeReleaseVersionTask = target.configureFinalizeReleaseVersionTask(
+            projectActionsFactory,
+            releaseActionContext,
+            projectFile,
+        )
         val setReleaseVersionTask = target.configureSetReleaseVersionTask(
             projectActionsFactory,
             releaseActionContext,
@@ -47,6 +54,23 @@ class EazyReleasePlugin : Plugin<Project> {
             projectActionsFactory,
             releaseActionContext,
             projectFile,
+        )
+    }
+
+    private fun Project.configureFinalizeReleaseVersionTask(
+        projectActionsFactory: GradleProjectActionsFactory,
+        releaseActionContext: ReleaseActionContext<File>,
+        projectFile: FileSystemProjectFile,
+    ): TaskProvider<ReleaseActionTask> {
+        val finalizeReleaseVersionAction = FinalizeReleaseVersionAction(
+            projectActionsFactory,
+            projectFile,
+            releaseActionContext,
+        )
+
+        return tasks.registerReleaseActionTask(
+            FINALIZE_RELEASE_VERSION_TASK_NAME,
+            finalizeReleaseVersionAction,
         )
     }
 
