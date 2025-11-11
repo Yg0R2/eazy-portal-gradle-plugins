@@ -1,8 +1,8 @@
 package org.eazyportal.plugin.gradle.release.model
 
-import org.eazyportal.plugin.gradle.release.core.scm.ScmActions
-import org.eazyportal.plugin.gradle.release.core.scm.model.ConventionalCommitType
-import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.scm.ScmActions
+import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input

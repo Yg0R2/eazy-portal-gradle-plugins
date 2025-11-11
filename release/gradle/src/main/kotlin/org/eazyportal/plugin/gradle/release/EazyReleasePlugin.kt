@@ -1,17 +1,5 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.gradle.release.core.action.PrepareRepositoryForReleaseAction
-import org.eazyportal.plugin.gradle.release.core.action.SetReleaseVersionAction
-import org.eazyportal.plugin.gradle.release.core.action.SetSnapshotVersionAction
-import org.eazyportal.plugin.gradle.release.core.action.model.ReleaseActionContext
-import org.eazyportal.plugin.gradle.release.core.executor.CommandLineExecutor
-import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.gradle.release.core.scm.GitActions
-import org.eazyportal.plugin.gradle.release.core.scm.model.ConventionalCommitType
-import org.eazyportal.plugin.gradle.release.core.scm.model.ScmConfig
-import org.eazyportal.plugin.gradle.release.core.version.ReleaseVersionProvider
-import org.eazyportal.plugin.gradle.release.core.version.SnapshotVersionProvider
-import org.eazyportal.plugin.gradle.release.core.version.VersionIncrementProvider
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -19,6 +7,18 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
 import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
+import org.eazyportal.plugin.release.core.action.PrepareRepositoryForReleaseAction
+import org.eazyportal.plugin.release.core.action.SetReleaseVersionAction
+import org.eazyportal.plugin.release.core.action.SetSnapshotVersionAction
+import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
+import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.scm.GitActions
+import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.version.ReleaseVersionProvider
+import org.eazyportal.plugin.release.core.version.SnapshotVersionProvider
+import org.eazyportal.plugin.release.core.version.VersionIncrementProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider

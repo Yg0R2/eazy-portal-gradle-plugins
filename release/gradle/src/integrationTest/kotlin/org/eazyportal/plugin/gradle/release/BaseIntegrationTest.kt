@@ -1,14 +1,14 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.gradle.release.core.executor.CommandLineExecutor
-import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.gradle.release.core.project.ProjectActions
-import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
-import org.eazyportal.plugin.gradle.release.core.scm.GitActions
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.REMOTE
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
+import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectActions
+import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.scm.GitActions
+import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance

@@ -1,5 +1,5 @@
-import org.eazyportal.plugin.gradle.release.core.scm.model.ConventionalCommitType
-import org.eazyportal.plugin.gradle.release.core.version.model.VersionIncrement
+import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
+import org.eazyportal.plugin.release.core.version.model.VersionIncrement
 
 plugins {
     id("org.eazyportal.plugin.gradle.release-gradle")

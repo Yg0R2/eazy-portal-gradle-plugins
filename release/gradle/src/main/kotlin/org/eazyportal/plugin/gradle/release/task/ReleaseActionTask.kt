@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.gradle.release.core.action.ReleaseAction
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
+import org.eazyportal.plugin.release.core.action.ReleaseAction
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal

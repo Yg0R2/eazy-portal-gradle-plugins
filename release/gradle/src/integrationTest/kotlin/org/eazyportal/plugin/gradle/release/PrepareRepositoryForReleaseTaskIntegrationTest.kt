@@ -2,12 +2,12 @@ package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.gradle.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.MAIN_BRANCH
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.REMOTE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
+import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation

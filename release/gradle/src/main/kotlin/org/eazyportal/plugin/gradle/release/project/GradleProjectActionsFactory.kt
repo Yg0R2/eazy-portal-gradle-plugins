@@ -1,9 +1,9 @@
 package org.eazyportal.plugin.gradle.release.project
 
-import org.eazyportal.plugin.gradle.release.core.project.ProjectActions
-import org.eazyportal.plugin.gradle.release.core.project.ProjectActionsFactory
-import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
-import org.eazyportal.plugin.gradle.release.core.project.exception.InvalidProjectTypeException
+import org.eazyportal.plugin.release.core.project.ProjectActions
+import org.eazyportal.plugin.release.core.project.ProjectActionsFactory
+import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.project.exception.InvalidProjectTypeException
 import java.io.File
 
 class GradleProjectActionsFactory : ProjectActionsFactory<File> {

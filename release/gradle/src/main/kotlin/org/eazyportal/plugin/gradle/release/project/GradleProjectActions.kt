@@ -1,14 +1,14 @@
 package org.eazyportal.plugin.gradle.release.project
 
-import org.eazyportal.plugin.gradle.release.core.project.ProjectActions
-import org.eazyportal.plugin.gradle.release.core.project.ProjectFile
-import org.eazyportal.plugin.gradle.release.core.project.exception.InvalidProjectLocationException
-import org.eazyportal.plugin.gradle.release.core.project.exception.MissingProjectVersionPropertyException
-import org.eazyportal.plugin.gradle.release.core.project.exception.MultipleProjectVersionPropertyException
-import org.eazyportal.plugin.gradle.release.core.project.exception.ProjectVersionPropertyException
-import org.eazyportal.plugin.gradle.release.core.version.model.Version
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROJECT_FILES
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.release.core.project.ProjectActions
+import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.project.exception.InvalidProjectLocationException
+import org.eazyportal.plugin.release.core.project.exception.MissingProjectVersionPropertyException
+import org.eazyportal.plugin.release.core.project.exception.MultipleProjectVersionPropertyException
+import org.eazyportal.plugin.release.core.project.exception.ProjectVersionPropertyException
+import org.eazyportal.plugin.release.core.version.model.Version
 
 class GradleProjectActions<T : Any>(
     private val projectFile: ProjectFile<T>

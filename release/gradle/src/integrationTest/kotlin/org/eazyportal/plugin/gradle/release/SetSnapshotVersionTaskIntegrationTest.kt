@@ -1,12 +1,12 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.SNAPSHOT_001
-import org.eazyportal.plugin.gradle.release.core.model.VersionFixtures.SNAPSHOT_002
-import org.eazyportal.plugin.gradle.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.gradle.release.core.version.model.Version
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
+import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
+import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
+import org.eazyportal.plugin.release.core.version.model.Version
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
