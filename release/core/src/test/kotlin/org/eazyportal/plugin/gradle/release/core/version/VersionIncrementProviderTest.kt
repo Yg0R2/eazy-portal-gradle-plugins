@@ -12,6 +12,7 @@ class VersionIncrementProviderTest {
     private val underTest = VersionIncrementProvider()
 
     @MethodSource(
+        "errorVersionIncrements",
         "majorVersionIncrements",
         "minorVersionIncrements",
         "patchVersionIncrements",
@@ -23,7 +24,7 @@ class VersionIncrementProviderTest {
     fun test_provide(
         commits: List<String>,
         conventionalCommitTypes: List<ConventionalCommitType>,
-        expected: VersionIncrement?
+        expected: VersionIncrement?,
     ) {
         // GIVEN
         // WHEN
@@ -34,6 +35,14 @@ class VersionIncrementProviderTest {
     }
 
     companion object {
+        @JvmStatic
+        private fun errorVersionIncrements(): List<Arguments> =
+            listOf(
+                listOf("feature: message", "tmp: message"),
+                listOf("feature: message", "fixup: message"),
+                listOf("feature: message", "fixup!: message"),
+            ).map { Arguments.of(it, ConventionalCommitType.DEFAULT_TYPES, VersionIncrement.ERROR) }
+
         @JvmStatic
         private fun majorVersionIncrements(): List<Arguments> =
             listOf(

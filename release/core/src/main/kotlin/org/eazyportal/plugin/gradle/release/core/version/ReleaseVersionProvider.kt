@@ -21,8 +21,8 @@ class ReleaseVersionProvider {
                 }
             }
 
-            VersionIncrement.NONE -> throw InvalidVersionException(
-                "Cannot provide release version with '${VersionIncrement.NONE}' version increment for version: $version",
+            else -> throw InvalidVersionException(
+                "Cannot provide release version with '${versionIncrement.name}' version increment for version: $version"
             )
         }
 

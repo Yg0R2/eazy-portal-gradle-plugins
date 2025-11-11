@@ -4,6 +4,7 @@ enum class VersionIncrement(
     val priority: Int
 ) {
 
+    ERROR(-1),
     MAJOR(0),
     MINOR(1),
     PATCH(2),

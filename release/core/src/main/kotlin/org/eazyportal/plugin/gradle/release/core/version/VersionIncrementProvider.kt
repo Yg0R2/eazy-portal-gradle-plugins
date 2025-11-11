@@ -10,7 +10,8 @@ class VersionIncrementProvider {
         commits: List<String>,
         conventionalCommitTypes: List<ConventionalCommitType> = ConventionalCommitType.DEFAULT_TYPES
     ): VersionIncrement? =
-        commits.mapNotNull { mapToCommitType(it) }
+        commits.asSequence()
+            .mapNotNull { mapToCommitType(it) }
             .mapNotNull { mapToVersionIncrement(it, conventionalCommitTypes) }
             .minWithOrNull(compareBy { it.priority })
 
@@ -31,14 +32,17 @@ class VersionIncrementProvider {
     private fun mapToVersionIncrement(
         commitType: String,
         conventionalCommitTypes: List<ConventionalCommitType>,
-    ): VersionIncrement? =
-        if (commitType.endsWith(ConventionalCommitType.BREAKING_CHANGE_INDICATOR)) {
+    ): VersionIncrement? {
+        val versionIncrement = conventionalCommitTypes
+            .firstOrNull { it.aliases.contains(commitType) }
+            ?.versionIncrement
+
+        return if ((versionIncrement != VersionIncrement.ERROR) && commitType.endsWith(ConventionalCommitType.BREAKING_CHANGE_INDICATOR)) {
             VersionIncrement.MAJOR
         } else {
-            conventionalCommitTypes
-                .firstOrNull { it.aliases.contains(commitType) }
-                ?.versionIncrement
+            versionIncrement
         }
+    }
 
     companion object {
         private val LOGGER = LoggerFactory.getLogger(VersionIncrementProvider::class.java)

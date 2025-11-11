@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.core.scm.model
 
 import org.eazyportal.plugin.gradle.release.core.version.model.VersionIncrement
+import kotlin.collections.listOf
 
 data class ConventionalCommitType(
     val aliases: List<String>,
@@ -20,6 +21,8 @@ data class ConventionalCommitType(
         const val TYPE_DELIMITER = ':'
 
         val DEFAULT_TYPES = listOf(
+            ConventionalCommitType(listOf("tmp", "fixup", "fixup!"), VersionIncrement.ERROR),
+
             ConventionalCommitType(listOf("BREAKING CHANGE"), VersionIncrement.MAJOR),
 
             ConventionalCommitType(listOf("feat", "feature"), VersionIncrement.MINOR), // implement new feature

@@ -40,14 +40,19 @@ class ReleaseVersionProviderTest {
         listOf(
             RELEASE_001,
             SNAPSHOT_001,
-        ).map { version ->
-            DynamicTest.dynamicTest("with '${VersionIncrement.NONE}' version increment for version: $version") {
-                // GIVEN
-                // WHEN & THEN
-                assertThatThrownBy {
-                    underTest.provide(version, VersionIncrement.NONE)
-                }.isInstanceOf(InvalidVersionException::class.java)
-                    .hasMessage("Cannot provide release version with '${VersionIncrement.NONE}' version increment for version: $version")
+        ).flatMap { version ->
+            listOf(
+                VersionIncrement.ERROR,
+                VersionIncrement.NONE,
+            ).map { versionIncrement ->
+                DynamicTest.dynamicTest("with '${versionIncrement.name}' version increment for version: $version") {
+                    // GIVEN
+                    // WHEN & THEN
+                    assertThatThrownBy {
+                        underTest.provide(version, versionIncrement)
+                    }.isInstanceOf(InvalidVersionException::class.java)
+                        .hasMessage("Cannot provide release version with '${versionIncrement.name}' version increment for version: $version")
+                }
             }
         }
 
