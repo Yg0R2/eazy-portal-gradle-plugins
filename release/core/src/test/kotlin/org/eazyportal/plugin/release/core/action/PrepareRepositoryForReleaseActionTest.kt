@@ -6,7 +6,9 @@ import io.mockk.verifySequence
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 
 class PrepareRepositoryForReleaseActionTest : ReleaseActionBaseTest() {
@@ -19,50 +21,21 @@ class PrepareRepositoryForReleaseActionTest : ReleaseActionBaseTest() {
 
     private lateinit var underTest: PrepareRepositoryForReleaseAction<File>
 
-    @Test
-    fun test_execute_withGitFlow() {
+    @MethodSource("scmConfigs")
+    @ParameterizedTest
+    fun test_execute(scmConfig: ScmConfig) {
         // GIVEN
         justRun { scmActions.clean(any()) }
-        justRun { scmActions.fetch(projectFile, ScmConfig.GIT_FLOW.remote) }
-        justRun { scmActions.checkout(any(), ScmConfig.GIT_FLOW.featureBranch) }
-
-        underTest = PrepareRepositoryForReleaseAction(
-            createProjectContext(projectActions),
-            createReleaseActionContext(scmActions = scmActions),
-        )
-
-        // WHEN
-        underTest.execute()
-
-        // THEN
-        verifySequence {
-            repeat(allProjectFiles.size) {
-                projectActions.hashCode() // because of createProjectContext
-            }
-
-            allProjectFiles.forEach {
-                scmActions.clean(it)
-            }
-
-            scmActions.fetch(projectFile, ScmConfig.GIT_FLOW.remote)
-
-            allProjectFiles.forEach {
-                scmActions.checkout(it, ScmConfig.GIT_FLOW.featureBranch)
-            }
+        justRun { scmActions.fetch(projectFile, scmConfig.remote) }
+        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+            justRun { scmActions.checkout(any(), scmConfig.featureBranch) }
         }
-    }
-
-    @Test
-    fun test_execute_withTrunkBasedFlow() {
-        // GIVEN
-        justRun { scmActions.clean(any()) }
-        justRun { scmActions.fetch(projectFile, ScmConfig.TRUNK_BASED_FLOW.remote) }
 
         underTest = PrepareRepositoryForReleaseAction(
             createProjectContext(projectActions),
             createReleaseActionContext(
                 scmActions = scmActions,
-                scmConfig = ScmConfig.TRUNK_BASED_FLOW,
+                scmConfig = scmConfig,
             ),
         )
 
@@ -79,8 +52,23 @@ class PrepareRepositoryForReleaseActionTest : ReleaseActionBaseTest() {
                 scmActions.clean(it)
             }
 
-            scmActions.fetch(projectFile, ScmConfig.TRUNK_BASED_FLOW.remote)
+            scmActions.fetch(projectFile, scmConfig.remote)
+
+            if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+                allProjectFiles.forEach {
+                    scmActions.checkout(it, scmConfig.featureBranch)
+                }
+            }
         }
+    }
+
+    companion object {
+        @JvmStatic
+        fun scmConfigs() = listOf(
+            Arguments.of(ScmConfig.GIT_FLOW),
+            Arguments.of(ScmConfig.TRUNK_BASED_FLOW),
+            Arguments.of(ScmConfig("feature-branch", "release-branch", "remote-repository"))
+        )
     }
 
 }

@@ -1,8 +1,10 @@
 package org.eazyportal.plugin.gradle.release.action
 
+import org.eazyportal.plugin.gradle.release.extension.getOrElse
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions
 import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.ScmConstants
@@ -34,7 +36,7 @@ object ReleaseActionContextFactory {
 
             override val scmActions: ScmActions<File> by lazy {
                 eazyReleaseExtension.scmActions
-                    .getOrElse(GitActions(CommandLineExecutor()))
+                    .getOrElse { GitActions(CommandLineExecutor()) }
             }
 
             override val scmConfig: ScmConfig by lazy {
@@ -43,11 +45,13 @@ object ReleaseActionContextFactory {
                     ?: run {
                         val releaseBranch = target.providers
                             .systemProperty("releaseBranch")
-                            .getOrElse(ScmConfig.Companion.GIT_FLOW.releaseBranch)
+                            .getOrElse { ScmConfig.GIT_FLOW.releaseBranch }
 
                         val featureBranch = target.providers
                             .systemProperty("featureBranch")
-                            .getOrElse(ScmConfig.Companion.GIT_FLOW.featureBranch)
+                            .getOrElse {
+                                scmActions.getCurrentBranch(FileSystemProjectFile(target.projectDir))
+                            }
 
                         ScmConfig(featureBranch, releaseBranch, ScmConstants.REMOTE)
                     }

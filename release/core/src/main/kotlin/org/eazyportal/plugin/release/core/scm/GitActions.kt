@@ -36,7 +36,7 @@ class GitActions<T: Any>(
     override fun fetch(projectFile: ProjectFile<T>, remote: String) {
         execute(projectFile, "fetch", remote, "--tags", "--prune", "--prune-tags", "--recurse-submodules")
 
-        val currentBranchName = execute(projectFile, "rev-parse", "--abbrev-ref", "HEAD")
+        val currentBranchName = getCurrentBranch(projectFile)
         execute(projectFile, "reset", "--hard", "$remote/$currentBranchName")
     }
 
@@ -46,6 +46,9 @@ class GitActions<T: Any>(
             .let { execute(projectFile, "log", "--pretty=format:%s", it) }
             .split(LINE_BREAK_REGEX)
             .filter { it.isNotBlank() }
+
+    override fun getCurrentBranch(projectFile: ProjectFile<T>): String =
+        execute(projectFile, "rev-parse", "--abbrev-ref", "HEAD")
 
     override fun getLastTag(projectFile: ProjectFile<T>, fromRef: String): String =
         execute(projectFile, "describe", "--abbrev=0", "--tags", fromRef)

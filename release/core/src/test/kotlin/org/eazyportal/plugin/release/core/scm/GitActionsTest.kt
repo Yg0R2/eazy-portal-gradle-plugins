@@ -232,6 +232,26 @@ class GitActionsTest {
     }
 
     @Test
+    fun test_getCurrentBranch() {
+        // GIVEN
+        val currentBranchName = "branch"
+
+        every {
+            commandExecutor.execute(projectFile, GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD")
+        } returns currentBranchName
+
+        // WHEN
+        val actual = underTest.getCurrentBranch(projectFile)
+
+        // THEN
+        assertThat(actual).isEqualTo(currentBranchName)
+
+        verify(exactly = 1) {
+            commandExecutor.execute(projectFile, GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD")
+        }
+    }
+
+    @Test
     fun test_getLastTag() {
         // GIVEN
         every {

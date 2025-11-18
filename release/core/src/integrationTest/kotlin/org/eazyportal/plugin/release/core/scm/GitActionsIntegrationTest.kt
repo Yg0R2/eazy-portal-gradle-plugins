@@ -10,10 +10,13 @@ import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_002
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_003
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions.Companion.GIT_EXECUTABLE
+import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 class GitActionsIntegrationTest : BaseIntegrationTest() {
 
@@ -217,6 +220,21 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
         // and WHEN & THEN (get commits between the last and the latest one)
         assertThat(underTest.getCommits(projectFile = projectFile, fromRef = commitHashes[2], toRef = commitHashes[0]))
             .containsExactly("build: add gradle.properties", "docs: add README")
+    }
+
+    @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)
+    @ParameterizedTest
+    fun test_getCurrentBranch(testBranch: String) {
+        // GIVEN
+        if (testBranch != RELEASE_BRANCH) {
+            git("checkout", "-b", testBranch)
+        }
+
+        // WHEN
+        val actual = underTest.getCurrentBranch(projectFile)
+
+        // THEN
+        assertThat(actual).isEqualTo(testBranch)
     }
 
     @Test

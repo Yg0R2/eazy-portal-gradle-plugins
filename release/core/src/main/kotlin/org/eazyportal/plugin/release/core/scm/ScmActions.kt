@@ -17,6 +17,8 @@ interface ScmActions<T : Any> {
 
     fun getCommits(projectFile: ProjectFile<T>, fromRef: String? = null, toRef: String = "HEAD"): List<String>
 
+    fun getCurrentBranch(projectFile: ProjectFile<T>): String
+
     fun getLastTag(projectFile: ProjectFile<T>, fromRef: String = "HEAD"): String
 
     fun getSubmodules(projectFile: ProjectFile<T>): List<String>
