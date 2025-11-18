@@ -64,8 +64,10 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetReleaseVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(scmActions = scmActions),
+            createReleaseActionContext(),
             releaseVersionProvider,
+            scmActions,
+            ScmConfig.GIT_FLOW,
             versionIncrementProvider,
         )
 
@@ -123,11 +125,10 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetReleaseVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(
-                scmActions = scmActions,
-                scmConfig = ScmConfig.TRUNK_BASED_FLOW,
-            ),
+            createReleaseActionContext(),
             releaseVersionProvider,
+            scmActions,
+            ScmConfig.TRUNK_BASED_FLOW,
             versionIncrementProvider,
         )
 
@@ -188,11 +189,10 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetReleaseVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(
-                isForceRelease = true,
-                scmActions = scmActions,
-            ),
+            createReleaseActionContext(isForceRelease = true),
             releaseVersionProvider,
+            scmActions,
+            ScmConfig.GIT_FLOW,
             versionIncrementProvider,
         )
 
@@ -238,8 +238,10 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetReleaseVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(scmActions = scmActions),
+            createReleaseActionContext(),
             releaseVersionProvider,
+            scmActions,
+            ScmConfig.GIT_FLOW,
             versionIncrementProvider,
         )
 

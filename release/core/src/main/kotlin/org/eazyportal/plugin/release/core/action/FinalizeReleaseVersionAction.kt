@@ -1,13 +1,13 @@
 package org.eazyportal.plugin.release.core.action
 
-import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.project.model.ProjectContext
+import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class FinalizeReleaseVersionAction<T : Any>(
     private val projectContext: ProjectContext<T>,
-    private val releaseActionContext: ReleaseActionContext<T>,
+    private val scmActions: ScmActions<T>,
 ) : ReleaseAction<T> {
 
     override fun execute() {
@@ -18,10 +18,10 @@ class FinalizeReleaseVersionAction<T : Any>(
         projectContext.all.reversed().forEach { (projectActions, projectFile) ->
             val csmFilesToCommit = projectActions.scmFilesToCommit()
 
-            releaseActionContext.scmActions.add(projectFile, *csmFilesToCommit)
-            releaseActionContext.scmActions.commit(projectFile, "Release version: $releaseVersion")
+            scmActions.add(projectFile, *csmFilesToCommit)
+            scmActions.commit(projectFile, "Release version: $releaseVersion")
 
-            releaseActionContext.scmActions.tag(projectFile, releaseVersion)
+            scmActions.tag(projectFile, releaseVersion)
         }
     }
 

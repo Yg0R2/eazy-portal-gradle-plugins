@@ -3,6 +3,8 @@ package org.eazyportal.plugin.release.core.action
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.project.model.ProjectContext
+import org.eazyportal.plugin.release.core.scm.ScmActions
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.ReleaseVersionProvider
 import org.eazyportal.plugin.release.core.version.VersionComparator
 import org.eazyportal.plugin.release.core.version.VersionIncrementProvider
@@ -12,8 +14,10 @@ import org.slf4j.LoggerFactory
 
 class SetReleaseVersionAction<T : Any>(
     private val projectContext: ProjectContext<T>,
-    private val releaseActionContext: ReleaseActionContext<T>,
+    private val releaseActionContext: ReleaseActionContext,
     private val releaseVersionProvider: ReleaseVersionProvider,
+    private val scmActions: ScmActions<T>,
+    private val scmConfig: ScmConfig,
     private val versionIncrementProvider: VersionIncrementProvider,
 ) : ReleaseAction<T> {
 
@@ -32,10 +36,10 @@ class SetReleaseVersionAction<T : Any>(
     }
 
     private fun checkoutToReleaseBranch(projectFile: ProjectFile<T>) {
-        if (releaseActionContext.scmConfig.releaseBranch != releaseActionContext.scmConfig.featureBranch) {
-            releaseActionContext.scmActions.checkout(projectFile, releaseActionContext.scmConfig.releaseBranch)
+        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+            scmActions.checkout(projectFile, scmConfig.releaseBranch)
 
-            releaseActionContext.scmActions.mergeNoCommit(projectFile, releaseActionContext.scmConfig.featureBranch)
+            scmActions.mergeNoCommit(projectFile, scmConfig.featureBranch)
         }
     }
 
@@ -64,12 +68,12 @@ class SetReleaseVersionAction<T : Any>(
 
     private fun getVersionIncrementFromScm(projectFile: ProjectFile<T>): VersionIncrement? {
         val lastTag = runCatching {
-            releaseActionContext.scmActions.getLastTag(projectFile)
+            scmActions.getLastTag(projectFile)
         }.onFailure {
             LOGGER.warn("Ignoring missing Git tag from release version calculation.")
         }.getOrNull()
 
-        return releaseActionContext.scmActions.getCommits(projectFile, lastTag)
+        return scmActions.getCommits(projectFile, lastTag)
             .let { versionIncrementProvider.provide(it, releaseActionContext.conventionalCommitTypes) }
     }
 

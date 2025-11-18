@@ -3,17 +3,16 @@ package org.eazyportal.plugin.release.core.project.model
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 
-abstract class ProjectContext<T : Any> {
+data class ProjectContext<T : Any>(
+    val root: Pair<T>,
+    val sub: Set<Pair<T>>,
+) {
 
-    open val all: Set<ProjectFileToProjectActionsPair<T>> by lazy {
+    val all: Set<Pair<T>> by lazy {
         setOf(root) + sub
     }
 
-    abstract val root: ProjectFileToProjectActionsPair<T>
-
-    abstract val sub: Set<ProjectFileToProjectActionsPair<T>>
-
-    data class ProjectFileToProjectActionsPair<T : Any>(
+    data class Pair<T : Any>(
         val projectActions: ProjectActions<T>,
         val projectFile: ProjectFile<T>,
     )

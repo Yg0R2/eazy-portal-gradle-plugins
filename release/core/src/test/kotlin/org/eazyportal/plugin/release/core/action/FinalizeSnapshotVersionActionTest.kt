@@ -23,10 +23,7 @@ class FinalizeSnapshotVersionActionTest : ReleaseActionBaseTest() {
 
     @BeforeEach
     fun setUp() {
-        underTest = FinalizeSnapshotVersionAction(
-            createProjectContext(projectActions),
-            createReleaseActionContext(scmActions = scmActions)
-        )
+        underTest = FinalizeSnapshotVersionAction(createProjectContext(projectActions), scmActions)
     }
 
     @Test

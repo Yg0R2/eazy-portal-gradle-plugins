@@ -1,15 +1,17 @@
 package org.eazyportal.plugin.release.core.action
 
-import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.project.model.ProjectContext
+import org.eazyportal.plugin.release.core.scm.ScmActions
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.SnapshotVersionProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class SetSnapshotVersionAction<T : Any>(
     private val projectContext: ProjectContext<T>,
-    private val releaseActionContext: ReleaseActionContext<T>,
+    private val scmActions: ScmActions<T>,
+    private val scmConfig: ScmConfig,
     private val snapshotVersionProvider: SnapshotVersionProvider,
 ) : ReleaseAction<T> {
 
@@ -29,10 +31,10 @@ class SetSnapshotVersionAction<T : Any>(
     }
 
     private fun checkoutToFeatureBranch(projectFile: ProjectFile<T>) {
-        if (releaseActionContext.scmConfig.releaseBranch != releaseActionContext.scmConfig.featureBranch) {
-            releaseActionContext.scmActions.checkout(projectFile, releaseActionContext.scmConfig.featureBranch)
+        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
 // TODO: release-branch is master, feature-branch is current branch (where build started)
-            releaseActionContext.scmActions.mergeNoCommit(projectFile, releaseActionContext.scmConfig.releaseBranch)
+            scmActions.mergeNoCommit(projectFile, scmConfig.releaseBranch)
         }
     }
 

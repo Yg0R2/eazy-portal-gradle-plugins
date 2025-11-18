@@ -42,7 +42,8 @@ class SetSnapshotVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetSnapshotVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(scmActions = scmActions),
+            scmActions,
+            ScmConfig.GIT_FLOW,
             snapshotVersionProvider,
         )
 
@@ -79,10 +80,8 @@ class SetSnapshotVersionActionTest : ReleaseActionBaseTest() {
 
         underTest = SetSnapshotVersionAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(
-                scmActions = scmActions,
-                scmConfig = ScmConfig.TRUNK_BASED_FLOW,
-            ),
+            scmActions,
+            ScmConfig.TRUNK_BASED_FLOW,
             snapshotVersionProvider,
         )
 

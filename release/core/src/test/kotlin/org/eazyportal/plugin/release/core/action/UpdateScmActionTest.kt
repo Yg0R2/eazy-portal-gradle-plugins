@@ -29,10 +29,8 @@ class UpdateScmActionTest : ReleaseActionBaseTest() {
 
         underTest = UpdateScmAction(
             createProjectContext(projectActions),
-            createReleaseActionContext(
-                scmActions = scmActions,
-                scmConfig = scmConfig,
-            ),
+            scmActions,
+            scmConfig,
         )
 
         // WHEN

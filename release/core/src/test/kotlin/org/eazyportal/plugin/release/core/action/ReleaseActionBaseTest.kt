@@ -36,43 +36,26 @@ abstract class ReleaseActionBaseTest {
         projectActions: ProjectActions<File>,
         projectFile: ProjectFile<File> = this.projectFile,
     ): ProjectContext<File> =
-        object : ProjectContext<File>() {
-
-            override val root: ProjectFileToProjectActionsPair<File> =
-                ProjectFileToProjectActionsPair(projectActions, projectFile)
-
-            override val sub: Set<ProjectFileToProjectActionsPair<File>> =
-                SUBMODULE_NAMES
-                    .map { ProjectFileToProjectActionsPair(projectActions, projectFile.resolve(it)) }
-                    .toSet()
-
-    }
+        ProjectContext(
+            root = ProjectContext.Pair(projectActions, projectFile),
+            sub = SUBMODULE_NAMES
+                .map { ProjectContext.Pair(projectActions, projectFile.resolve(it)) }
+                .toSet()
+        )
 
     protected fun createReleaseActionContext(
         conventionalCommitTypes: List<ConventionalCommitType> = ConventionalCommitType.DEFAULT_TYPES,
         isForceRelease: Boolean = false,
-        scmActions: ScmActions<File>,
-        scmConfig: ScmConfig = ScmConfig.GIT_FLOW,
-    ): ReleaseActionContext<File> =
-        object : ReleaseActionContext<File>() {
-
-            override val conventionalCommitTypes: List<ConventionalCommitType> =
-                conventionalCommitTypes
-
-            override val isForceRelease: Boolean =
-                isForceRelease
-
-            override val scmActions: ScmActions<File> =
-                scmActions
-
-            override val scmConfig: ScmConfig =
-                scmConfig
-
-        }
+    ): ReleaseActionContext =
+        ReleaseActionContext(
+            conventionalCommitTypes,
+            isForceRelease,
+        )
 
     companion object {
         @JvmStatic
         protected val FILES_TO_COMMIT = arrayOf(".")
+
         @JvmStatic
         protected val SUBMODULE_NAMES = listOf("ui")
     }
