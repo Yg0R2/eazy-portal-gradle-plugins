@@ -9,6 +9,7 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask.Companion.RELEASE_TASKS_GROUP
+import org.eazyportal.plugin.release.core.project.exception.ProjectException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
@@ -17,7 +18,10 @@ import org.gradle.kotlin.dsl.register
 class EazyReleasePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
-        // TODO: validate root project
+        if (target != target.rootProject) {
+            throw ProjectException("Plugin can be applied only to the root project.")
+        }
+
         target.extensions.create<EazyReleasePluginExtension>("eazyRelease")
 
         val setReleaseVersionTask = target.tasks
