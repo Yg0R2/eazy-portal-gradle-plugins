@@ -1,7 +1,9 @@
 package org.eazyportal.plugin.gradle.release
 
+import org.eazyportal.plugin.gradle.release.action.ReleaseActionContextFactory
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
+import org.eazyportal.plugin.gradle.release.project.ProjectContextFactory
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -10,18 +12,10 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SN
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
 import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
-import org.eazyportal.plugin.release.core.action.FinalizeReleaseVersionAction
-import org.eazyportal.plugin.release.core.action.FinalizeSnapshotVersionAction
-import org.eazyportal.plugin.release.core.action.PrepareRepositoryForReleaseAction
-import org.eazyportal.plugin.release.core.action.SetReleaseVersionAction
-import org.eazyportal.plugin.release.core.action.SetSnapshotVersionAction
-import org.eazyportal.plugin.release.core.action.UpdateScmAction
+import org.eazyportal.plugin.release.core.action.*
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
-import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.release.core.scm.GitActions
-import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
-import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.project.model.ProjectContext
 import org.eazyportal.plugin.release.core.version.ReleaseVersionProvider
 import org.eazyportal.plugin.release.core.version.SnapshotVersionProvider
 import org.eazyportal.plugin.release.core.version.VersionIncrementProvider
@@ -35,49 +29,46 @@ class EazyReleasePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         val eazyReleaseExtension = target.extensions.create<EazyReleasePluginExtension>("eazyRelease")
-        val releaseActionContext = createReleaseActionContext(eazyReleaseExtension, target)
+        val releaseActionContext = ReleaseActionContextFactory.create(eazyReleaseExtension, target)
 
-        val projectActionsFactory = GradleProjectActionsFactory()
-        val projectFile = FileSystemProjectFile(target.projectDir)
+        val projectContext = ProjectContextFactory.create(
+            GradleProjectActionsFactory(),
+            FileSystemProjectFile(target.projectDir),
+            lazy { releaseActionContext.scmActions },
+        )
 
-        val prepareRepositoryForReleaseTask = target.configurePrepareRepositoryForReleaseTask(
+        val prepareRepositoryForReleaseTask = target.registerPrepareRepositoryForReleaseTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
-        val finalizeReleaseVersionTask = target.configureFinalizeReleaseVersionTask(
-            projectActionsFactory,
+        val finalizeReleaseVersionTask = target.registerFinalizeReleaseVersionTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
-        val finalizeSnapshotVersionTask = target.configureFinalizeSnapshotVersionTask(
-            projectActionsFactory,
+        val finalizeSnapshotVersionTask = target.registerFinalizeSnapshotVersionTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
-        val setReleaseVersionTask = target.configureSetReleaseVersionTask(
-            projectActionsFactory,
+        val setReleaseVersionTask = target.registerSetReleaseVersionTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
-        val setSnapshotVersionTask = target.configureSetSnapshotVersionTask(
-            projectActionsFactory,
+        val setSnapshotVersionTask = target.registerSetSnapshotVersionTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
-        val updateScmTask = target.configureUpdateScmTask(
+        val updateScmTask = target.registerUpdateScmTask(
+            projectContext,
             releaseActionContext,
-            projectFile,
         )
     }
 
-    private fun Project.configureFinalizeReleaseVersionTask(
-        projectActionsFactory: GradleProjectActionsFactory,
+    private fun Project.registerFinalizeReleaseVersionTask(
+        projectContext: ProjectContext<File>,
         releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile,
     ): TaskProvider<ReleaseActionTask> {
         val finalizeReleaseVersionAction = FinalizeReleaseVersionAction(
-            projectActionsFactory,
-            projectFile,
+            projectContext,
             releaseActionContext,
         )
 
@@ -87,14 +78,12 @@ class EazyReleasePlugin : Plugin<Project> {
         )
     }
 
-    private fun Project.configureFinalizeSnapshotVersionTask(
-        projectActionsFactory: GradleProjectActionsFactory,
+    private fun Project.registerFinalizeSnapshotVersionTask(
+        projectContext: ProjectContext<File>,
         releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile,
     ): TaskProvider<ReleaseActionTask> {
         val finalizeSnapshotVersionAction = FinalizeSnapshotVersionAction(
-            projectActionsFactory,
-            projectFile,
+            projectContext,
             releaseActionContext,
         )
 
@@ -104,12 +93,12 @@ class EazyReleasePlugin : Plugin<Project> {
         )
     }
 
-    private fun Project.configurePrepareRepositoryForReleaseTask(
+    private fun Project.registerPrepareRepositoryForReleaseTask(
+        projectContext: ProjectContext<File>,
         releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile
     ): TaskProvider<ReleaseActionTask> {
         val prepareRepositoryForReleaseAction = PrepareRepositoryForReleaseAction(
-            projectFile,
+            projectContext,
             releaseActionContext,
         )
 
@@ -119,14 +108,12 @@ class EazyReleasePlugin : Plugin<Project> {
         )
     }
 
-    private fun Project.configureSetReleaseVersionTask(
-        projectActionsFactory: GradleProjectActionsFactory,
+    private fun Project.registerSetReleaseVersionTask(
+        projectContext: ProjectContext<File>,
         releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile
     ): TaskProvider<ReleaseActionTask> {
         val setReleaseVersionAction = SetReleaseVersionAction(
-            projectActionsFactory,
-            projectFile,
+            projectContext,
             releaseActionContext,
             ReleaseVersionProvider(),
             VersionIncrementProvider(),
@@ -138,14 +125,12 @@ class EazyReleasePlugin : Plugin<Project> {
         )
     }
 
-    private fun Project.configureSetSnapshotVersionTask(
-        projectActionsFactory: GradleProjectActionsFactory,
+    private fun Project.registerSetSnapshotVersionTask(
+        projectContext: ProjectContext<File>,
         releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile
     ): TaskProvider<ReleaseActionTask> {
         val setSnapshotVersionAction = SetSnapshotVersionAction(
-            projectActionsFactory,
-            projectFile,
+            projectContext,
             releaseActionContext,
             SnapshotVersionProvider(),
         )
@@ -156,13 +141,13 @@ class EazyReleasePlugin : Plugin<Project> {
         )
     }
 
-    private fun Project.configureUpdateScmTask(
-        releaseActionContext: ReleaseActionContext<File>,
-        projectFile: FileSystemProjectFile
+    private fun Project.registerUpdateScmTask(
+        projectContext: ProjectContext<File>,
+        releaseActionContext: ReleaseActionContext<File>
     ): TaskProvider<ReleaseActionTask> {
         val updateScmActions = UpdateScmAction(
-            projectFile,
-            releaseActionContext
+            projectContext,
+            releaseActionContext,
         )
 
         return tasks.registerReleaseActionTask(
@@ -170,30 +155,5 @@ class EazyReleasePlugin : Plugin<Project> {
             updateScmActions,
         )
     }
-
-    private fun createReleaseActionContext(
-        eazyReleaseExtension: EazyReleasePluginExtension,
-        target: Project
-    ): ReleaseActionContext<File> = ReleaseActionContext(
-        conventionalCommitTypesProvider = {
-            eazyReleaseExtension.conventionalCommitTypes
-                .get()
-                .ifEmpty { ConventionalCommitType.DEFAULT_TYPES }
-        },
-        isForceReleaseProvider = {
-            target.providers
-                .systemProperty("forceRelease")
-                .orNull
-                .toBoolean()
-        },
-        scmActionsProvider = {
-            eazyReleaseExtension.scmActions
-                .getOrElse(GitActions(CommandLineExecutor()))
-        },
-        scmConfigProvider = {
-            eazyReleaseExtension.scmConfig
-                .getOrElse(ScmConfig.GIT_FLOW)
-        }
-    )
 
 }

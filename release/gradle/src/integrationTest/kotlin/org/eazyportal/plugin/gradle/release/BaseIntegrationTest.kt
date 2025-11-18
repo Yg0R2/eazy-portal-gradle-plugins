@@ -7,7 +7,7 @@ import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
@@ -122,7 +122,7 @@ abstract class BaseIntegrationTest {
         copyIntoFromResources("README.adoc")
 
         with(FileSystemProjectFile(this)) {
-            gitActions.execute(this, "init", "--initial-branch=$MAIN_BRANCH")
+            gitActions.execute(this, "init", "--initial-branch=$RELEASE_BRANCH")
             gitActions.add(this, ".gitattributes", ".gitignore", "README.adoc")
             gitActions.commit(this, "initial commit")
         }

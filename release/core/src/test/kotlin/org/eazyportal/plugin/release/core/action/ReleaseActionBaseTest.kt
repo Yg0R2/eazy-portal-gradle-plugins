@@ -1,11 +1,11 @@
 package org.eazyportal.plugin.release.core.action
 
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.project.model.ProjectContext
 import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
@@ -15,37 +15,66 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 @ExtendWith(MockKExtension::class)
+@MockKExtension.ConfirmVerification
 abstract class ReleaseActionBaseTest {
-
-    protected lateinit var allProjectFiles: Set<ProjectFile<File>>
 
     protected lateinit var projectFile: ProjectFile<File>
 
-    @MockK
-    protected lateinit var releaseActionContext: ReleaseActionContext<File>
+    protected lateinit var allProjectFiles: Set<ProjectFile<File>>
 
-    @MockK
-    protected lateinit var scmActions: ScmActions<File>
-
-    protected lateinit var subModuleProjectFiles: Set<ProjectFile<File>>
+    protected lateinit var subProjectFiles: Set<ProjectFile<File>>
 
     @BeforeEach
     fun setUp(@TempDir workingDir: File) {
         projectFile = FileSystemProjectFile(workingDir)
-        subModuleProjectFiles = setOf(projectFile.resolve(SUBMODULE_NAME))
-        allProjectFiles = setOf(projectFile) + subModuleProjectFiles
 
-        every { releaseActionContext.conventionalCommitTypesProvider } returns { ConventionalCommitType.DEFAULT_TYPES }
-        every { releaseActionContext.isForceReleaseProvider } returns { false }
-        every { releaseActionContext.scmActionsProvider } returns { scmActions }
-        every { releaseActionContext.scmConfigProvider } returns { ScmConfig.GIT_FLOW }
-
-        every { scmActions.getSubmodules(projectFile) } returns listOf(SUBMODULE_NAME)
+        subProjectFiles = SUBMODULE_NAMES.map { projectFile.resolve(it) }.toSet()
+        allProjectFiles = setOf(projectFile) + subProjectFiles
     }
 
+    protected fun createProjectContext(
+        projectActions: ProjectActions<File>,
+        projectFile: ProjectFile<File> = this.projectFile,
+    ): ProjectContext<File> =
+        object : ProjectContext<File>() {
+
+            override val root: ProjectFileToProjectActionsPair<File> =
+                ProjectFileToProjectActionsPair(projectActions, projectFile)
+
+            override val sub: Set<ProjectFileToProjectActionsPair<File>> =
+                SUBMODULE_NAMES
+                    .map { ProjectFileToProjectActionsPair(projectActions, projectFile.resolve(it)) }
+                    .toSet()
+
+    }
+
+    protected fun createReleaseActionContext(
+        conventionalCommitTypes: List<ConventionalCommitType> = ConventionalCommitType.DEFAULT_TYPES,
+        isForceRelease: Boolean = false,
+        scmActions: ScmActions<File>,
+        scmConfig: ScmConfig = ScmConfig.GIT_FLOW,
+    ): ReleaseActionContext<File> =
+        object : ReleaseActionContext<File>() {
+
+            override val conventionalCommitTypes: List<ConventionalCommitType> =
+                conventionalCommitTypes
+
+            override val isForceRelease: Boolean =
+                isForceRelease
+
+            override val scmActions: ScmActions<File> =
+                scmActions
+
+            override val scmConfig: ScmConfig =
+                scmConfig
+
+        }
+
     companion object {
-        protected const val FILE_TO_COMMIT = "."
-        protected const val SUBMODULE_NAME = "ui"
+        @JvmStatic
+        protected val FILES_TO_COMMIT = arrayOf(".")
+        @JvmStatic
+        protected val SUBMODULE_NAMES = listOf("ui")
     }
 
 }

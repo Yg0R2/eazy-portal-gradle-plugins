@@ -3,20 +3,18 @@ package org.eazyportal.plugin.release.core.action
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.justRun
-import io.mockk.mockk
 import io.mockk.verifySequence
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.project.ProjectActions
-import org.eazyportal.plugin.release.core.project.ProjectActionsFactory
+import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.exception.ScmActionException
 import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.ReleaseVersionProvider
 import org.eazyportal.plugin.release.core.version.VersionIncrementProvider
 import org.eazyportal.plugin.release.core.version.model.VersionIncrement
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -26,36 +24,26 @@ import java.io.File
 class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
     @MockK
-    private lateinit var projectActionsFactory: ProjectActionsFactory<File>
+    private lateinit var projectActions: ProjectActions<File>
 
     @MockK
     private lateinit var releaseVersionProvider: ReleaseVersionProvider
+
+    @MockK
+    private lateinit var scmActions: ScmActions<File>
 
     @MockK
     private lateinit var versionIncrementProvider: VersionIncrementProvider
 
     private lateinit var underTest: SetReleaseVersionAction<File>
 
-    @BeforeEach
-    fun setUp() {
-        underTest = SetReleaseVersionAction(
-            projectActionsFactory,
-            projectFile,
-            releaseActionContext,
-            releaseVersionProvider,
-            versionIncrementProvider,
-        )
-    }
-
     @Test
     fun test_execute_withGitFlow() {
         // GIVEN
-        every { releaseActionContext.scmConfigProvider() } returns ScmConfig.GIT_FLOW
-
         every { scmActions.getLastTag(projectFile) } returns GIT_TAG
         every { scmActions.getCommits(projectFile, GIT_TAG) } returns COMMITS
 
-        subModuleProjectFiles.forEach {
+        subProjectFiles.forEach {
             every { scmActions.getLastTag(it) } throws ScmActionException(null)
             every { scmActions.getCommits(it, null) } returns COMMITS
         }
@@ -64,46 +52,49 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
         } returns VERSION_INCREMENT
 
-        val projectActions: ProjectActions<File> = mockk {
-            every { getVersion() } returns SNAPSHOT_001
-            justRun { setVersion(RELEASE_001) }
-        }
-
-        every { projectActionsFactory.create(any()) } returns projectActions
+        every { projectActions.getVersion() } returns SNAPSHOT_001
 
         every { releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT) } returns RELEASE_001
 
         allProjectFiles.forEach {
             justRun { scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch) }
             justRun { scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch) }
+            justRun { projectActions.setVersion(RELEASE_001) }
         }
+
+        underTest = SetReleaseVersionAction(
+            createProjectContext(projectActions),
+            createReleaseActionContext(scmActions = scmActions),
+            releaseVersionProvider,
+            versionIncrementProvider,
+        )
 
         // WHEN
         underTest.execute()
 
         // THEN
         verifySequence {
-            scmActions.getSubmodules(projectFile)
+            repeat(allProjectFiles.size) {
+                projectActions.hashCode() // because of createProjectContext
+            }
+
             scmActions.getLastTag(projectFile)
             scmActions.getCommits(projectFile, GIT_TAG)
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            projectActionsFactory.create(projectFile)
             projectActions.getVersion()
             releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
-            subModuleProjectFiles.forEach {
+
+            subProjectFiles.forEach {
                 scmActions.getLastTag(it)
-                scmActions.getCommits(it, null)
-            }
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            subModuleProjectFiles.forEach {
-                projectActionsFactory.create(it)
+                scmActions.getCommits(it)
+                versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
                 projectActions.getVersion()
+                releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
             }
-            releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
+
             allProjectFiles.forEach {
                 scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch)
                 scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch)
-                projectActionsFactory.create(it)
                 projectActions.setVersion(RELEASE_001)
             }
         }
@@ -112,12 +103,10 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
     @Test
     fun test_execute_withTrunkBasedFlow() {
         // GIVEN
-        every { releaseActionContext.scmConfigProvider() } returns ScmConfig.TRUNK_BASED_FLOW
-
         every { scmActions.getLastTag(projectFile) } returns GIT_TAG
         every { scmActions.getCommits(projectFile, GIT_TAG) } returns COMMITS
 
-        subModuleProjectFiles.forEach {
+        subProjectFiles.forEach {
             every { scmActions.getLastTag(it) } throws ScmActionException(null)
             every { scmActions.getCommits(it, null) } returns COMMITS
         }
@@ -126,39 +115,46 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
         } returns VERSION_INCREMENT
 
-        val projectActions: ProjectActions<File> = mockk {
-            every { getVersion() } returns SNAPSHOT_001
-            justRun { setVersion(RELEASE_001) }
-        }
-
-        every { projectActionsFactory.create(any()) } returns projectActions
+        every { projectActions.getVersion() } returns SNAPSHOT_001
 
         every { releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT) } returns RELEASE_001
+
+        justRun { projectActions.setVersion(RELEASE_001) }
+
+        underTest = SetReleaseVersionAction(
+            createProjectContext(projectActions),
+            createReleaseActionContext(
+                scmActions = scmActions,
+                scmConfig = ScmConfig.TRUNK_BASED_FLOW,
+            ),
+            releaseVersionProvider,
+            versionIncrementProvider,
+        )
 
         // WHEN
         underTest.execute()
 
         // THEN
         verifySequence {
-            scmActions.getSubmodules(projectFile)
+            repeat(allProjectFiles.size) {
+                projectActions.hashCode() // because of createProjectContext
+            }
+
             scmActions.getLastTag(projectFile)
             scmActions.getCommits(projectFile, GIT_TAG)
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            projectActionsFactory.create(projectFile)
             projectActions.getVersion()
             releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
-            subModuleProjectFiles.forEach {
+
+            subProjectFiles.forEach {
                 scmActions.getLastTag(it)
-                scmActions.getCommits(it, null)
-            }
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            subModuleProjectFiles.forEach {
-                projectActionsFactory.create(it)
+                scmActions.getCommits(it)
+                versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
                 projectActions.getVersion()
+                releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
             }
-            releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT)
-            allProjectFiles.forEach {
-                projectActionsFactory.create(it)
+
+            repeat(allProjectFiles.size) {
                 projectActions.setVersion(RELEASE_001)
             }
         }
@@ -168,63 +164,58 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
     @ParameterizedTest
     fun test_execute_shouldRelease_whenIsForceReleaseSet(
         versionIncrement: VersionIncrement?,
-        expectedVersionIncrement: VersionIncrement
+        expectedVersionIncrement: VersionIncrement,
     ) {
         // GIVEN
-        every { releaseActionContext.isForceReleaseProvider() } returns true
-
-        every { scmActions.getLastTag(projectFile) } returns GIT_TAG
-        every { scmActions.getCommits(projectFile, GIT_TAG) } returns COMMITS
-
-        subModuleProjectFiles.forEach {
-            every { scmActions.getLastTag(it) } throws ScmActionException(null)
-            every { scmActions.getCommits(it, null) } returns COMMITS
+        allProjectFiles.forEach {
+            every { scmActions.getLastTag(it) } returns GIT_TAG
+            every { scmActions.getCommits(it, GIT_TAG) } returns COMMITS
         }
 
         every {
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
         } returns versionIncrement
 
-        val projectActions: ProjectActions<File> = mockk {
-            every { getVersion() } returns SNAPSHOT_001
-            justRun { setVersion(RELEASE_001) }
-        }
-
-        every { projectActionsFactory.create(any()) } returns projectActions
+        every { projectActions.getVersion() } returns SNAPSHOT_001
 
         every { releaseVersionProvider.provide(SNAPSHOT_001, expectedVersionIncrement) } returns RELEASE_001
 
         allProjectFiles.forEach {
             justRun { scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch) }
             justRun { scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch) }
+            justRun { projectActions.setVersion(RELEASE_001) }
         }
+
+        underTest = SetReleaseVersionAction(
+            createProjectContext(projectActions),
+            createReleaseActionContext(
+                isForceRelease = true,
+                scmActions = scmActions,
+            ),
+            releaseVersionProvider,
+            versionIncrementProvider,
+        )
 
         // WHEN
         underTest.execute()
 
         // THEN
         verifySequence {
-            scmActions.getSubmodules(projectFile)
-            scmActions.getLastTag(projectFile)
-            scmActions.getCommits(projectFile, GIT_TAG)
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            projectActionsFactory.create(projectFile)
-            projectActions.getVersion()
-            releaseVersionProvider.provide(SNAPSHOT_001, expectedVersionIncrement)
-            subModuleProjectFiles.forEach {
+            repeat(allProjectFiles.size) {
+                projectActions.hashCode() // because of createProjectContext
+            }
+
+            allProjectFiles.forEach {
                 scmActions.getLastTag(it)
-                scmActions.getCommits(it, null)
-            }
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            subModuleProjectFiles.forEach {
-                projectActionsFactory.create(it)
+                scmActions.getCommits(it, GIT_TAG)
+                versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
                 projectActions.getVersion()
+                releaseVersionProvider.provide(SNAPSHOT_001, expectedVersionIncrement)
             }
-            releaseVersionProvider.provide(SNAPSHOT_001, expectedVersionIncrement)
+
             allProjectFiles.forEach {
                 scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch)
                 scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch)
-                projectActionsFactory.create(it)
                 projectActions.setVersion(RELEASE_001)
             }
         }
@@ -234,23 +225,23 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
     @ParameterizedTest
     fun test_execute_shouldFail_whenVersionIncrementIsInvalid(versionIncrement: VersionIncrement?) {
         // GIVEN
-        every { scmActions.getLastTag(projectFile) } returns GIT_TAG
-        every { scmActions.getCommits(projectFile, GIT_TAG) } returns COMMITS
-
-        subModuleProjectFiles.forEach {
-            every { scmActions.getLastTag(it) } throws ScmActionException(null)
-            every { scmActions.getCommits(it, null) } returns COMMITS
+        allProjectFiles.forEach {
+            every { scmActions.getLastTag(it) } returns GIT_TAG
+            every { scmActions.getCommits(it, GIT_TAG) } returns COMMITS
         }
 
         every {
             versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
         } returns versionIncrement
 
-        val projectActions: ProjectActions<File> = mockk {
-            every { getVersion() } returns SNAPSHOT_001
-        }
+        every { projectActions.getVersion() } returns SNAPSHOT_001
 
-        every { projectActionsFactory.create(any()) } returns projectActions
+        underTest = SetReleaseVersionAction(
+            createProjectContext(projectActions),
+            createReleaseActionContext(scmActions = scmActions),
+            releaseVersionProvider,
+            versionIncrementProvider,
+        )
 
         // WHEN
         assertThatThrownBy { underTest.execute() }
@@ -259,15 +250,15 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
 
         // THEN
         verifySequence {
-            scmActions.getSubmodules(projectFile)
-            scmActions.getLastTag(projectFile)
-            scmActions.getCommits(projectFile, GIT_TAG)
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
-            subModuleProjectFiles.forEach {
-                scmActions.getLastTag(it)
-                scmActions.getCommits(it, null)
+            repeat(allProjectFiles.size) {
+                projectActions.hashCode() // because of createProjectContext
             }
-            versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
+
+            allProjectFiles.forEach {
+                scmActions.getLastTag(it)
+                scmActions.getCommits(it, GIT_TAG)
+                versionIncrementProvider.provide(COMMITS, ConventionalCommitType.DEFAULT_TYPES)
+            }
         }
     }
 

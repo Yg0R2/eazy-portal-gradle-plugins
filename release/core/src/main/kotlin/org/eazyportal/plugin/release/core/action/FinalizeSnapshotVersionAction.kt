@@ -1,32 +1,25 @@
 package org.eazyportal.plugin.release.core.action
 
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
-import org.eazyportal.plugin.release.core.project.ProjectActionsFactory
-import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.project.model.ProjectContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class FinalizeSnapshotVersionAction<T : Any>(
-    private val projectActionsFactory: ProjectActionsFactory<T>,
-    private val projectFile: ProjectFile<T>,
+    private val projectContext: ProjectContext<T>,
     private val releaseActionContext: ReleaseActionContext<T>,
-) : ReleaseAction<T>(
-    projectFile,
-    releaseActionContext,
-) {
+) : ReleaseAction<T> {
 
     override fun execute() {
         LOGGER.info("Finalizing snapshot version...")
 
-        val snapshotVersion = projectActionsFactory.create(projectFile)
-            .getVersion()
+        val snapshotVersion = projectContext.root.projectActions.getVersion()
 
-        allProjectFiles.reversed().forEach {
-            val csmFilesToCommit = projectActionsFactory.create(it)
-                .scmFilesToCommit()
+        projectContext.all.reversed().forEach { (projectActions, projectFile) ->
+            val csmFilesToCommit = projectActions.scmFilesToCommit()
 
-            scmActions.add(it, *csmFilesToCommit)
-            scmActions.commit(it, "New SNAPSHOT version: $snapshotVersion")
+            releaseActionContext.scmActions.add(projectFile, *csmFilesToCommit)
+            releaseActionContext.scmActions.commit(projectFile, "New SNAPSHOT version: $snapshotVersion")
         }
     }
 

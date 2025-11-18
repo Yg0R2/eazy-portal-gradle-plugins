@@ -3,11 +3,10 @@ package org.eazyportal.plugin.release.core.action
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.justRun
-import io.mockk.mockk
 import io.mockk.verifySequence
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.project.ProjectActions
-import org.eazyportal.plugin.release.core.project.ProjectActionsFactory
+import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -15,46 +14,45 @@ import java.io.File
 class FinalizeReleaseVersionActionTest : ReleaseActionBaseTest() {
 
     @MockK
-    private lateinit var projectActionsFactory: ProjectActionsFactory<File>
+    private lateinit var projectActions: ProjectActions<File>
+
+    @MockK
+    private lateinit var scmActions: ScmActions<File>
 
     private lateinit var underTest: FinalizeReleaseVersionAction<File>
 
     @BeforeEach
     fun setUp() {
-        underTest = FinalizeReleaseVersionAction(projectActionsFactory, projectFile, releaseActionContext)
+        underTest = FinalizeReleaseVersionAction(
+            createProjectContext(projectActions),
+            createReleaseActionContext(scmActions = scmActions)
+        )
     }
+
 
     @Test
     fun test_execute() {
         // GIVEN
-        val scmFilesToCommit = arrayOf(".")
-
-        val projectActions = mockk<ProjectActions<File>> {
-            every { getVersion() } returns RELEASE_001
-            every { scmFilesToCommit() } returns scmFilesToCommit
-        }
-
-        allProjectFiles.forEach {
-            every { projectActionsFactory.create(it) } returns projectActions
-
-            justRun { scmActions.add(it, *scmFilesToCommit) }
-            justRun { scmActions.commit(it, "Release version: $RELEASE_001") }
-            justRun { scmActions.tag(it, RELEASE_001) }
-        }
+        every { projectActions.getVersion() } returns RELEASE_001
+        every { projectActions.scmFilesToCommit() } returns FILES_TO_COMMIT
+        justRun { scmActions.add(any(), *FILES_TO_COMMIT) }
+        justRun { scmActions.commit(any(), "Release version: $RELEASE_001") }
+        justRun { scmActions.tag(any(), RELEASE_001) }
 
         // WHEN
         underTest.execute()
 
         // THEN
         verifySequence {
-            projectActionsFactory.create(projectFile)
-
-            scmActions.getSubmodules(projectFile)
+            projectActions.getVersion()
+            repeat(allProjectFiles.size) {
+                projectActions.hashCode() // because of createProjectContext
+            }
 
             allProjectFiles.reversed().forEach {
-                projectActionsFactory.create(it)
+                projectActions.scmFilesToCommit()
 
-                scmActions.add(it, *scmFilesToCommit)
+                scmActions.add(it, *FILES_TO_COMMIT)
                 scmActions.commit(it, "Release version: $RELEASE_001")
                 scmActions.tag(it, RELEASE_001)
             }

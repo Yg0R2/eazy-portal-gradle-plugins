@@ -1,24 +1,16 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
+import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.io.File
-import java.util.UUID
 
 @TestMethodOrder(OrderAnnotation::class)
 class UpdateScmTaskIntegrationTest : BaseIntegrationTest() {
@@ -41,7 +33,7 @@ class UpdateScmTaskIntegrationTest : BaseIntegrationTest() {
 
         // Branch is cloned, but needs to be created locally
         gitActions.checkout(projectFile, FEATURE_BRANCH)
-        gitActions.checkout(projectFile, MAIN_BRANCH)
+        gitActions.checkout(projectFile, RELEASE_BRANCH)
     }
 
     @AfterEach
@@ -49,7 +41,7 @@ class UpdateScmTaskIntegrationTest : BaseIntegrationTest() {
         gitActions.execute(projectFile, "reset", "--hard")
     }
 
-    @CsvSource(MAIN_BRANCH, FEATURE_BRANCH)
+    @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)
     @ParameterizedTest
     fun `test 'run' should update SCM with commits`(testBranch: String) {
         // GIVEN

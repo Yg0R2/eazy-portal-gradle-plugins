@@ -4,9 +4,8 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
+import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -16,8 +15,6 @@ import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.io.File
-import java.util.UUID
 
 @TestMethodOrder(OrderAnnotation::class)
 class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
@@ -42,7 +39,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         gitActions.execute(projectFile, "reset", "--hard")
     }
 
-    @CsvSource(MAIN_BRANCH, FEATURE_BRANCH)
+    @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)
     @ParameterizedTest
     fun `test 'run' should checkout to feature branch`(testBranch: String) {
         // GIVEN
@@ -56,7 +53,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         assertTaskExecutionAndCleanFeatureBranch(actual.output.lines())
     }
 
-    @CsvSource(MAIN_BRANCH, FEATURE_BRANCH)
+    @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)
     @ParameterizedTest
     fun `test 'run' should clean project and checkout to feature branch`(testBranch: String) {
         // GIVEN
@@ -72,7 +69,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         assertTaskExecutionAndCleanFeatureBranch(actual.output.lines())
     }
 
-    @CsvSource(MAIN_BRANCH, FEATURE_BRANCH)
+    @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)
     @ParameterizedTest
     fun `test 'run' should ignore local commits and checkout to feature branch`(
         testBranch: String,
@@ -92,10 +89,10 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
             .let(Assertions::assertThat)
             .hasSize(2)
             .doesNotContain(commitMessage)
-        gitActions.getCommits(projectFile, FEATURE_BRANCH, MAIN_BRANCH)
+        gitActions.getCommits(projectFile, FEATURE_BRANCH, RELEASE_BRANCH)
             .let(Assertions::assertThat)
             .isEmpty()
-        gitActions.getCommits(projectFile, MAIN_BRANCH, FEATURE_BRANCH)
+        gitActions.getCommits(projectFile, RELEASE_BRANCH, FEATURE_BRANCH)
             .let(Assertions::assertThat)
             .isEmpty()
     }
@@ -103,9 +100,9 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'run' should fetch changes from origin main branch`(testInfo: TestInfo) {
         // GIVEN
-        val commitMessage = originProjectFile.createDummyComment(MAIN_BRANCH, testInfo)
+        val commitMessage = originProjectFile.createDummyComment(RELEASE_BRANCH, testInfo)
 
-        gitActions.checkout(projectFile, MAIN_BRANCH)
+        gitActions.checkout(projectFile, RELEASE_BRANCH)
 
         // WHEN
         val actual = createGradleRunner(projectDir, PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
@@ -117,11 +114,11 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         gitActions.getCommits(projectFile)
             .let(Assertions::assertThat)
             .doesNotContain(commitMessage)
-        gitActions.getCommits(projectFile, FEATURE_BRANCH, MAIN_BRANCH)
+        gitActions.getCommits(projectFile, FEATURE_BRANCH, RELEASE_BRANCH)
             .let(Assertions::assertThat)
             .hasSize(1)
             .contains(commitMessage)
-        gitActions.getCommits(projectFile, MAIN_BRANCH, FEATURE_BRANCH)
+        gitActions.getCommits(projectFile, RELEASE_BRANCH, FEATURE_BRANCH)
             .let(Assertions::assertThat)
             .isEmpty()
     }

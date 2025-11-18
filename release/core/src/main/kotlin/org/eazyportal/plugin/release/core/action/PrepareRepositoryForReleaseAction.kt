@@ -2,34 +2,32 @@ package org.eazyportal.plugin.release.core.action
 
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.project.model.ProjectContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class PrepareRepositoryForReleaseAction<T : Any>(
-    private val projectFile: ProjectFile<T>,
+    private val projectContext: ProjectContext<T>,
     private val releaseActionContext: ReleaseActionContext<T>,
-) : ReleaseAction<T>(
-    projectFile,
-    releaseActionContext,
-) {
+) : ReleaseAction<T> {
 
     override fun execute() {
         LOGGER.info("Preparing repository for release...")
 
-        allProjectFiles.forEach {
-            scmActions.clean(it)
+        projectContext.all.forEach { (_, projectFile) ->
+            releaseActionContext.scmActions.clean(projectFile)
         }
 
-        scmActions.fetch(projectFile, scmConfig.remote)
+        releaseActionContext.scmActions.fetch(projectContext.root.projectFile, releaseActionContext.scmConfig.remote)
 
-        allProjectFiles.forEach {
-            checkoutToFeatureBranch(it)
+        projectContext.all.forEach { (_, projectFile) ->
+            checkoutToFeatureBranch(projectFile)
         }
     }
 
     private fun checkoutToFeatureBranch(projectFile: ProjectFile<T>) {
-        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
-            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        if (releaseActionContext.scmConfig.releaseBranch != releaseActionContext.scmConfig.featureBranch) {
+            releaseActionContext.scmActions.checkout(projectFile, releaseActionContext.scmConfig.featureBranch)
         }
     }
 
