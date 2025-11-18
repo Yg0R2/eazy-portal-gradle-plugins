@@ -406,7 +406,7 @@ class GitActionsIntegrationTest : BaseIntegrationTest() {
             .also { it.mkdir() }
             .let(::FileSystemProjectFile)
 
-        commandExecutor.execute(originProjectFile, GIT_EXECUTABLE, "init", "--bare", "-b", MAIN_BRANCH)
+        commandExecutor.execute(originProjectFile, GIT_EXECUTABLE, "init", "--bare", "--initial-branch=$MAIN_BRANCH")
 
         // and GIVEN (another local repository)
         val validateProjectFile = workingDir

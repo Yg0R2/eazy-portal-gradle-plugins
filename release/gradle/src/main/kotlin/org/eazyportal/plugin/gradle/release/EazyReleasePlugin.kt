@@ -7,6 +7,7 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALI
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
 import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
 import org.eazyportal.plugin.release.core.action.FinalizeReleaseVersionAction
@@ -14,6 +15,7 @@ import org.eazyportal.plugin.release.core.action.FinalizeSnapshotVersionAction
 import org.eazyportal.plugin.release.core.action.PrepareRepositoryForReleaseAction
 import org.eazyportal.plugin.release.core.action.SetReleaseVersionAction
 import org.eazyportal.plugin.release.core.action.SetSnapshotVersionAction
+import org.eazyportal.plugin.release.core.action.UpdateScmAction
 import org.eazyportal.plugin.release.core.action.model.ReleaseActionContext
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
@@ -59,6 +61,10 @@ class EazyReleasePlugin : Plugin<Project> {
         )
         val setSnapshotVersionTask = target.configureSetSnapshotVersionTask(
             projectActionsFactory,
+            releaseActionContext,
+            projectFile,
+        )
+        val updateScmTask = target.configureUpdateScmTask(
             releaseActionContext,
             projectFile,
         )
@@ -147,6 +153,21 @@ class EazyReleasePlugin : Plugin<Project> {
         return tasks.registerReleaseActionTask(
             SET_SNAPSHOT_VERSION_TASK_NAME,
             setSnapshotVersionAction,
+        )
+    }
+
+    private fun Project.configureUpdateScmTask(
+        releaseActionContext: ReleaseActionContext<File>,
+        projectFile: FileSystemProjectFile
+    ): TaskProvider<ReleaseActionTask> {
+        val updateScmActions = UpdateScmAction(
+            projectFile,
+            releaseActionContext
+        )
+
+        return tasks.registerReleaseActionTask(
+            UPDATE_SCM_TASK_NAME,
+            updateScmActions,
         )
     }
 

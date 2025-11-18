@@ -159,27 +159,4 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
             )
     }
 
-    private fun ProjectFile<File>.createDummyFile() {
-        resolve(DUMMY_FILE_NAME)
-            .writeText(UUID.randomUUID().toString())
-    }
-
-    private fun ProjectFile<File>.createDummyComment(
-        branch: String,
-        testInfo: TestInfo,
-    ): String {
-        gitActions.checkout(this, branch)
-
-        createDummyFile()
-
-        gitActions.add(this, DUMMY_FILE_NAME)
-
-        return "chore: update $DUMMY_FILE_NAME for `${testInfo.testMethod.get().name}`"
-            .also { gitActions.commit(this, it) }
-    }
-
-    companion object {
-        private const val DUMMY_FILE_NAME = "dummy.txt"
-    }
-
 }

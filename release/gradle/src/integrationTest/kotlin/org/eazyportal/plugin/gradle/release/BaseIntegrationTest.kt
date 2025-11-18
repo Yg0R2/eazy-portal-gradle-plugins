@@ -11,10 +11,12 @@ import org.eazyportal.plugin.release.core.scm.ScmConstants.MAIN_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Files
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseIntegrationTest {
@@ -62,6 +64,25 @@ abstract class BaseIntegrationTest {
                 it.writeText(resourceFile.readText())
             }
         }
+    }
+
+    protected fun ProjectFile<File>.createDummyFile() {
+        resolve(DUMMY_FILE_NAME)
+            .writeText(UUID.randomUUID().toString())
+    }
+
+    protected fun ProjectFile<File>.createDummyComment(
+        branch: String,
+        testInfo: TestInfo? = null,
+    ): String {
+        gitActions.checkout(this, branch)
+
+        createDummyFile()
+
+        gitActions.add(this, DUMMY_FILE_NAME)
+
+        return "chore: update $DUMMY_FILE_NAME${testInfo?.let { " for `${it.testMethod.get().name}`" }}"
+            .also { gitActions.commit(this, it) }
     }
 
     protected fun createGradleRunner(
@@ -135,6 +156,7 @@ abstract class BaseIntegrationTest {
         }
 
     companion object {
+        protected const val DUMMY_FILE_NAME = "dummy.txt"
         protected const val PROJECT_NAME = "dummy-project"
     }
 
