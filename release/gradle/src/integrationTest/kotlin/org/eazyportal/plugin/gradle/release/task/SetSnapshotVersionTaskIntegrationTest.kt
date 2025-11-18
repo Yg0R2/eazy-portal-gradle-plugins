@@ -1,6 +1,7 @@
-package org.eazyportal.plugin.gradle.release
+package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
@@ -32,7 +33,7 @@ class SetSnapshotVersionTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'run' should fail when project version is not release version`() {
         // GIVEN
-        projectDir.copyIntoFromResources(GRADLE_PROPERTIES_FILE_NAME)
+        projectFile.createDummyFile()
 
         // WHEN
         val actual = createGradleRunner(projectDir, SET_SNAPSHOT_VERSION_TASK_NAME)

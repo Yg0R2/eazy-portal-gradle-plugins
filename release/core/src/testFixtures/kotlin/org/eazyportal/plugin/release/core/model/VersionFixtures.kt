@@ -16,6 +16,7 @@ object VersionFixtures {
 
     val SNAPSHOT_001 = Version(0, 0, 1, Version.DEVELOPMENT_VERSION_SUFFIX)
     val SNAPSHOT_002 = Version(0, 0, 2, Version.DEVELOPMENT_VERSION_SUFFIX)
+    val SNAPSHOT_003 = Version(0, 0, 3, Version.DEVELOPMENT_VERSION_SUFFIX)
 
     val SNAPSHOT_010 = Version(0, 1, 0, Version.DEVELOPMENT_VERSION_SUFFIX)
     val SNAPSHOT_020 = Version(0, 2, 0, Version.DEVELOPMENT_VERSION_SUFFIX)

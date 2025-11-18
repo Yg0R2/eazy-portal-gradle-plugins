@@ -19,11 +19,11 @@ open class ReleaseActionTask @Inject constructor(
 
     @Internal
     final override fun getGroup(): String {
-        return GROUP
+        return RELEASE_TASKS_GROUP
     }
 
     final override fun setGroup(group: String?) {
-        throw UnsupportedOperationException("Not allowed to set the group of an $GROUP task.")
+        throw UnsupportedOperationException("Not allowed to set the group of an $RELEASE_TASKS_GROUP task.")
     }
 
     @TaskAction
@@ -40,7 +40,7 @@ open class ReleaseActionTask @Inject constructor(
     }
 
     companion object {
-        const val GROUP = "eazy-release"
+        const val RELEASE_TASKS_GROUP = "eazy-release"
     }
 
 }

@@ -2,6 +2,7 @@ import org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType
 import org.eazyportal.plugin.release.core.version.model.VersionIncrement
 
 plugins {
+    java
     id("org.eazyportal.plugin.gradle.release-gradle")
 }
 

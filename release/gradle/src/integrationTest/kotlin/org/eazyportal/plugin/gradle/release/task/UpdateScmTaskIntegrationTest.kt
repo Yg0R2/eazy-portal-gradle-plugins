@@ -1,6 +1,7 @@
-package org.eazyportal.plugin.gradle.release
+package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH

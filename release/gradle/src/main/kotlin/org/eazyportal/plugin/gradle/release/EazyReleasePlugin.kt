@@ -6,10 +6,12 @@ import org.eazyportal.plugin.gradle.release.project.GradleProjectActionsFactory
 import org.eazyportal.plugin.gradle.release.project.ProjectContextFactory
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask
+import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask.Companion.RELEASE_TASKS_GROUP
 import org.eazyportal.plugin.gradle.release.task.extension.registerReleaseActionTask
 import org.eazyportal.plugin.release.core.action.FinalizeReleaseVersionAction
 import org.eazyportal.plugin.release.core.action.FinalizeSnapshotVersionAction
@@ -40,26 +42,70 @@ class EazyReleasePlugin : Plugin<Project> {
             lazy { releaseActionContext.scmActions },
         )
 
-        val finalizeReleaseVersionTask = target.registerFinalizeReleaseVersionTask(
-            projectContext,
-            releaseActionContext,
-        )
-        val finalizeSnapshotVersionTask = target.registerFinalizeSnapshotVersionTask(
-            projectContext,
-            releaseActionContext,
-        )
         val setReleaseVersionTask = target.registerSetReleaseVersionTask(
             projectContext,
             releaseActionContext,
-        )
+        ).apply {
+            configure {
+                mustRunAfter("clean")
+            }
+        }
+
+        val finalizeReleaseVersionTask = target.registerFinalizeReleaseVersionTask(
+            projectContext,
+            releaseActionContext,
+        ).apply {
+            configure {
+                mustRunAfter(SET_RELEASE_VERSION_TASK_NAME)
+            }
+        }
+
+        target.tasks.named("build").configure {
+            mustRunAfter(
+                SET_RELEASE_VERSION_TASK_NAME,
+                FINALIZE_RELEASE_VERSION_TASK_NAME,
+            )
+        }
+
         val setSnapshotVersionTask = target.registerSetSnapshotVersionTask(
             projectContext,
             releaseActionContext,
-        )
+        ).apply {
+            configure {
+                mustRunAfter("build")
+            }
+        }
+
+        val finalizeSnapshotVersionTask = target.registerFinalizeSnapshotVersionTask(
+            projectContext,
+            releaseActionContext,
+        ).apply {
+            configure {
+                mustRunAfter(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+        }
+
         val updateScmTask = target.registerUpdateScmTask(
             projectContext,
             releaseActionContext,
-        )
+        ).apply {
+            configure {
+                mustRunAfter(FINALIZE_SNAPSHOT_VERSION_TASK_NAME)
+            }
+        }
+
+        val releaseTask = target.tasks.register(RELEASE_TASK_NAME) {
+            group = RELEASE_TASKS_GROUP
+
+            dependsOn(
+                setReleaseVersionTask,
+                finalizeReleaseVersionTask,
+                "build", // releaseBuildTasks,
+                setSnapshotVersionTask,
+                finalizeSnapshotVersionTask,
+                updateScmTask,
+            )
+        }
     }
 
     private fun Project.registerFinalizeReleaseVersionTask(
@@ -127,7 +173,7 @@ class EazyReleasePlugin : Plugin<Project> {
 
     private fun Project.registerUpdateScmTask(
         projectContext: ProjectContext<File>,
-        releaseActionContext: ReleaseActionContext<File>
+        releaseActionContext: ReleaseActionContext<File>,
     ): TaskProvider<ReleaseActionTask> {
         val updateScmActions = UpdateScmAction(
             projectContext,

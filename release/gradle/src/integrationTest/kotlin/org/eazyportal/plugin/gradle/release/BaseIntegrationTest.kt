@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
+import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
@@ -11,7 +12,6 @@ import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -66,23 +66,21 @@ abstract class BaseIntegrationTest {
         }
     }
 
-    protected fun ProjectFile<File>.createDummyFile() {
-        resolve(DUMMY_FILE_NAME)
-            .writeText(UUID.randomUUID().toString())
-    }
-
     protected fun ProjectFile<File>.createDummyComment(
         branch: String,
-        testInfo: TestInfo? = null,
-    ): String {
+        commitMessage: String = "chore: update $DUMMY_FILE_NAME",
+    ) {
         gitActions.checkout(this, branch)
 
         createDummyFile()
 
         gitActions.add(this, DUMMY_FILE_NAME)
+        gitActions.commit(this, commitMessage)
+    }
 
-        return "chore: update $DUMMY_FILE_NAME${testInfo?.let { " for `${it.testMethod.get().name}`" }}"
-            .also { gitActions.commit(this, it) }
+    protected fun ProjectFile<File>.createDummyFile() {
+        resolve(DUMMY_FILE_NAME)
+            .writeText(UUID.randomUUID().toString())
     }
 
     protected fun createGradleRunner(
@@ -110,6 +108,11 @@ abstract class BaseIntegrationTest {
         with(FileSystemProjectFile(this)) {
             gitActions.add(this, "*")
             gitActions.commit(this, "initialize project")
+
+            copyIntoFromResources(GRADLE_PROPERTIES_FILE_NAME)
+
+            gitActions.add(this, "*")
+            gitActions.commit(this, "chore: add gradle.properties")
 
             // TODO: maybe move it into `initializeGitProject`
             gitActions.execute(this, "branch", FEATURE_BRANCH)
