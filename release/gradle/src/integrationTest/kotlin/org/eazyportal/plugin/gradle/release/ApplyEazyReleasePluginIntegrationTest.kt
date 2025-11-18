@@ -5,7 +5,7 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RE
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
-class ApplyPluginIntegrationTest : BaseIntegrationTest() {
+class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
 
     @BeforeAll
     fun initialize() {

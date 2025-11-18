@@ -5,7 +5,7 @@ import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
-class ApplyPluginIntegrationTest : BaseIntegrationTest() {
+class ApplyEazyPortalProjectPluginIntegrationTest : BaseIntegrationTest() {
 
     @BeforeAll
     fun initialize() {
