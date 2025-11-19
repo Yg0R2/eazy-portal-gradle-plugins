@@ -2,21 +2,16 @@ package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
 
-@TestMethodOrder(OrderAnnotation::class)
 class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
 
-    @BeforeAll
-    fun initialize() {
+    @BeforeEach
+    fun setUp() {
         projectDir.initializeGradleProject()
     }
 
-    @Order(0)
     @Test
     fun `apply plugin`() {
         // GIVEN
@@ -32,7 +27,6 @@ class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
             )
     }
 
-    @Order(1)
     @Test
     fun `apply plugin on subproject should fail`() {
         // GIVEN

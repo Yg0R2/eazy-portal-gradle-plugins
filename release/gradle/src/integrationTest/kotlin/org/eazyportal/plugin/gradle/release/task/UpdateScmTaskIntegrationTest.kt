@@ -6,18 +6,14 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-@TestMethodOrder(OrderAnnotation::class)
 class UpdateScmTaskIntegrationTest : BaseIntegrationTest() {
 
-    @BeforeAll
-    fun initialize() {
+    @BeforeEach
+    fun setUp() {
         originProjectDir.initializeGitAndGradleProject()
         // Workaround for using none-bare repository
         gitActions.execute(originProjectFile, "config", "receive.denyCurrentBranch", "ignore")
@@ -35,11 +31,6 @@ class UpdateScmTaskIntegrationTest : BaseIntegrationTest() {
         // Branch is cloned, but needs to be created locally
         gitActions.checkout(projectFile, FEATURE_BRANCH)
         gitActions.checkout(projectFile, RELEASE_BRANCH)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        gitActions.execute(projectFile, "reset", "--hard")
     }
 
     @CsvSource(RELEASE_BRANCH, FEATURE_BRANCH)

@@ -11,14 +11,13 @@ import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Files
-import java.util.UUID
+import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseIntegrationTest {
 
     protected val gitActions = GitActions(CommandLineExecutor())
@@ -32,10 +31,8 @@ abstract class BaseIntegrationTest {
     protected val projectActions: ProjectActions<File>
         get() = GradleProjectActions(projectFile)
 
-    @BeforeAll
-    fun setUpBaseIntegrationTest(
-        @TempDir tempDir: File
-    ) {
+    @BeforeEach
+    fun setUpBaseIntegrationTest(@TempDir tempDir: File) {
         workingDir = tempDir
 
         originProjectDir = workingDir.resolve("$REMOTE/$PROJECT_NAME")

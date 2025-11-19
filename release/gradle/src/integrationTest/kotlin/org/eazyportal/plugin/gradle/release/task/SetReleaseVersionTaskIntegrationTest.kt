@@ -8,33 +8,18 @@ import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_010
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_100
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
 
-@TestMethodOrder(OrderAnnotation::class)
 class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
-
-    @BeforeAll
-    fun initialize() {
-        projectDir.initializeGitAndGradleProject()
-    }
 
     @BeforeEach
     fun setUp() {
+        projectDir.initializeGitAndGradleProject()
+
         gitActions.checkout(projectFile, FEATURE_BRANCH)
     }
 
-    @AfterEach
-    fun tearDown() {
-        gitActions.execute(projectFile, "reset", "--hard")
-    }
-
-    @Order(0)
     @Test
     fun `test 'run' should fail when there are no acceptable commits`() {
         // GIVEN
@@ -55,7 +40,6 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
             .isEqualTo(SNAPSHOT_001)
     }
 
-    @Order(1)
     @Test
     fun `test 'run' should set release version when release is forced`() {
         // GIVEN
@@ -68,7 +52,6 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
             .isEqualTo(RELEASE_001)
     }
 
-    @Order(10)
     @Test
     fun `test 'run' should set release version`() {
         // GIVEN
@@ -86,7 +69,6 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
             .isEqualTo(RELEASE_010)
     }
 
-    @Order(20)
     @Test
     fun `test 'run' should set release version based on custom ConventionalCommitType`() {
         // GIVEN
