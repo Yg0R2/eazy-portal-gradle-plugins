@@ -65,7 +65,7 @@ abstract class BaseIntegrationTest {
 
     protected fun ProjectFile<File>.createDummyComment(
         branch: String,
-        commitMessage: String = "chore: update $DUMMY_FILE_NAME",
+        commitMessage: String = DUMMY_COMMIT_MESSAGE,
     ) {
         gitActions.checkout(this, branch)
 
@@ -157,6 +157,7 @@ abstract class BaseIntegrationTest {
 
     companion object {
         protected const val DUMMY_FILE_NAME = "dummy.txt"
+        protected const val DUMMY_COMMIT_MESSAGE = "chore: update $DUMMY_FILE_NAME"
         protected const val PROJECT_NAME = "dummy-project"
     }
 

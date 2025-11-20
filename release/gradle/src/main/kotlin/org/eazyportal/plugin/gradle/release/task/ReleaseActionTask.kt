@@ -56,7 +56,7 @@ abstract class ReleaseActionTask : DefaultTask() {
             val scmActions = extension.scmActions
                 .getOrElse { GitActions(CommandLineExecutor()) }
 
-            val scmConfig = ScmConfigFactory.create(extension, projectFile, providerFactory, scmActions)
+            val scmConfig = ScmConfigFactory.create(extension, providerFactory)
 
             val projectContext = ProjectContextFactory.create(projectActionsFactory, projectFile, scmActions)
 

@@ -33,11 +33,15 @@ class GitActions<T: Any>(
             throw ScmActionException(it)
         }
 
-    override fun fetch(projectFile: ProjectFile<T>, remote: String) {
+    override fun fetch(projectFile: ProjectFile<T>, remote: String, vararg branches: String) {
         execute(projectFile, "fetch", remote, "--tags", "--prune", "--prune-tags", "--recurse-submodules")
 
         val currentBranchName = getCurrentBranch(projectFile)
         execute(projectFile, "reset", "--hard", "$remote/$currentBranchName")
+
+        branches.asSequence()
+            .filter { it != currentBranchName }
+            .forEach { execute(projectFile, "branch", "-f", it, "$remote/$it") }
     }
 
     override fun getCommits(projectFile: ProjectFile<T>, fromRef: String?, toRef: String): List<String> =

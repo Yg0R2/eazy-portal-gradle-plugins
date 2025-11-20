@@ -1,14 +1,20 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.gradle.release.model.EazyReleasePluginExtension
-import org.eazyportal.plugin.gradle.release.task.*
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.FinalizeReleaseVersionTask
+import org.eazyportal.plugin.gradle.release.task.FinalizeSnapshotVersionTask
+import org.eazyportal.plugin.gradle.release.task.PrepareRepositoryForReleaseTask
 import org.eazyportal.plugin.gradle.release.task.ReleaseActionTask.Companion.RELEASE_TASKS_GROUP
+import org.eazyportal.plugin.gradle.release.task.SetReleaseVersionTask
+import org.eazyportal.plugin.gradle.release.task.SetSnapshotVersionTask
+import org.eazyportal.plugin.gradle.release.task.UpdateScmTask
 import org.eazyportal.plugin.release.core.project.exception.ProjectException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -24,9 +30,14 @@ class EazyReleasePlugin : Plugin<Project> {
 
         target.extensions.create<EazyReleasePluginExtension>("eazyRelease")
 
+        val prepareRepositoryForReleaseTask = target.tasks
+            .register<PrepareRepositoryForReleaseTask>(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME) {
+                mustRunAfter("clean")
+            }
+
         val setReleaseVersionTask = target.tasks
             .register<SetReleaseVersionTask>(SET_RELEASE_VERSION_TASK_NAME) {
-                mustRunAfter("clean")
+                mustRunAfter(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             }
 
         val finalizeReleaseVersionTask = target.tasks
@@ -34,7 +45,7 @@ class EazyReleasePlugin : Plugin<Project> {
                 mustRunAfter(SET_RELEASE_VERSION_TASK_NAME)
             }
 
-        target.tasks.named("build").configure {
+        target.tasks.named("build") {
             mustRunAfter(
                 SET_RELEASE_VERSION_TASK_NAME,
                 FINALIZE_RELEASE_VERSION_TASK_NAME,
@@ -60,6 +71,7 @@ class EazyReleasePlugin : Plugin<Project> {
             group = RELEASE_TASKS_GROUP
 
             dependsOn(
+                prepareRepositoryForReleaseTask,
                 setReleaseVersionTask,
                 finalizeReleaseVersionTask,
                 "build", // releaseBuildTasks,

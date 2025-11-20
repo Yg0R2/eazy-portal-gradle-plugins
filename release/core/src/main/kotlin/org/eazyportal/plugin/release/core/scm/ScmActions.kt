@@ -13,7 +13,7 @@ interface ScmActions<T : Any> {
 
     fun commit(projectFile: ProjectFile<T>, message: String)
 
-    fun fetch(projectFile: ProjectFile<T>, remote: String)
+    fun fetch(projectFile: ProjectFile<T>, remote: String, vararg branches: String)
 
     fun getCommits(projectFile: ProjectFile<T>, fromRef: String? = null, toRef: String = "HEAD"): List<String>
 
