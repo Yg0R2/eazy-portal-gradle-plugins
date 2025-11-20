@@ -28,6 +28,8 @@ abstract class BaseIntegrationTest {
     protected lateinit var projectDir: File
     protected lateinit var workingDir: File
 
+    protected val originProjectActions: ProjectActions<File>
+        get() = GradleProjectActions(projectFile)
     protected val projectActions: ProjectActions<File>
         get() = GradleProjectActions(projectFile)
 

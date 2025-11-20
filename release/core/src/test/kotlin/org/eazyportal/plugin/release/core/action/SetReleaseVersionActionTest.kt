@@ -57,6 +57,7 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
         every { releaseVersionProvider.provide(SNAPSHOT_001, VERSION_INCREMENT) } returns RELEASE_001
 
         allProjectFiles.forEach {
+            every { scmActions.getCurrentBranch(it) } returns ScmConfig.GIT_FLOW.featureBranch
             justRun { scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch) }
             justRun { scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch) }
             justRun { projectActions.setVersion(RELEASE_001) }
@@ -95,6 +96,7 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
             }
 
             allProjectFiles.forEach {
+                scmActions.getCurrentBranch(it)
                 scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch)
                 scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch)
                 projectActions.setVersion(RELEASE_001)
@@ -182,6 +184,7 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
         every { releaseVersionProvider.provide(SNAPSHOT_001, expectedVersionIncrement) } returns RELEASE_001
 
         allProjectFiles.forEach {
+            every { scmActions.getCurrentBranch(it) } returns ScmConfig.GIT_FLOW.featureBranch
             justRun { scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch) }
             justRun { scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch) }
             justRun { projectActions.setVersion(RELEASE_001) }
@@ -214,6 +217,7 @@ class SetReleaseVersionActionTest : ReleaseActionBaseTest() {
             }
 
             allProjectFiles.forEach {
+                scmActions.getCurrentBranch(it)
                 scmActions.checkout(it, ScmConfig.GIT_FLOW.releaseBranch)
                 scmActions.mergeNoCommit(it, ScmConfig.GIT_FLOW.featureBranch)
                 projectActions.setVersion(RELEASE_001)
