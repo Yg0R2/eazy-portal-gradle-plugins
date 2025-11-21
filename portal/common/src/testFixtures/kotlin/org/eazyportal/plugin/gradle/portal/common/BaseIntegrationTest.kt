@@ -1,8 +1,8 @@
 package org.eazyportal.plugin.gradle.portal.common
 
 import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
@@ -24,21 +24,6 @@ abstract class BaseIntegrationTest {
         projectDir = workingDir.resolve(PROJECT_NAME)
             .also { it.mkdirs() }
     }
-
-    protected fun createGradleRunner(
-        projectFile: File,
-        vararg arguments: String,
-    ): GradleRunner =
-        GradleRunner.create()
-            .forwardOutput()
-            .withArguments(
-                "--stacktrace",
-                "--warning-mode=all",
-                "-Pversion=0.0.1-SNAPSHOT",
-                "--no-configuration-cache",
-                *arguments,
-            ).withPluginClasspath()
-            .withProjectDir(projectFile)
 
     protected fun File.initializeGradleProject(
         vararg subProjectNames: String,

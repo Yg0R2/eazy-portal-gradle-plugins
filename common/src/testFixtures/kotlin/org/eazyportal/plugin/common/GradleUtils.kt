@@ -14,11 +14,9 @@ object GradleUtils {
             .withArguments(
                 "--stacktrace",
                 "--warning-mode=all",
-//                "-Pversion=0.0.1-SNAPSHOT",
                 "--no-configuration-cache",
                 *arguments,
             ).withPluginClasspath()
-//            .withGradleVersion("9.1.0")
             .withProjectDir(projectDir)
 
 }
