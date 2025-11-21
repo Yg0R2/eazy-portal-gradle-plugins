@@ -1,31 +1,44 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.CommonTestFixtures.SUBPROJECT_NAMES
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
+import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
 
-@TestMethodOrder(OrderAnnotation::class)
 class EazyPortalProjectStructureIntegrationTest : BaseIntegrationTest() {
 
     @BeforeAll
     fun initialize() {
-        projectDir.initializeGradleProject(*EP_SUBPROJECT_NAMES)
-        EP_SUBPROJECT_NAMES.forEach {
+        GradleProjectBuilder(
+            projectDir = projectDir,
+            settingsPluginIds = setOf("org.eazyportal.plugin.gradle.portal-settings"),
+            subProjectNames = SUBPROJECT_NAMES,
+        ).withExtraSettingsConfig(
+            """
+            eazyPortal {
+                applyCoreDependencies = false
+            }
+            """.trimIndent()
+        ).withExtraProjectConfig(
+            """
+            allprojects {
+                dependencies {
+                    testImplementation(platform("org.junit:junit-bom:+"))
+            
+                    testImplementation("org.junit.jupiter:junit-jupiter")
+                    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+                }
+            }
+            """.trimIndent()
+        ).build()
+
+        SUBPROJECT_NAMES.forEach {
             projectDir.copyIntoFromResources(this::class.java.simpleName, "$it/")
         }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        createGradleRunner(projectDir, "clean")
-            .build()
     }
 
     @Test
@@ -36,24 +49,11 @@ class EazyPortalProjectStructureIntegrationTest : BaseIntegrationTest() {
             .build()
 
         // THEN
-        listOf("", *EP_SUBPROJECT_NAMES.map { ":$PROJECT_NAME-$it" }.toTypedArray()).forEach {
+        listOf("", *SUBPROJECT_NAMES.map { ":$it" }.toTypedArray()).forEach {
             assertThat(actual.output).contains(
                 "> Task $it:test",
             )
         }
-    }
-
-    companion object {
-        private val EP_SUBPROJECT_NAMES = arrayOf<String>(
-            "api",
-            "application",
-            "behemoth",
-            "client",
-            "common",
-            "dao",
-            "service",
-            "web",
-        )
     }
 
 }
