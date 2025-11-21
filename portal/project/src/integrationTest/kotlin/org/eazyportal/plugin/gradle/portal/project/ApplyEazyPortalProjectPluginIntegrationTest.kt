@@ -2,6 +2,7 @@ package org.eazyportal.plugin.gradle.portal.project
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -10,7 +11,11 @@ class ApplyEazyPortalProjectPluginIntegrationTest : BaseIntegrationTest() {
 
     @BeforeAll
     fun initialize() {
-        projectDir.initializeGradleProject()
+        GradleProjectBuilder(
+            projectDir = projectDir,
+            projectPluginIds = setOf("org.eazyportal.plugin.gradle.portal-project")
+        ).withListPluginsTask()
+            .build()
     }
 
     @Test
