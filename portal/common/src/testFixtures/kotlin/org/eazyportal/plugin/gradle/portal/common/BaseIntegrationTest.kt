@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.common
 
+import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeAll
@@ -51,10 +52,6 @@ abstract class BaseIntegrationTest {
         subProjectNames.forEach {
             Files.createDirectories(resolve(it).toPath())
         }
-    }
-
-    companion object {
-        protected const val PROJECT_NAME = "dummy-project"
     }
 
 }

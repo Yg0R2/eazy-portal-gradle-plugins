@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.release.core
 
+import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.junit.jupiter.api.BeforeEach
@@ -19,10 +20,6 @@ abstract class BaseIntegrationTest {
             .let(::FileSystemProjectFile)
 
         workingDir = tempDir
-    }
-
-    companion object {
-        const val PROJECT_NAME = "dummy-project"
     }
 
 }

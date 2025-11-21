@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
+import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
@@ -130,7 +131,6 @@ abstract class BaseIntegrationTest {
     companion object {
         protected const val DUMMY_FILE_NAME = "dummy.txt"
         protected const val DUMMY_COMMIT_MESSAGE = "chore: update $DUMMY_FILE_NAME"
-        protected const val PROJECT_NAME = "dummy-project"
     }
 
 }

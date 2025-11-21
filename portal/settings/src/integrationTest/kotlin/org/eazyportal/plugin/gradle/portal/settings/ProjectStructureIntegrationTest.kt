@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

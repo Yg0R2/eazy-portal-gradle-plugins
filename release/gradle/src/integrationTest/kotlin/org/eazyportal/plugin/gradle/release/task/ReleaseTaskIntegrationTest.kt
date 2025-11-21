@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
@@ -39,7 +40,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
             "clone",
             "--recurse-submodules",
             originProjectDir.resolve(".git").path,
-            PROJECT_NAME
+            PROJECT_NAME,
         )
 
         gitActions.execute(projectFile, "branch", FEATURE_BRANCH, "$REMOTE/$FEATURE_BRANCH")
