@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -15,7 +16,7 @@ class EazyPortalProjectStructureIntegrationTest : BaseIntegrationTest() {
     fun initialize() {
         projectDir.initializeGradleProject(*EP_SUBPROJECT_NAMES)
         EP_SUBPROJECT_NAMES.forEach {
-            projectDir.copyIntoFromResources("$it/")
+            projectDir.copyIntoFromResources(this::class.java.simpleName, "$it/")
         }
     }
 

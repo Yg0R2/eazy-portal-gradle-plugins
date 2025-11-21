@@ -4,8 +4,10 @@ import java.io.File
 
 object ResourceUtils {
 
+    private const val COMMON_FOLDER_NAME = "_common"
+
     fun File.copyIntoFromResources(
-        parentFolder: String = "_common",
+        parentFolder: String = COMMON_FOLDER_NAME,
         resourcePath: String,
     ): File {
         val resourceFile = getResourceFile(parentFolder, resourcePath)
@@ -24,13 +26,18 @@ object ResourceUtils {
     private fun getResourceFile(
         parentFolder: String,
         resourcePath: String,
-    ): File =
-        with(this@ResourceUtils::class.java) {
-            classLoader.getResource("$parentFolder/$resourcePath")
-                ?: classLoader.getResource("_common/$resourcePath")
+    ): File {
+        val resourceFullPath = "$parentFolder/$resourcePath"
+        val resourceCommonPath = "$COMMON_FOLDER_NAME/$resourcePath"
+
+        return with(this@ResourceUtils::class.java.classLoader) {
+            getResource(resourceFullPath) ?: getResource(resourceCommonPath)
         }?.let { File(it.toURI()) }
-            ?: throw IllegalArgumentException(
-                "Resource not found in $parentFolder/$resourcePath, _common/$resourcePath"
-            )
+            ?: if (parentFolder == COMMON_FOLDER_NAME) {
+                throw IllegalArgumentException("Resource not found in $resourceFullPath")
+            } else {
+                throw IllegalArgumentException("Resource not found in $resourceFullPath, $resourceCommonPath")
+            }
+    }
 
 }

@@ -91,7 +91,7 @@ abstract class BaseIntegrationTest {
             gitActions.add(this, "*")
             gitActions.commit(this, "initialize project")
 
-            copyIntoFromResources(resourcePath = GRADLE_PROPERTIES_FILE_NAME)
+            copyIntoFromResources(this@BaseIntegrationTest::class.java.simpleName, GRADLE_PROPERTIES_FILE_NAME)
 
             gitActions.add(this, "*")
             gitActions.commit(this, "chore: add gradle.properties")
