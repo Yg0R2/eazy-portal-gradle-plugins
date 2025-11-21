@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
@@ -55,7 +56,7 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'run' should set release version`() {
         // GIVEN
-        projectDir.copyIntoFromResources("src")
+        projectDir.copyIntoFromResources(this::class.java.simpleName, "src")
 
         gitActions.add(projectFile, "*")
         gitActions.commit(projectFile, "feature: add request")
@@ -72,7 +73,7 @@ class SetReleaseVersionTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'run' should set release version based on custom ConventionalCommitType`() {
         // GIVEN
-        projectDir.copyIntoFromResources("build.gradle.kts.customConventionalCommitTypes")
+        projectDir.copyIntoFromResources(this::class.java.simpleName, "build.gradle.kts.customConventionalCommitTypes")
             .renameTo(projectDir.resolve("build.gradle.kts"))
 
         gitActions.add(projectFile, "*")

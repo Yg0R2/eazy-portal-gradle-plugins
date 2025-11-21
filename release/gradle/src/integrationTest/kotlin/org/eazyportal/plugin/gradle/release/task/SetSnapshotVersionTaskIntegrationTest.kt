@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
@@ -43,7 +44,7 @@ class SetSnapshotVersionTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'run' should set snapshot version`() {
         // GIVEN
-        projectDir.copyIntoFromResources("$GRADLE_PROPERTIES_FILE_NAME.release-version")
+        projectDir.copyIntoFromResources(this::class.java.simpleName, "$GRADLE_PROPERTIES_FILE_NAME.release-version")
             .renameTo(projectDir.resolve(GRADLE_PROPERTIES_FILE_NAME))
 
         // WHEN

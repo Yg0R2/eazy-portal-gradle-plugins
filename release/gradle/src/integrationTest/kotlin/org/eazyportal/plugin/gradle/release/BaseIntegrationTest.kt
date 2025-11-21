@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
+import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
@@ -12,7 +13,6 @@ import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Files
@@ -46,23 +46,6 @@ abstract class BaseIntegrationTest {
             .also { it.mkdirs() }
 
         projectFile = FileSystemProjectFile(projectDir)
-    }
-
-    protected fun File.copyIntoFromResources(
-        fileName: String,
-        resourceSubFolder: String = "",
-    ): File {
-        val resourceFile = getResourceFile(fileName, resourceSubFolder)
-
-        return resolve(fileName).also {
-            it.parentFile.mkdirs()
-
-            if (resourceFile.isDirectory) {
-                resourceFile.copyRecursively(it, true)
-            } else {
-                it.writeText(resourceFile.readText())
-            }
-        }
     }
 
     protected fun ProjectFile<File>.createDummyComment(
@@ -108,7 +91,7 @@ abstract class BaseIntegrationTest {
             gitActions.add(this, "*")
             gitActions.commit(this, "initialize project")
 
-            copyIntoFromResources(GRADLE_PROPERTIES_FILE_NAME)
+            copyIntoFromResources(resourcePath = GRADLE_PROPERTIES_FILE_NAME)
 
             gitActions.add(this, "*")
             gitActions.commit(this, "chore: add gradle.properties")
@@ -121,7 +104,7 @@ abstract class BaseIntegrationTest {
     protected fun File.initializeGitProject(
         vararg subModuleNames: String,
     ) {
-        copyIntoFromResources("README.adoc")
+        copyIntoFromResources(resourcePath = "README.adoc")
 
         with(FileSystemProjectFile(this)) {
             gitActions.execute(this, "init", "--initial-branch=$RELEASE_BRANCH")
@@ -136,26 +119,13 @@ abstract class BaseIntegrationTest {
         createGradleRunner(this, "init", "--dsl", "kotlin")
             .build()
 
-        copyIntoFromResources("build.gradle.kts")
-        copyIntoFromResources("settings.gradle.kts")
+        copyIntoFromResources(resourcePath = "build.gradle.kts")
+        copyIntoFromResources(resourcePath = "settings.gradle.kts")
 
         subProjectNames.forEach {
             Files.createDirectories(resolve(it).toPath())
         }
     }
-
-    private fun getResourceFile(
-        fileName: String,
-        resourceSubFolder: String = "",
-    ): File =
-        with(this@BaseIntegrationTest::class.java) {
-            val resource = classLoader.getResource(
-                "${this@BaseIntegrationTest::class.java.simpleName}/$resourceSubFolder/$fileName"
-            ) ?: classLoader.getResource("_common/$resourceSubFolder/$fileName")
-
-            resource?.let { File(it.toURI()) }
-                ?: throw IllegalArgumentException("Resource is not found in classpath: $name")
-        }
 
     companion object {
         protected const val DUMMY_FILE_NAME = "dummy.txt"

@@ -5,6 +5,8 @@ pluginManagement {
     includeBuild("conventions")
 }
 
+include("common")
+
 listOf(
     "common",
     "project",

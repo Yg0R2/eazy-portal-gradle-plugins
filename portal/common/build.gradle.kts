@@ -3,7 +3,11 @@ plugins {
 }
 
 dependencies {
+    // dependencies
     implementation(gradleApi())
+
+    // TestFixtures dependencies
+    testFixturesApi(testFixtures(project(":common")))
 
     testFixturesImplementation(gradleTestKit())
 }

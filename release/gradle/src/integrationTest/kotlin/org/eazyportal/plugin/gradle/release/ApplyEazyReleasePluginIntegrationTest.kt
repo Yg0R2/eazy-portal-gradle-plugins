@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +37,7 @@ class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
         projectDir.resolve("build.gradle.kts")
             .renameTo(subprojectDir.resolve("build.gradle.kts"))
 
-        projectDir.copyIntoFromResources("settings.gradle.kts.withSubproject")
+        projectDir.copyIntoFromResources(this::class.java.simpleName, "settings.gradle.kts.withSubproject")
             .renameTo(projectDir.resolve("settings.gradle.kts"))
 
         // WHEN
