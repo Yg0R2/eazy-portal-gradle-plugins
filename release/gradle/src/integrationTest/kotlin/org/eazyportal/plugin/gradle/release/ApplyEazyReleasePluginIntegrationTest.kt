@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.junit.jupiter.api.BeforeEach

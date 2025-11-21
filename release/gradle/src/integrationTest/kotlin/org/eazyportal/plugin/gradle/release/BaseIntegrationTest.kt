@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
@@ -12,7 +13,6 @@ import org.eazyportal.plugin.release.core.scm.GitActions
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -65,22 +65,6 @@ abstract class BaseIntegrationTest {
         resolve(DUMMY_FILE_NAME)
             .writeText(UUID.randomUUID().toString())
     }
-
-    protected fun createGradleRunner(
-        projectFile: File,
-        vararg arguments: String,
-    ): GradleRunner =
-        GradleRunner.create()
-            .forwardOutput()
-            .withArguments(
-                "--stacktrace",
-                "--warning-mode=all",
-                "-Pversion=0.0.1-SNAPSHOT",
-                "--no-configuration-cache",
-                *arguments,
-            ).withPluginClasspath()
-//            .withGradleVersion("9.1.0")
-            .withProjectDir(projectFile)
 
     protected fun File.initializeGitAndGradleProject(
         vararg subModuleNames: String,

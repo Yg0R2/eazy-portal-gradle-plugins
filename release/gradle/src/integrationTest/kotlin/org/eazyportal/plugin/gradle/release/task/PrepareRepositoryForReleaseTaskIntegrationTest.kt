@@ -2,6 +2,7 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions
 import org.eazyportal.plugin.common.CommonTestFixtures
+import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
