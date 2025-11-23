@@ -3,6 +3,7 @@ package org.eazyportal.plugin.gradle.release
 import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
+import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
@@ -69,7 +70,11 @@ abstract class BaseIntegrationTest {
     protected fun File.initializeGitAndGradleProject(
         vararg subModuleNames: String,
     ) {
-        initializeGradleProject(*subModuleNames)
+        GradleProjectBuilder(
+            projectDir = this,
+            subProjectNames = subModuleNames.toSet(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).build()
         initializeGitProject(*subModuleNames)
 
         with(FileSystemProjectFile(this)) {
@@ -95,20 +100,6 @@ abstract class BaseIntegrationTest {
             gitActions.execute(this, "init", "--initial-branch=$RELEASE_BRANCH")
             gitActions.add(this, ".gitattributes", ".gitignore", "README.adoc")
             gitActions.commit(this, "initial commit")
-        }
-    }
-
-    protected fun File.initializeGradleProject(
-        vararg subProjectNames: String,
-    ) {
-        createGradleRunner(this, "init", "--dsl", "kotlin")
-            .build()
-
-        copyIntoFromResources(resourcePath = "build.gradle.kts")
-        copyIntoFromResources(resourcePath = "settings.gradle.kts")
-
-        subProjectNames.forEach {
-            Files.createDirectories(resolve(it).toPath())
         }
     }
 

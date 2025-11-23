@@ -3,7 +3,14 @@ package org.eazyportal.plugin.gradle.release
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
+import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.RELEASE_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -11,7 +18,10 @@ class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
 
     @BeforeEach
     fun setUp() {
-        projectDir.initializeGradleProject()
+        GradleProjectBuilder(
+            projectDir = projectDir,
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).build()
     }
 
     @Test
@@ -25,7 +35,13 @@ class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
         assertThat(actual.output.lines())
             .contains(
                 "Eazy-release tasks",
+                FINALIZE_RELEASE_VERSION_TASK_NAME,
+                FINALIZE_SNAPSHOT_VERSION_TASK_NAME,
+                PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME,
+                RELEASE_TASK_NAME,
                 SET_RELEASE_VERSION_TASK_NAME,
+                SET_SNAPSHOT_VERSION_TASK_NAME,
+                UPDATE_SCM_TASK_NAME,
             )
     }
 
