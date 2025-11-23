@@ -1,7 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
@@ -17,8 +16,7 @@ import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.nio.file.Files
-import java.util.*
+import java.util.UUID
 
 abstract class BaseIntegrationTest {
 
@@ -80,11 +78,6 @@ abstract class BaseIntegrationTest {
         with(FileSystemProjectFile(this)) {
             gitActions.add(this, "*")
             gitActions.commit(this, "initialize project")
-
-            copyIntoFromResources(this@BaseIntegrationTest::class.java.simpleName, GRADLE_PROPERTIES_FILE_NAME)
-
-            gitActions.add(this, "*")
-            gitActions.commit(this, "chore: add gradle.properties")
 
             // TODO: maybe move it into `initializeGitProject`
             gitActions.execute(this, "branch", FEATURE_BRANCH)
