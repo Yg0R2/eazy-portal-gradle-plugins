@@ -1,8 +1,13 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions
-import org.eazyportal.plugin.common.CommonTestFixtures
+import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.GradleTestFixtures
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.common.scm.GitUtils.createDummyCommit
+import org.eazyportal.plugin.common.scm.GitUtils.createDummyFile
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
@@ -23,7 +28,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
             "clone",
             "--recurse-submodules",
             originProjectDir.resolve(".git").path,
-            CommonTestFixtures.PROJECT_NAME,
+            GradleTestFixtures.PROJECT_NAME,
         )
     }
 
@@ -33,17 +38,17 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         // GIVEN
         gitActions.checkout(projectFile, testBranch)
 
-        projectFile.createDummyFile()
+        scmUtils.createDummyFile(projectDir)
 
         // WHEN
         val actual = createGradleRunner(projectDir, EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .build()
 
         // THEN
-        Assertions.assertThat(actual.output.lines())
+        assertThat(actual.output.lines())
             .contains("> Task :${EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME}")
 
-        Assertions.assertThat(gitActions.execute(projectFile, "status"))
+        assertThat(gitActions.execute(projectFile, "status"))
             .contains(
                 "On branch $testBranch",
                 "Your branch is up to date with '${ScmConstants.REMOTE}/$testBranch'.",
@@ -57,17 +62,17 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
         // GIVEN
         gitActions.checkout(projectFile, testBranch)
 
-        projectFile.createDummyComment(testBranch)
+        scmUtils.createDummyCommit(projectDir, testBranch)
 
         // WHEN
         val actual = createGradleRunner(projectDir, EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .build()
 
         // THEN
-        Assertions.assertThat(actual.output.lines())
+        assertThat(actual.output.lines())
             .contains("> Task :${EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME}")
 
-        Assertions.assertThat(gitActions.getCommits(projectFile))
+        assertThat(gitActions.getCommits(projectFile))
             .doesNotContain(DUMMY_COMMIT_MESSAGE)
     }
 
@@ -75,8 +80,16 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @ParameterizedTest
     fun `test 'run' update release and feature branches`(testBranch: String) {
         // GIVEN
-        originProjectFile.createDummyComment(ScmConstants.RELEASE_BRANCH, "chore: commit on ${ScmConstants.RELEASE_BRANCH}")
-        originProjectFile.createDummyComment(ScmConstants.FEATURE_BRANCH, "chore: commit on ${ScmConstants.FEATURE_BRANCH}")
+        scmUtils.createDummyCommit(
+            originProjectDir,
+            ScmConstants.RELEASE_BRANCH,
+            "chore: commit on ${ScmConstants.RELEASE_BRANCH}"
+        )
+        scmUtils.createDummyCommit(
+            originProjectDir,
+            ScmConstants.FEATURE_BRANCH,
+            "chore: commit on ${ScmConstants.FEATURE_BRANCH}"
+        )
 
         gitActions.checkout(projectFile, testBranch)
 
@@ -85,34 +98,38 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
             .build()
 
         // THEN
-        Assertions.assertThat(actual.output.lines())
+        assertThat(actual.output.lines())
             .contains("> Task :${EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME}")
 
-        Assertions.assertThat(
+        assertThat(
             gitActions.getCommits(
                 originProjectFile,
                 ScmConstants.RELEASE_BRANCH,
                 ScmConstants.FEATURE_BRANCH
             )
-        )
-            .contains("chore: commit on ${ScmConstants.FEATURE_BRANCH}")
-            .containsExactlyElementsOf(gitActions.getCommits(projectFile,
-                ScmConstants.RELEASE_BRANCH,
-                ScmConstants.FEATURE_BRANCH
-            ))
+        ).contains("chore: commit on ${ScmConstants.FEATURE_BRANCH}")
+            .containsExactlyElementsOf(
+                gitActions.getCommits(
+                    projectFile,
+                    ScmConstants.RELEASE_BRANCH,
+                    ScmConstants.FEATURE_BRANCH
+                )
+            )
 
-        Assertions.assertThat(
+        assertThat(
             gitActions.getCommits(
                 originProjectFile,
                 ScmConstants.FEATURE_BRANCH,
                 ScmConstants.RELEASE_BRANCH
             )
-        )
-            .contains("chore: commit on ${ScmConstants.RELEASE_BRANCH}")
-            .containsExactlyElementsOf(gitActions.getCommits(projectFile,
-                ScmConstants.FEATURE_BRANCH,
-                ScmConstants.RELEASE_BRANCH
-            ))
+        ).contains("chore: commit on ${ScmConstants.RELEASE_BRANCH}")
+            .containsExactlyElementsOf(
+                gitActions.getCommits(
+                    projectFile,
+                    ScmConstants.FEATURE_BRANCH,
+                    ScmConstants.RELEASE_BRANCH
+                )
+            )
     }
 
 }

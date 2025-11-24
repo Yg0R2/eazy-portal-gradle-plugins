@@ -1,9 +1,9 @@
 package org.eazyportal.plugin.common.gradle
 
-import org.eazyportal.plugin.common.CommonTestFixtures.BUILD_GRADLE_KTS_FILE_NAME
-import org.eazyportal.plugin.common.CommonTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.CommonTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import java.io.File
 import java.nio.file.Files

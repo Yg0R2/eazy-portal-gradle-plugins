@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.CommonTestFixtures.SUBPROJECT_NAMES
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBPROJECT_NAMES
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder

@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
@@ -64,7 +64,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, RELEASE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -83,7 +83,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should succeed from release branch when there are acceptable commits on release branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, RELEASE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -99,7 +99,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should fal from feature branch when there are acceptable commits on release branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, FEATURE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -118,7 +118,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, FEATURE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -149,7 +149,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, RELEASE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -168,7 +168,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on release branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, RELEASE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -184,7 +184,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on release branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, FEATURE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)
@@ -200,7 +200,7 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        originProjectFile.createDummyComment(FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
         gitActions.checkout(projectFile, FEATURE_BRANCH)
         gitActions.fetch(projectFile, REMOTE)

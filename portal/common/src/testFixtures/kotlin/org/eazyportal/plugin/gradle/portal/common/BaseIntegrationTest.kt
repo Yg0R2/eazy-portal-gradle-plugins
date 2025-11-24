@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.common
 
-import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir

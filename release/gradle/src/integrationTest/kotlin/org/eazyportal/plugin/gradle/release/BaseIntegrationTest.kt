@@ -1,10 +1,11 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.common.CommonTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.common.scm.ScmUtils
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
-import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
@@ -21,6 +22,7 @@ import java.util.UUID
 abstract class BaseIntegrationTest {
 
     protected val gitActions = GitActions(CommandLineExecutor())
+    protected val scmUtils: ScmUtils = GitUtils
 
     protected lateinit var originProjectDir: File
     protected lateinit var originProjectFile: ProjectFile<File>
@@ -46,23 +48,6 @@ abstract class BaseIntegrationTest {
             .also { it.mkdirs() }
 
         projectFile = FileSystemProjectFile(projectDir)
-    }
-
-    protected fun ProjectFile<File>.createDummyComment(
-        branch: String,
-        commitMessage: String = DUMMY_COMMIT_MESSAGE,
-    ) {
-        gitActions.checkout(this, branch)
-
-        createDummyFile()
-
-        gitActions.add(this, DUMMY_FILE_NAME)
-        gitActions.commit(this, commitMessage)
-    }
-
-    protected fun ProjectFile<File>.createDummyFile() {
-        resolve(DUMMY_FILE_NAME)
-            .writeText(UUID.randomUUID().toString())
     }
 
     protected fun File.initializeGitAndGradleProject(
@@ -94,11 +79,6 @@ abstract class BaseIntegrationTest {
             gitActions.add(this, ".gitattributes", ".gitignore", "README.adoc")
             gitActions.commit(this, "initial commit")
         }
-    }
-
-    companion object {
-        protected const val DUMMY_FILE_NAME = "dummy.txt"
-        protected const val DUMMY_COMMIT_MESSAGE = "chore: update $DUMMY_FILE_NAME"
     }
 
 }

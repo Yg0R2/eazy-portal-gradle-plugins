@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.common
 
-object CommonTestFixtures {
+object GradleTestFixtures {
 
     const val BUILD_GRADLE_KTS_FILE_NAME = "build.gradle.kts"
     const val GRADLE_PROPERTIES_FILE_NAME = "gradle.properties"
@@ -17,4 +17,5 @@ object CommonTestFixtures {
         "dummy-service",
         "dummy-web",
     )
+
 }
