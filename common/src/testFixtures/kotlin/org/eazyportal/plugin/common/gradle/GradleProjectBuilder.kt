@@ -16,7 +16,7 @@ class GradleProjectBuilder(
     private val projectVersion: String = "0.0.1-SNAPSHOT",
     private val settingsPluginIds: Set<String> = emptySet(),
     private val subProjectNames: Set<String> = emptySet(),
-    private val projectPluginIds: Set<String> = emptySet(),
+    private val projectPluginIds: Set<String> = emptySet(), // TODO: add withRelease, withEazyPortal
 ) {
 
     private val extraProjectContent = mutableListOf<String>()

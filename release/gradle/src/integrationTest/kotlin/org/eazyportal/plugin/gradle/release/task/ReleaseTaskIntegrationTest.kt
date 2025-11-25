@@ -1,9 +1,9 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
+import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.SingleProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.RELEASE_TASK_NAME
@@ -13,45 +13,43 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
-import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
+class ReleaseTaskIntegrationTest : SingleProjectBaseIntegrationTest(GitUtils) {
 
-    @BeforeEach
-    fun setUp() {
-        originProjectDir.initializeGitAndGradleProject()
-        // Workaround for using none-bare repository
-        gitActions.execute(originProjectFile, "config", "receive.denyCurrentBranch", "ignore")
-
-        gitActions.tag(originProjectFile, Version.of(INITIAL_TAG))
-
-        gitActions.execute(
-            FileSystemProjectFile(workingDir),
-            "-c",
-            "protocol.file.allow=always",
-            "clone",
-            "--recurse-submodules",
-            originProjectDir.resolve(".git").path,
-            PROJECT_NAME,
-        )
-
-        gitActions.execute(projectFile, "branch", FEATURE_BRANCH, "$REMOTE/$FEATURE_BRANCH")
-    }
+//    @BeforeEach
+//    fun setUp() {
+//        remoteDir.initializeGitAndGradleProject()
+//        // Workaround for using none-bare repository
+//        scmUtils.execute(originProjectFile, "config", "receive.denyCurrentBranch", "ignore")
+//
+//        scmUtils.tag(originProjectFile, Version.of(INITIAL_TAG))
+//
+//        scmUtils.execute(
+//            FileSystemProjectFile(workingDir),
+//            "-c",
+//            "protocol.file.allow=always",
+//            "clone",
+//            "--recurse-submodules",
+//            remoteDir.resolve(".git").path,
+//            PROJECT_NAME,
+//        )
+//
+//        scmUtils.execute(projectDir, "branch", FEATURE_BRANCH, "$REMOTE/$FEATURE_BRANCH")
+//    }
 
     @CsvSource(FEATURE_BRANCH, RELEASE_BRANCH)
     @ParameterizedTest
     fun `test 'release' should fail when there are no acceptable commits`(testBranch: String) {
         // GIVEN
-        gitActions.checkout(projectFile, testBranch)
+        scmUtils.checkout(projectDir, testBranch)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -64,10 +62,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, RELEASE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, RELEASE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -83,10 +81,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should succeed from release branch when there are acceptable commits on release branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, RELEASE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, RELEASE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -99,10 +97,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should fal from feature branch when there are acceptable commits on release branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, FEATURE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, FEATURE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -118,10 +116,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, FEATURE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, FEATURE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -149,10 +147,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, RELEASE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, RELEASE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -168,10 +166,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on release branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, RELEASE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, RELEASE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -184,10 +182,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on release branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, FEATURE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, FEATURE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -200,10 +198,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on feature branch`() {
         // GIVEN
-        scmUtils.createDummyCommit(originProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
+        scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, COMMIT_MESSAGE)
 
-        gitActions.checkout(projectFile, FEATURE_BRANCH)
-        gitActions.fetch(projectFile, REMOTE)
+        scmUtils.checkout(projectDir, FEATURE_BRANCH)
+        scmUtils.fetch(projectDir, REMOTE)
 
         // WHEN
         val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -225,10 +223,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
             )
 
         // assert project version
-        assertThat(projectActions.getVersion())
+        assertThat(getProjectVersion(projectDir))
             .isEqualTo(SNAPSHOT_001)
 
-        assertThat(originProjectActions.getVersion())
+        assertThat(getProjectVersion(remoteProjectDir))
             .isEqualTo(SNAPSHOT_001)
 
         assertGitRepository(releaseBranchCommits, featureBranchCommits)
@@ -240,37 +238,33 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
         lastTag: String = INITIAL_TAG,
     ) {
         // assert commits
-        assertThat(gitActions.getCommits(projectFile, INITIAL_TAG, "$REMOTE/$RELEASE_BRANCH"))
+        assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, "$REMOTE/$RELEASE_BRANCH"))
             .containsExactlyElementsOf(releaseBranchCommits)
-        assertThat(gitActions.getCommits(projectFile, INITIAL_TAG, "$REMOTE/$FEATURE_BRANCH"))
+        assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, "$REMOTE/$FEATURE_BRANCH"))
             .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
-        assertThat(gitActions.getCommits(projectFile, INITIAL_TAG, RELEASE_BRANCH))
+        assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, RELEASE_BRANCH))
             .containsExactlyElementsOf(releaseBranchCommits)
-        assertThat(gitActions.getCommits(projectFile, INITIAL_TAG, FEATURE_BRANCH))
+        assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, FEATURE_BRANCH))
             .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
 
-        assertThat(gitActions.getCommits(originProjectFile, INITIAL_TAG, RELEASE_BRANCH))
+        assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, RELEASE_BRANCH))
             .containsExactlyElementsOf(releaseBranchCommits)
-        assertThat(gitActions.getCommits(originProjectFile, INITIAL_TAG, FEATURE_BRANCH))
+        assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, FEATURE_BRANCH))
             .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
 
         // assert tags
-        assertThat(gitActions.getLastTag(projectFile, RELEASE_BRANCH))
+        assertThat(scmUtils.getLastTag(projectDir, RELEASE_BRANCH))
             .isEqualTo(lastTag)
 
-        assertThat(gitActions.getLastTag(originProjectFile, RELEASE_BRANCH))
+        assertThat(scmUtils.getLastTag(remoteProjectDir, RELEASE_BRANCH))
             .isEqualTo(lastTag)
 
         val expectedTags = setOf(INITIAL_TAG, lastTag)
 
-        gitActions.execute(projectFile, "tag")
-            .split(System.lineSeparator())
-            .let { assertThat(it) }
+        assertThat(scmUtils.getTags(projectDir))
             .containsExactlyElementsOf(expectedTags)
 
-        gitActions.execute(originProjectFile, "tag")
-            .split(System.lineSeparator())
-            .let { assertThat(it) }
+        assertThat(scmUtils.getTags(remoteProjectDir))
             .containsExactlyElementsOf(expectedTags)
     }
 
@@ -298,10 +292,10 @@ class ReleaseTaskIntegrationTest : BaseIntegrationTest() {
             )
 
         // assert project version
-        assertThat(projectActions.getVersion())
+        assertThat(getProjectVersion(projectDir))
             .isEqualTo(SNAPSHOT_002)
 
-        assertThat(originProjectActions.getVersion())
+        assertThat(getProjectVersion(remoteProjectDir))
             .isEqualTo(SNAPSHOT_002)
 
         assertGitRepository(releaseBranchCommits, featureBranchCommits, RELEASE_001.toString())
