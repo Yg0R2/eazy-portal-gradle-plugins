@@ -1,13 +1,9 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleTestFixtures
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.common.scm.GitUtils.createDummyCommit
-import org.eazyportal.plugin.common.scm.GitUtils.createDummyFile
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.BaseIntegrationTest
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
@@ -73,7 +69,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest : BaseIntegrationTest() {
             .contains("> Task :${EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME}")
 
         assertThat(gitActions.getCommits(projectFile))
-            .doesNotContain(DUMMY_COMMIT_MESSAGE)
+            .doesNotContain(CHORE_COMMIT_MESSAGE)
     }
 
     @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)

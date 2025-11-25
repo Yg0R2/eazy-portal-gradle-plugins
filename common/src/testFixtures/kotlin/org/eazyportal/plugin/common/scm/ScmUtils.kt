@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.common.scm
 
 import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
@@ -13,6 +13,13 @@ object GitUtils : ScmUtils() {
 
     override fun checkout(projectDir: File, toBranch: String) {
         projectDir.git("checkout", toBranch)
+    }
+
+    override fun clean(projectDir: File) {
+        // Workaround for using none-bare repository as origin
+        projectDir.git("reset", "--hard")
+
+        projectDir.git("clean", "-fdX")
     }
 
     override fun clone(from: File, to: File) {
@@ -31,7 +38,7 @@ object GitUtils : ScmUtils() {
         branch: String,
         commitMessage: String,
     ) {
-        projectDir.git("checkout", branch)
+        checkout(projectDir, branch)
 
         createDummyFile(projectDir)
 
@@ -75,7 +82,7 @@ object GitUtils : ScmUtils() {
             .trim()
 
     override fun getTags(projectDir: File): List<String> =
-        projectDir.git("tag", "--sort=-creatordate")
+        projectDir.git("tag", "--list", "--sort=-creatordate")
             .split(System.lineSeparator())
             .asSequence()
             .map { it.trim() }
@@ -106,12 +113,14 @@ abstract class ScmUtils {
 
     abstract fun checkout(projectDir: File, toBranch: String)
 
+    abstract fun clean(projectDir: File)
+
     abstract fun clone(from: File, to: File)
 
     abstract fun createDummyCommit(
         projectDir: File,
         branch: String,
-        commitMessage: String = DUMMY_COMMIT_MESSAGE,
+        commitMessage: String = CHORE_COMMIT_MESSAGE,
     )
 
     abstract fun createDummyFile(projectDir: File)

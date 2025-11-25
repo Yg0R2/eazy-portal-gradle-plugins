@@ -68,7 +68,7 @@ class GitActions<T: Any>(
             .toList()
 
     override fun getTags(projectFile: ProjectFile<T>, fromRef: String): List<String> =
-        execute(projectFile, "tag", "--sort=-creatordate", "--contains", fromRef)
+        execute(projectFile, "tag", "--list", "--sort=-creatordate", "--contains", fromRef)
             .split(LINE_BREAK_REGEX)
             .filter { it.isNotBlank() }
 
