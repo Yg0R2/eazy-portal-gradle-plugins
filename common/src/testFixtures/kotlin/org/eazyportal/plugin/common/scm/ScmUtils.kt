@@ -35,14 +35,16 @@ object GitUtils : ScmUtils() {
 
     override fun createDummyCommit(
         projectDir: File,
-        branch: String,
+        branch: String?,
         commitMessage: String,
     ) {
-        checkout(projectDir, branch)
+        if (branch != null) {
+            checkout(projectDir, branch)
+        }
 
         createDummyFile(projectDir)
 
-        projectDir.git("add", DUMMY_FILE_NAME)
+        projectDir.git("add", ".")
         projectDir.git("commit", "-m", commitMessage)
     }
 
@@ -71,11 +73,7 @@ object GitUtils : ScmUtils() {
         listOfNotNull(fromRef, toRef)
             .joinToString("..")
             .let { projectDir.git("log", "--pretty=format:%s", it) }
-            .split(System.lineSeparator())
-            .asSequence()
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .toList()
+            .splitOutput()
 
     override fun getLastTag(projectDir: File, fromRef: String?): String =
         projectDir.git("describe", "--abbrev=0", "--tags", fromRef ?: "HEAD")
@@ -83,11 +81,7 @@ object GitUtils : ScmUtils() {
 
     override fun getTags(projectDir: File): List<String> =
         projectDir.git("tag", "--list", "--sort=-creatordate")
-            .split(System.lineSeparator())
-            .asSequence()
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .toList()
+            .splitOutput()
 
     override fun initializeRepository(projectDir: File) {
         projectDir.resolve("README.adoc")
@@ -107,6 +101,17 @@ object GitUtils : ScmUtils() {
         projectDir.git("branch", "dev")
     }
 
+    override fun status(projectDir: File): List<String> =
+        projectDir.git("status")
+            .splitOutput()
+
+    private fun String.splitOutput(): List<String> =
+        split(System.lineSeparator())
+        .asSequence()
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .toList()
+
 }
 
 abstract class ScmUtils {
@@ -119,7 +124,7 @@ abstract class ScmUtils {
 
     abstract fun createDummyCommit(
         projectDir: File,
-        branch: String,
+        branch: String? = null,
         commitMessage: String = CHORE_COMMIT_MESSAGE,
     )
 
@@ -133,7 +138,7 @@ abstract class ScmUtils {
 
     abstract fun getCommits(
         projectDir: File,
-        fromRef: String?,
+        fromRef: String? = null,
         toRef: String = "HEAD",
     ): List<String>
 
@@ -142,5 +147,7 @@ abstract class ScmUtils {
     abstract fun getTags(projectDir: File): List<String>
 
     abstract fun initializeRepository(projectDir: File)
+
+    abstract fun status(projectDir: File): List<String>
 
 }
