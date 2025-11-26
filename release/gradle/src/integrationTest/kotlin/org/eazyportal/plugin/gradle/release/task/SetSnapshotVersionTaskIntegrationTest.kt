@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.SingleModuleScmProjectBaseIntegrationTest
+import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
+import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001

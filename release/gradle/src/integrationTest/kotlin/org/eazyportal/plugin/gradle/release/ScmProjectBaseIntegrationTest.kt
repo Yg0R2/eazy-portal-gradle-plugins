@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle
+package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.scm.ScmUtils

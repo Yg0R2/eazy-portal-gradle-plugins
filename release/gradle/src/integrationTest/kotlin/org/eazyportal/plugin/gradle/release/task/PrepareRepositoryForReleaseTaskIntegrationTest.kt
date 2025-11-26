@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.SingleModuleScmProjectBaseIntegrationTest
+import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
+import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
