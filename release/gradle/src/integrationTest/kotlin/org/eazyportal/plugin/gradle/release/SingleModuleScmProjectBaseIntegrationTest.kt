@@ -11,15 +11,13 @@ abstract class SingleModuleScmProjectBaseIntegrationTest(
 ) : ScmProjectBaseIntegrationTest(scmUtils) {
 
     @BeforeEach
-    override fun setUpRepositories(@TempDir tempDir: File) {
-        super.setUpRepositories(tempDir)
-
+    fun setUpRepositories() {
         setupRemoteBeforeClone()
 
         scmUtils.clone(remoteProjectDir, projectDir)
     }
 
-    protected open fun setupRemoteBeforeClone() {
+    override fun setupRemoteBeforeClone() {
         GradleProjectBuilder(
             projectDir = remoteProjectDir,
             projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")

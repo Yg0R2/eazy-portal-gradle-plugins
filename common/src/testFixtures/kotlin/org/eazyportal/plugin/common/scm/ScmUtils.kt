@@ -3,13 +3,16 @@ package org.eazyportal.plugin.common.scm
 import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
-import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import java.io.File
 import java.util.UUID
 import kotlin.sequences.forEach
 
 object GitUtils : ScmUtils() {
+
+    override fun add(projectDir: File, vararg filePaths: String) {
+        projectDir.git("add", *filePaths)
+    }
 
     override fun checkout(projectDir: File, toBranch: String) {
         projectDir.git("checkout", toBranch)
@@ -28,9 +31,13 @@ object GitUtils : ScmUtils() {
             "protocol.file.allow=always",
             "clone",
             "--recurse-submodules",
-            from.resolve(".git").path,
+            from.resolve(".git").absolutePath,
             to.name,
         )
+    }
+
+    override fun commit(projectDir: File, commitMessage: String) {
+        projectDir.git("commit", "-m", commitMessage)
     }
 
     override fun createDummyCommit(
@@ -45,7 +52,7 @@ object GitUtils : ScmUtils() {
         createDummyFile(projectDir)
 
         projectDir.git("add", ".")
-        projectDir.git("commit", "-m", commitMessage)
+        commit(projectDir, commitMessage)
     }
 
     override fun createDummyFile(projectDir: File) {
@@ -111,11 +118,15 @@ object GitUtils : ScmUtils() {
 
 abstract class ScmUtils {
 
+    abstract fun add(projectDir: File, vararg filePaths: String)
+
     abstract fun checkout(projectDir: File, toBranch: String)
 
     abstract fun clean(projectDir: File)
 
     abstract fun clone(from: File, to: File)
+
+    abstract fun commit(projectDir: File, commitMessage: String)
 
     abstract fun createDummyCommit(
         projectDir: File,

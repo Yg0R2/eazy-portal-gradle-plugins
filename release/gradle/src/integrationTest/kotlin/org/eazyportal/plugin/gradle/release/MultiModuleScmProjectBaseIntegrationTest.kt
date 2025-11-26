@@ -17,8 +17,8 @@ abstract class MultiModuleScmProjectBaseIntegrationTest(
             .also { it.mkdirs() }
 
     @BeforeEach
-    override fun setUpRepositories(@TempDir tempDir: File) {
-        super.setUpRepositories(tempDir)
+    fun setUpRepositories() {
+        setupRemoteBeforeClone()
 
         GradleProjectBuilder(
             projectDir = remoteProjectDir,

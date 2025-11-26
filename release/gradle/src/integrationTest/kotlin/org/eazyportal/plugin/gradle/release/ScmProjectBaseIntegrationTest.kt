@@ -13,24 +13,13 @@ import java.io.File
 
 abstract class ScmProjectBaseIntegrationTest(
     override val scmUtils: ScmUtils,
-) : ScmProjectIntegrationTest {
-
-    override val projectDir: File
-        get() = workingDir.resolve(PROJECT_NAME)
-            .also { it.mkdirs() }
+) : BaseIntegrationTest(), ScmProjectIntegrationTest {
 
     override val remoteProjectDir: File
         get() = workingDir.resolve("${ScmConstants.REMOTE}/$PROJECT_NAME")
             .also { it.mkdirs() }
 
-    protected lateinit var workingDir: File
-
     private val projectActionsMap = mutableMapOf<String, ProjectActions<File>>()
-
-    @BeforeEach
-    open fun setUpRepositories(@TempDir tempDir: File) {
-        workingDir = tempDir
-    }
 
     final override fun getProjectVersion(projectDir: File, branch: String?): Version {
         if (branch != null) {
@@ -47,5 +36,7 @@ abstract class ScmProjectBaseIntegrationTest(
             GradleProjectActions(FileSystemProjectFile(projectDir))
         }.setVersion(version)
     }
+
+    protected abstract fun setupRemoteBeforeClone()
 
 }
