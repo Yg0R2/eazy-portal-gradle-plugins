@@ -3,6 +3,7 @@ package org.eazyportal.plugin.gradle.release.task
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
+import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
@@ -21,7 +22,16 @@ class SetSnapshotVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitProject :
         SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseSetSnapshotVersionTaskIntegrationTest
+        BaseSetSnapshotVersionTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+
+    }
 
     private interface BaseSetSnapshotVersionTaskIntegrationTest : ScmProjectIntegrationTest {
 

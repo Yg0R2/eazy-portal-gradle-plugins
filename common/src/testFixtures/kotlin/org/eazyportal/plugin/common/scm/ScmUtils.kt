@@ -91,14 +91,9 @@ object GitUtils : ScmUtils() {
         projectDir.git("add", ".")
         projectDir.git("commit", "-m", "initial commit")
 
-        projectDir.git("tag", INITIAL_TAG)
-
         // TODO: move somewhere for origin specific
         // Workaround for using none-bare repository as origin
         projectDir.git("config", "receive.denyCurrentBranch", "ignore")
-
-        // Workaround to have both main and dev branches
-        projectDir.git("branch", "dev")
     }
 
     override fun status(projectDir: File): List<String> =

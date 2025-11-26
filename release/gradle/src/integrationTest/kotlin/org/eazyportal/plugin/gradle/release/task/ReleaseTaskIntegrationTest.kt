@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
+import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
@@ -17,9 +18,6 @@ import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
 import org.eazyportal.plugin.release.core.scm.ScmConstants
-import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
-import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.gradle.testkit.runner.BuildResult
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -31,11 +29,22 @@ class ReleaseTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitProject :
         SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseReleaseTaskIntegrationTest
+        BaseReleaseTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            remoteProjectDir.git("tag", INITIAL_TAG)
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+
+    }
 
     private interface BaseReleaseTaskIntegrationTest : ScmProjectIntegrationTest {
 
-        @CsvSource(FEATURE_BRANCH, RELEASE_BRANCH)
+        @CsvSource(ScmConstants.FEATURE_BRANCH, ScmConstants.RELEASE_BRANCH)
         @ParameterizedTest
         fun `test 'release' should fail when there are no acceptable commits`(testBranch: String) {
             // GIVEN
@@ -52,10 +61,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -71,10 +80,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release' should succeed from release branch when there are acceptable commits on release branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -87,10 +96,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release' should fal from feature branch when there are acceptable commits on release branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -106,10 +115,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
@@ -137,10 +146,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on feature branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -156,10 +165,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on release branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -172,10 +181,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on release branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
@@ -188,10 +197,10 @@ class ReleaseTaskIntegrationTest {
         @Test
         fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on feature branch`() {
             // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
 
-            scmUtils.checkout(projectDir, FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, REMOTE)
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
 
             // WHEN
             val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
