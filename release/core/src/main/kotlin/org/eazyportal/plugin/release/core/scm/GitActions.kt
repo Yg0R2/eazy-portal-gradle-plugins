@@ -26,7 +26,7 @@ class GitActions<T: Any>(
         execute(projectFile, "commit", "-m", message)
     }
 
-    fun execute(projectFile: ProjectFile<T>, vararg gitCommands: String): String =
+    fun execute(projectFile: ProjectFile<T>, vararg gitCommands: String): List<String> =
         runCatching {
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, *gitCommands)
         }.getOrElse {
@@ -48,20 +48,15 @@ class GitActions<T: Any>(
         listOfNotNull(fromRef, toRef)
             .joinToString("..")
             .let { execute(projectFile, "log", "--pretty=format:%s", it) }
-            .split(LINE_BREAK_REGEX)
-            .filter { it.isNotBlank() }
 
     override fun getCurrentBranch(projectFile: ProjectFile<T>): String =
-        execute(projectFile, "rev-parse", "--abbrev-ref", "HEAD")
+        execute(projectFile, "rev-parse", "--abbrev-ref", "HEAD")[0]
 
     override fun getLastTag(projectFile: ProjectFile<T>, fromRef: String): String =
-        execute(projectFile, "describe", "--abbrev=0", "--tags", fromRef)
-            .trim()
+        execute(projectFile, "describe", "--abbrev=0", "--tags", fromRef)[0]
 
     override fun getSubmodules(projectFile: ProjectFile<T>): List<String> =
         execute(projectFile, "submodule")
-            .lines()
-            .asSequence()
             .map { it.replace(Regex("""^[\s\W]?\w+\s(.*?)\s?(\(.*\))?${'$'}"""), "$1") }
             .filter { it.isNotBlank() }
             .map { it.trim() }
@@ -69,8 +64,6 @@ class GitActions<T: Any>(
 
     override fun getTags(projectFile: ProjectFile<T>, fromRef: String): List<String> =
         execute(projectFile, "tag", "--list", "--sort=-creatordate", "--contains", fromRef)
-            .split(LINE_BREAK_REGEX)
-            .filter { it.isNotBlank() }
 
     override fun mergeNoCommit(projectFile: ProjectFile<T>, fromBranch: String) {
         execute(projectFile, "merge", "--no-ff", "--no-commit", "--strategy-option=theirs", fromBranch)
@@ -82,7 +75,7 @@ class GitActions<T: Any>(
             .map { "$it:$it" }
             .toTypedArray()
 
-        execute(projectFile, "push", "--atomic", "--tags", remote, *branchesRefs)
+        execute(projectFile, "push", "--atomic", "--tags", "--recurse-submodules=on-demand", remote, *branchesRefs)
     }
 
     override fun tag(projectFile: ProjectFile<T>, version: Version) {
@@ -96,8 +89,6 @@ class GitActions<T: Any>(
             } else {
                 "git"
             }
-
-        private val LINE_BREAK_REGEX = "\r?\n".toRegex()
     }
 
 }

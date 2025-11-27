@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 
 class CommandLineExecutor : CommandExecutor<ProjectFile<File>> {
 
-    override fun execute(projectFile: ProjectFile<File>, vararg commands: String): String {
+    override fun execute(projectFile: ProjectFile<File>, vararg commands: String): List<String> {
         val process = runCatching {
             ProcessBuilder()
                 .directory(projectFile.getFile())
@@ -34,7 +34,12 @@ class CommandLineExecutor : CommandExecutor<ProjectFile<File>> {
             throw CliExecutionException(output)
         }
 
-        return output
+        return output.split(System.lineSeparator())
+            .asSequence()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toList()
+
     }
 
 }

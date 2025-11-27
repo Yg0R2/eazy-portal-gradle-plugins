@@ -6,6 +6,6 @@ import org.eazyportal.plugin.release.core.project.ProjectFile
 interface CommandExecutor<T: ProjectFile<*>> {
 
     @Throws(CliExecutionException::class)
-    fun execute(projectFile: T, vararg commands: String): String
+    fun execute(projectFile: T, vararg commands: String): List<String>
 
 }

@@ -44,7 +44,7 @@ class GitActionsTest {
         // GIVEN
         val filePaths = arrayOf(".")
 
-        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "add", *filePaths) } returns ""
+        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "add", *filePaths) } returns emptyList()
 
         // WHEN
         underTest.add(projectFile, *filePaths)
@@ -61,7 +61,7 @@ class GitActionsTest {
         // GIVEN
         val toRef = "main"
 
-        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "checkout", toRef) } returns ""
+        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "checkout", toRef) } returns emptyList()
 
         // WHEN
         underTest.checkout(projectFile, toRef)
@@ -77,7 +77,7 @@ class GitActionsTest {
         // GIVEN
         val message = "commit message"
 
-        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "commit", "-m", message) } returns ""
+        every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "commit", "-m", message) } returns emptyList()
 
         // WHEN
         underTest.commit(projectFile, message)
@@ -91,7 +91,7 @@ class GitActionsTest {
     @Test
     fun test_execute() {
         // GIVEN
-        val response = "dummy response"
+        val response = listOf("dummy response")
 
         every { commandExecutor.execute(projectFile, GIT_EXECUTABLE, "log") } returns response
 
@@ -141,15 +141,15 @@ class GitActionsTest {
                 "--prune-tags",
                 "--recurse-submodules",
             )
-        } returns ""
+        } returns emptyList()
 
         every {
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD")
-        } returns currentBranchName
+        } returns listOf(currentBranchName)
 
         every {
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, "reset", "--hard", "$remote/$currentBranchName")
-        } returns ""
+        } returns emptyList()
 
         // WHEN
         underTest.fetch(projectFile, remote)
@@ -182,7 +182,7 @@ class GitActionsTest {
                 "--pretty=format:%s",
                 "HEAD",
             )
-        } returns "$COMMIT_MESSAGE_1\n$COMMIT_MESSAGE_2\r\n$COMMIT_MESSAGE_3"
+        } returns COMMIT_MESSAGES
 
         // WHEN
         val actual = underTest.getCommits(projectFile)
@@ -212,7 +212,7 @@ class GitActionsTest {
                 "--pretty=format:%s",
                 "$COMMIT_HASH_1..$COMMIT_HASH_2",
             )
-        } returns COMMIT_MESSAGES.joinToString(System.lineSeparator())
+        } returns COMMIT_MESSAGES
 
         // WHEN
         val actual = underTest.getCommits(projectFile, COMMIT_HASH_1, COMMIT_HASH_2)
@@ -238,7 +238,7 @@ class GitActionsTest {
 
         every {
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD")
-        } returns currentBranchName
+        } returns listOf(currentBranchName)
 
         // WHEN
         val actual = underTest.getCurrentBranch(projectFile)
@@ -263,7 +263,7 @@ class GitActionsTest {
                 "--tags",
                 "HEAD",
             )
-        } returns TAG_1
+        } returns listOf(TAG_1)
 
         // WHEN
         val actual = underTest.getLastTag(projectFile)
@@ -295,7 +295,7 @@ class GitActionsTest {
                 "--tags",
                 COMMIT_HASH_1,
             )
-        } returns TAG_1
+        } returns listOf(TAG_1)
 
         // WHEN
         val actual = underTest.getLastTag(projectFile, COMMIT_HASH_1)
@@ -326,7 +326,7 @@ class GitActionsTest {
 
         every {
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, "submodule")
-        } returns response.joinToString(System.lineSeparator())
+        } returns response
 
         // WHEN
         val actual = underTest.getSubmodules(projectFile)
@@ -347,11 +347,12 @@ class GitActionsTest {
                 projectFile,
                 GIT_EXECUTABLE,
                 "tag",
+                "--list",
                 "--sort=-creatordate",
                 "--contains",
                 "HEAD",
             )
-        } returns "$TAG_1\n$TAG_2\r\n$TAG_3"
+        } returns TAGS
 
         // WHEN
         val actual = underTest.getTags(projectFile)
@@ -364,6 +365,7 @@ class GitActionsTest {
                 projectFile,
                 GIT_EXECUTABLE,
                 "tag",
+                "--list",
                 "--sort=-creatordate",
                 "--contains",
                 "HEAD",
@@ -379,11 +381,12 @@ class GitActionsTest {
                 projectFile,
                 GIT_EXECUTABLE,
                 "tag",
+                "--list",
                 "--sort=-creatordate",
                 "--contains",
                 COMMIT_HASH_1,
             )
-        } returns TAGS.joinToString(System.lineSeparator())
+        } returns TAGS
 
         // WHEN
         val actual = underTest.getTags(projectFile, COMMIT_HASH_1)
@@ -396,6 +399,7 @@ class GitActionsTest {
                 projectFile,
                 GIT_EXECUTABLE,
                 "tag",
+                "--list",
                 "--sort=-creatordate",
                 "--contains",
                 COMMIT_HASH_1,
@@ -418,7 +422,7 @@ class GitActionsTest {
                 "--strategy-option=theirs",
                 fromBranch,
             )
-        } returns ""
+        } returns emptyList()
 
         // WHEN
         underTest.mergeNoCommit(projectFile, fromBranch)
@@ -454,7 +458,7 @@ class GitActionsTest {
                 remote,
                 "$branch:$branch",
             )
-        } returns ""
+        } returns emptyList()
 
         // WHEN
         underTest.push(projectFile, remote, branch)
@@ -489,7 +493,7 @@ class GitActionsTest {
                 "-m",
                 "v$version",
             )
-        } returns ""
+        } returns emptyList()
 
         // WHEN
         underTest.tag(projectFile, version)

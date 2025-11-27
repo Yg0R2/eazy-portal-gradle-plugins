@@ -27,7 +27,7 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
     @BeforeEach
     fun setUpRepository() {
         assertThat(git("init", "--initial-branch=$RELEASE_BRANCH"))
-            .contains("Initialized empty Git repository in ${projectFile.getFile().absolutePath}")
+            .contains("Initialized empty Git repository in ${projectFile.getFile().absolutePath}/.git/")
 
         projectFile
             .resolve(".gitignore")
@@ -57,14 +57,14 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         // GIVEN
         git("checkout", "-b", "tmp")
 
-        assertThat(git("status").split(LINE_BREAK_REGEX))
+        assertThat(git("status"))
             .contains("On branch tmp")
 
         // WHEN
         underTest.checkout(projectFile, RELEASE_BRANCH)
 
         // THEN
-        assertThat(git("status").split(LINE_BREAK_REGEX))
+        assertThat(git("status"))
             .contains("On branch $RELEASE_BRANCH")
     }
 
@@ -82,7 +82,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         assertThat(git("status"))
             .contains("nothing to commit, working tree clean")
         assertThat(git("log"))
-            .startsWith("commit")
             .endsWith("initial commit")
     }
 
@@ -101,7 +100,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         assertThat(git("status"))
             .contains("nothing to commit, working tree clean")
         assertThat(git("log"))
-            .startsWith("commit")
             .contains("docs: add README")
             .endsWith("initial commit")
     }
@@ -110,7 +108,7 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
     fun test_execute() {
         // GIVEN
         // WHEN & THEN
-        assertThat(underTest.execute(projectFile, "help"))
+        assertThat(underTest.execute(projectFile, "help")[0])
             .contains("usage: git")
     }
 
@@ -142,40 +140,31 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
 
         commandExecutor
             .execute(originProjectFile, GIT_EXECUTABLE, "branch")
-            .split(LINE_BREAK_REGEX)
             .run { assertThat(this).containsExactly(RELEASE_BRANCH, "* tmp") }
 
         // and GIVEN (add remote origin)
         git("remote", "add", REMOTE, originProjectFile.getFile().absolutePath)
 
-        assertThat(git("remote", "-v").split(LINE_BREAK_REGEX))
+        assertThat(git("remote", "-v"))
             .containsExactly(
                 "origin\t${originProjectFile.getFile().absolutePath} (fetch)",
                 "origin\t${originProjectFile.getFile().absolutePath} (push)",
             )
 
-        git("tag")
-            .split(LINE_BREAK_REGEX)
-            .filter { it.isNotBlank() }
-            .run { assertThat(this).isEmpty() }
+        assertThat(git("tag")).isEmpty()
 
-        assertThat(git("log", "--pretty=format:%s").split(LINE_BREAK_REGEX))
+        assertThat(git("log", "--pretty=format:%s"))
             .containsExactly("initial commit")
 
         // WHEN
         underTest.fetch(projectFile, REMOTE)
 
         // THEN
-        git("branch")
-            .split(LINE_BREAK_REGEX)
-            .run { assertThat(this).containsExactly("* $RELEASE_BRANCH") }
+        assertThat(git("branch")).containsExactly("* $RELEASE_BRANCH")
 
-        git("tag")
-            .split(LINE_BREAK_REGEX)
-            .filter { it.isNotBlank() }
-            .run { assertThat(this).containsExactly(RELEASE_001.toString()) }
+        assertThat(git("tag")).containsExactly(RELEASE_001.toString())
 
-        assertThat(git("log", "--pretty=format:%s").split(LINE_BREAK_REGEX))
+        assertThat(git("log", "--pretty=format:%s"))
             .containsExactly("docs: add README", "initial commit")
     }
 
@@ -195,7 +184,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         git("commit", "-m", "build: add gradle.properties")
 
         val commitHashes = git("log", "--pretty=format:%H")
-            .split(LINE_BREAK_REGEX)
 
         // WHEN & THEN (get all commits)
         assertThat(underTest.getCommits(projectFile))
@@ -271,7 +259,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         git("tag", RELEASE_003.toString())
 
         val commitHashes = git("log", "--pretty=format:%H")
-            .split(LINE_BREAK_REGEX)
 
         // WHEN & THEN (get last tag)
         assertThat(underTest.getLastTag(projectFile))
@@ -304,7 +291,7 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
             .execute(originProjectFile, GIT_EXECUTABLE, "init", "-b", RELEASE_BRANCH)
             .run {
                 assertThat(this)
-                    .contains("Initialized empty Git repository in ${originProjectFile.getFile().absolutePath}")
+                    .contains("Initialized empty Git repository in ${originProjectFile.getFile().absolutePath}/.git/")
             }
         originProjectFile
             .resolve(".gitignore")
@@ -323,7 +310,7 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
             "dummy-submodule",
             originProjectFile.resolve(".git").getFile().absolutePath,
         ).run {
-            assertThat(split(LINE_BREAK_REGEX))
+            assertThat(this)
                 .containsExactly(
                     "Cloning into '${projectFile.getFile().absolutePath}/submodule-project'...",
                     "done."
@@ -369,7 +356,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         git("tag", RELEASE_003.toString())
 
         val commitHashes = git("log", "--pretty=format:%H")
-            .split(LINE_BREAK_REGEX)
 
         // WHEN & THEN (get all tags)
         assertThat(underTest.getTags(projectFile))
@@ -407,12 +393,12 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         underTest.mergeNoCommit(projectFile, "tmp")
 
         // THEN
-        assertThat(git("status").split(LINE_BREAK_REGEX))
+        assertThat(git("status"))
             .contains(
                 "On branch $RELEASE_BRANCH",
                 "All conflicts fixed but you are still merging.",
                 "Changes to be committed:",
-                "\tnew file:   README.adoc",
+                "new file:   README.adoc",
             )
     }
 
@@ -442,7 +428,7 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         // and GIVEN (add remote origin)
         git("remote", "add", REMOTE, originProjectFile.getFile().absolutePath)
 
-        assertThat(git("remote", "-v").split(LINE_BREAK_REGEX))
+        assertThat(git("remote", "-v"))
             .containsExactly(
                 "origin\t${originProjectFile.getFile().absolutePath} (fetch)",
                 "origin\t${originProjectFile.getFile().absolutePath} (push)",
@@ -476,7 +462,6 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
             )
 
         commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "tag")
-            .split(LINE_BREAK_REGEX)
             .run { assertThat(this).containsExactly(RELEASE_001.toString()) }
 
         assertThatThrownBy {
@@ -490,11 +475,9 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
         commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "pull", "--tags", REMOTE)
 
         commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "tag")
-            .split(LINE_BREAK_REGEX)
             .run { assertThat(this).containsExactly(RELEASE_001.toString()) }
 
         commandExecutor.execute(validateProjectFile, GIT_EXECUTABLE, "log", "--pretty=format:%s")
-            .split(LINE_BREAK_REGEX)
             .run {
                 assertThat(this).containsExactly(
                     "build: add gradle.properties",
@@ -507,20 +490,17 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
     @Test
     fun test_tag() {
         // GIVEN
-        git("tag")
-            .split(LINE_BREAK_REGEX)
-            .filter { it.isNotBlank() }
-            .run { assertThat(this).isEmpty() }
+        assertThat(git("tag")).isEmpty()
 
         // WHEN
         underTest.tag(projectFile, RELEASE_001)
 
         // THEN
-        assertThat(git("tag").split(LINE_BREAK_REGEX))
+        assertThat(git("tag"))
             .containsExactly(RELEASE_001.toString())
     }
 
-    private fun git(vararg args: String): String =
+    private fun git(vararg args: String): List<String> =
         commandExecutor.execute(projectFile, GIT_EXECUTABLE, *args)
 
     companion object {

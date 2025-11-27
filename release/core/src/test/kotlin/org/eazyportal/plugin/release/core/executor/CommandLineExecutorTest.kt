@@ -49,7 +49,7 @@ class CommandLineExecutorTest {
         val actual = underTest.execute(this.projectFile, "ping", "127.0.0.1", "-c", "1")
 
         // THEN
-        assertThat(actual).contains("1 packets transmitted, 1 received, 0% packet loss")
+        assertThat(actual).contains("1 packets transmitted, 1 received, 0% packet loss, time 0ms")
     }
 
     @EnabledOnOs(WINDOWS)

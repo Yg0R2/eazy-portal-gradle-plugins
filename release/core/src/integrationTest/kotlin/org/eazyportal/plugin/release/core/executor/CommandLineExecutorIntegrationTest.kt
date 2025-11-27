@@ -20,7 +20,7 @@ class CommandLineExecutorIntegrationTest : BaseReleaseCoreIntegrationTest() {
         val actual = underTest.execute(projectFile, GIT_EXECUTABLE, "init")
 
         // THEN
-        assertThat(actual).contains("hint: Using 'master' as the name for the initial branch.")
+        assertThat(actual[0]).contains("hint: Using 'master' as the name for the initial branch.")
     }
 
     @Test
@@ -36,7 +36,7 @@ class CommandLineExecutorIntegrationTest : BaseReleaseCoreIntegrationTest() {
         val actual = underTest.execute(projectFile, "./gradlew", "project")
 
         // THEN
-        assertThat(actual).contains("BUILD SUCCESSFUL")
+        assertThat(actual).contains("Root project 'dummy-project'")
     }
 
     @Test
