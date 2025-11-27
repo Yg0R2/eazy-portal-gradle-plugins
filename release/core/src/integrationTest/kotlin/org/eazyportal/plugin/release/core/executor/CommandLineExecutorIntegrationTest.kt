@@ -2,14 +2,14 @@ package org.eazyportal.plugin.release.core.executor
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.eazyportal.plugin.release.core.BaseIntegrationTest
+import org.eazyportal.plugin.release.core.BaseReleaseCoreIntegrationTest
 import org.eazyportal.plugin.release.core.executor.exception.CliExecutionException
 import org.eazyportal.plugin.release.core.scm.GitActions.Companion.GIT_EXECUTABLE
 import org.eazyportal.plugin.release.core.utils.isWindows
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 
-class CommandLineExecutorIntegrationTest : BaseIntegrationTest() {
+class CommandLineExecutorIntegrationTest : BaseReleaseCoreIntegrationTest() {
 
     private val underTest = CommandLineExecutor()
 

@@ -14,7 +14,7 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class ApplyEazyReleasePluginIntegrationTest : BaseIntegrationTest() {
+class ApplyEazyReleasePluginIntegrationTest : BaseReleaseGradlePluginIntegrationTest() {
 
     @BeforeEach
     fun setUp() {

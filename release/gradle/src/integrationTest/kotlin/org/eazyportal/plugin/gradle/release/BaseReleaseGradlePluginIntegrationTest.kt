@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-abstract class BaseIntegrationTest {
+abstract class BaseReleaseGradlePluginIntegrationTest {
 
     val projectDir: File
         get() = workingDir.resolve(PROJECT_NAME)

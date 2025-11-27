@@ -7,13 +7,11 @@ import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.version.model.Version
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 abstract class ScmProjectBaseIntegrationTest(
     override val scmUtils: ScmUtils,
-) : BaseIntegrationTest(), ScmProjectIntegrationTest {
+) : BaseReleaseGradlePluginIntegrationTest(), ScmProjectIntegrationTest {
 
     override val remoteProjectDir: File
         get() = workingDir.resolve("${ScmConstants.REMOTE}/$PROJECT_NAME")

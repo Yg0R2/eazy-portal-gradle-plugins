@@ -2,7 +2,7 @@ package org.eazyportal.plugin.release.core.scm
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.eazyportal.plugin.release.core.BaseIntegrationTest
+import org.eazyportal.plugin.release.core.BaseReleaseCoreIntegrationTest
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.executor.exception.CliExecutionException
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-class GitActionsIntegrationTest : BaseIntegrationTest() {
+class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
 
     private val commandExecutor = CommandLineExecutor()
 
