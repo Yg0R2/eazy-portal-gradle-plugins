@@ -5,6 +5,7 @@ import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.release.core.scm.ScmConstants
@@ -13,6 +14,21 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 class PrepareRepositoryForReleaseTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BasePrepareRepositoryForReleaseTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+
+    }
 
     @Nested
     inner class SingleModuleGitProject :

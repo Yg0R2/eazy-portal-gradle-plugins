@@ -12,7 +12,7 @@ object GradleUtils {
         GradleRunner.create()
             .forwardOutput()
             .withArguments(
-                "--stacktrace",
+//                "--stacktrace",
                 "--warning-mode=all",
                 "--no-configuration-cache",
                 *arguments,

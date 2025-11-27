@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
@@ -14,6 +15,56 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 class UpdateScmTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BaseUpdateScmTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+
+        @BeforeEach
+        fun setUpSubModule() {
+            // Initialize both branch locally
+            scmUtils.checkout(subModuleDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.checkout(subModuleDir, ScmConstants.RELEASE_BRANCH)
+        }
+
+        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
+        @ParameterizedTest
+        fun `test 'run' should update SCM submodule with commits`(testBranch: String) {
+            // GIVEN
+            scmUtils.checkout(subModuleDir, testBranch)
+
+            scmUtils.createDummyCommit(subModuleDir, testBranch)
+
+            // WHEN
+            val actual = createGradleRunner(projectDir, UPDATE_SCM_TASK_NAME)
+                .build()
+
+            // THEN
+            assertThat(actual.output.lines())
+                .contains("> Task :$UPDATE_SCM_TASK_NAME")
+
+            // Workaround for using none-bare repository
+            scmUtils.clean(remoteProjectDir)
+            scmUtils.checkout(remoteProjectDir, testBranch)
+            scmUtils.clean(remoteSubModuleDir)
+            scmUtils.checkout(remoteSubModuleDir, testBranch)
+
+            assertThat(scmUtils.getCommits(projectDir))
+                .containsExactlyElementsOf(scmUtils.getCommits(remoteProjectDir))
+            assertThat(scmUtils.getCommits(subModuleDir))
+                .containsExactlyElementsOf(scmUtils.getCommits(remoteSubModuleDir))
+        }
+
+    }
 
     @Nested
     inner class SingleModuleGitProject :

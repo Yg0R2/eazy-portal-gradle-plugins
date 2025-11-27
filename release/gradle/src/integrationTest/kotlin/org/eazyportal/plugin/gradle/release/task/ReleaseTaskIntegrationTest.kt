@@ -6,6 +6,7 @@ import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
@@ -23,8 +24,109 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import java.io.File
 
 class ReleaseTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BaseReleaseTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            remoteProjectDir.git("tag", INITIAL_TAG)
+            remoteSubModuleDir.git("tag", INITIAL_TAG)
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+
+        @Test
+        fun `test 'release' should fail from release branch when there are acceptable commits on submodule feature branch`() {
+            // GIVEN
+            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+
+            // WHEN
+            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+                .buildAndFail()
+
+            // THEN
+            assertFailedRelease(
+                actual = actual,
+                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+            )
+        }
+
+        @Test
+        fun `test 'release' should succeed from release branch when there are acceptable commits on submodule release branch`() {
+            // GIVEN
+            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+
+            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+
+            // WHEN
+            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+                .build()
+
+            // THEN
+            assertSucceededRelease(actual)
+        }
+
+        @Test
+        fun `test 'release' should fal from feature branch when there are acceptable commits on submodule release branch`() {
+            // GIVEN
+            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+
+            // WHEN
+            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+                .buildAndFail()
+
+            // THEN
+            assertFailedRelease(
+                actual = actual,
+                releaseBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+            )
+        }
+
+        @Test
+        fun `test 'release' should succeed from feature branch when there are acceptable commits on submodule feature branch`() {
+            // GIVEN
+            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+
+            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+
+            // WHEN
+            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+                .build()
+
+            // THEN
+            assertSucceededRelease(actual)
+        }
+
+        override fun assertRepositories(
+            projectDir: File,
+            remoteProjectDir: File,
+            releaseBranchCommits: List<String>,
+            featureBranchCommits: List<String>,
+            lastTag: String
+        ) {
+            super.assertRepositories(projectDir, remoteProjectDir, releaseBranchCommits, featureBranchCommits, lastTag)
+
+            super.assertRepositories(subModuleDir, remoteSubModuleDir, releaseBranchCommits, featureBranchCommits, lastTag)
+        }
+
+    }
 
     @Nested
     inner class SingleModuleGitProject :
@@ -210,7 +312,7 @@ class ReleaseTaskIntegrationTest {
             assertSucceededRelease(actual)
         }
 
-        private fun assertFailedRelease(
+        fun assertFailedRelease(
             actual: BuildResult,
             releaseBranchCommits: List<String> = emptyList(),
             featureBranchCommits: List<String> = emptyList(),
@@ -232,10 +334,13 @@ class ReleaseTaskIntegrationTest {
                     .isEqualTo(SNAPSHOT_001)
             }
 
-            assertRepositories(releaseBranchCommits, featureBranchCommits)
+            assertRepositories(
+                releaseBranchCommits = releaseBranchCommits,
+                featureBranchCommits = featureBranchCommits,
+            )
         }
 
-        private fun assertSucceededRelease(
+        fun assertSucceededRelease(
             actual: BuildResult,
             releaseBranchCommits: List<String> = listOf(
                 "Release version: $RELEASE_001",
@@ -272,10 +377,16 @@ class ReleaseTaskIntegrationTest {
             assertThat(getProjectVersion(remoteProjectDir, ScmConstants.RELEASE_BRANCH))
                 .isEqualTo(RELEASE_001)
 
-            assertRepositories(releaseBranchCommits, featureBranchCommits, RELEASE_001.toString())
+            assertRepositories(
+                releaseBranchCommits = releaseBranchCommits,
+                featureBranchCommits= featureBranchCommits,
+                lastTag = RELEASE_001.toString(),
+            )
         }
 
-        private fun assertRepositories(
+        fun assertRepositories(
+            projectDir: File = this@BaseReleaseTaskIntegrationTest.projectDir,
+            remoteProjectDir: File = this@BaseReleaseTaskIntegrationTest.remoteProjectDir,
             releaseBranchCommits: List<String> = emptyList(),
             featureBranchCommits: List<String> = emptyList(),
             lastTag: String = INITIAL_TAG,

@@ -3,6 +3,7 @@ package org.eazyportal.plugin.gradle.release.task
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
@@ -11,6 +12,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class FinalizeReleaseVersionTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BaseFinalizeReleaseVersionTaskIntegrationTest
 
     @Nested
     inner class SingleModuleGitProject :

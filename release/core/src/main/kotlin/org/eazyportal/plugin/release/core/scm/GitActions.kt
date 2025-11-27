@@ -82,7 +82,7 @@ class GitActions<T: Any>(
             .map { "$it:$it" }
             .toTypedArray()
 
-        execute(projectFile, "push", "--atomic", "--tags", "--recurse-submodules=on-demand", remote, *branchesRefs)
+        execute(projectFile, "push", "--atomic", "--tags", remote, *branchesRefs)
     }
 
     override fun tag(projectFile: ProjectFile<T>, version: Version) {

@@ -2,15 +2,24 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.SetSnapshotVersionTaskIntegrationTest.BaseSetSnapshotVersionTaskIntegrationTest
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
+import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class FinalizeSnapshotVersionTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BaseFinalizeSnapshotVersionTaskIntegrationTest
 
     @Nested
     inner class SingleModuleGitProject :

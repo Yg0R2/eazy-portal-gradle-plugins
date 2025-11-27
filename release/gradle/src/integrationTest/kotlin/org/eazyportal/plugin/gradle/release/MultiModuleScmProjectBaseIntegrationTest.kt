@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.common.GradleTestFixtures
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.scm.ScmUtils
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
@@ -15,7 +15,11 @@ abstract class MultiModuleScmProjectBaseIntegrationTest(
 ) : ScmProjectBaseIntegrationTest(scmUtils) {
 
     val subModuleDir: File
-        get() = workingDir.resolve("${ScmConstants.REMOTE}/${GradleTestFixtures.SUBMODULE_NAME}")
+        get() = projectDir.resolve(SUBMODULE_NAME)
+            .also { it.mkdirs() }
+
+    val remoteSubModuleDir : File
+        get() = workingDir.resolve("${ScmConstants.REMOTE}/$SUBMODULE_NAME")
             .also { it.mkdirs() }
 
     final override fun setProjectVersion(version: Version) {
@@ -33,6 +37,10 @@ abstract class MultiModuleScmProjectBaseIntegrationTest(
         setupRemoteBeforeClone()
 
         scmUtils.clone(remoteProjectDir, projectDir)
+//
+//        // Initialize both branch locally
+//        scmUtils.checkout(remoteProjectDir, ScmConstants.FEATURE_BRANCH)
+//        scmUtils.checkout(remoteProjectDir, ScmConstants.RELEASE_BRANCH)
     }
 
     override fun setupRemoteBeforeClone() {
@@ -43,13 +51,13 @@ abstract class MultiModuleScmProjectBaseIntegrationTest(
         scmUtils.initializeRepository(remoteProjectDir)
 
         GradleProjectBuilder(
-            projectDir = subModuleDir,
+            projectDir = remoteSubModuleDir,
             projectPluginIds = setOf("java")
         ).build()
-        scmUtils.initializeRepository(subModuleDir)
+        scmUtils.initializeRepository(remoteSubModuleDir)
 
-        scmUtils.addSubmodule(remoteProjectDir, subModuleDir)
-        scmUtils.commit(remoteProjectDir, "chore: add ${subModuleDir.name} submodule")
+        scmUtils.addSubmodule(remoteProjectDir, remoteSubModuleDir)
+        scmUtils.commit(remoteProjectDir, "chore: add $SUBMODULE_NAME submodule")
     }
 
 }
