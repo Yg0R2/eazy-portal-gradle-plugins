@@ -4,11 +4,47 @@ import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.scm.ScmUtils
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
+import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.junit.jupiter.api.BeforeEach
 import java.io.File
+
+abstract class MultiModuleScmProjectBaseIntegrationTest1(
+    override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
+) : ScmProjectBaseIntegrationTest1(scmActions, scmConfig) {
+
+    protected val remoteSubmoduleProjectFile: ProjectFile<File>
+        get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
+            .also { it.mkdirs() }
+            .let { FileSystemProjectFile(it) }
+
+    protected val submoduleProjectFile: ProjectFile<File>
+        get() = projectFile.resolve(SUBMODULE_NAME)
+            .also { it.getFile().mkdirs() }
+
+    @BeforeEach
+    fun setUpRepositories() {
+        initializeRepository(remoteProjectFile)
+
+        initializeRepository(remoteSubmoduleProjectFile)
+
+        scmActions.addSubmodule(remoteProjectFile, remoteSubmoduleProjectFile)
+        scmActions.commit(remoteProjectFile, "chore: add $SUBMODULE_NAME submodule")
+
+        setUpBeforeClone()
+
+        scmActions.clone(remoteProjectFile, projectFile)
+
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
+    }
+
+}
 
 abstract class MultiModuleScmProjectBaseIntegrationTest(
     override val scmUtils: ScmUtils,

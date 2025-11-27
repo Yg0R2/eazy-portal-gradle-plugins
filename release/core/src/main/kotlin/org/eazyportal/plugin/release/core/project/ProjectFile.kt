@@ -1,5 +1,7 @@
 package org.eazyportal.plugin.release.core.project
 
+import java.nio.file.Path
+
 interface ProjectFile<T : Any> {
 
     fun createIfMissing()
@@ -7,6 +9,12 @@ interface ProjectFile<T : Any> {
     fun exists(): Boolean
 
     fun getFile(): T
+
+    fun getName(): String
+
+    fun getParent(): ProjectFile<T>
+
+    fun getPath(): Path
 
     fun isDirectory(): Boolean
 

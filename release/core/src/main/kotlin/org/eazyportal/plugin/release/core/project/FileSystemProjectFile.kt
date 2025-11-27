@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.release.core.project
 
 import java.io.File
+import java.nio.file.Path
 
 data class FileSystemProjectFile(
     private val file: File
@@ -15,6 +16,15 @@ data class FileSystemProjectFile(
 
     override fun getFile(): File =
         file
+
+    override fun getName(): String =
+        file.name
+
+    override fun getParent(): ProjectFile<File> =
+        FileSystemProjectFile(file.parentFile)
+
+    override fun getPath(): Path =
+        file.toPath()
 
     override fun isDirectory(): Boolean =
         file.isDirectory
@@ -36,6 +46,6 @@ data class FileSystemProjectFile(
     }
 
     override fun toString(): String =
-        file.path
+        file.absolutePath
 
 }

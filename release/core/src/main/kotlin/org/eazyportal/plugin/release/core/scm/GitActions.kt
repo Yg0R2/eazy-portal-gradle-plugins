@@ -6,7 +6,7 @@ import org.eazyportal.plugin.release.core.scm.exception.ScmActionException
 import org.eazyportal.plugin.release.core.utils.isWindows
 import org.eazyportal.plugin.release.core.version.model.Version
 
-class GitActions<T: Any>(
+open class GitActions<T: Any>(
     private val commandExecutor: CommandExecutor<ProjectFile<T>>
 ) : ScmActions<T> {
 
