@@ -5,6 +5,7 @@ import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
+import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
@@ -18,6 +19,20 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class SetReleaseVersionTaskIntegrationTest {
+
+    @Nested
+    inner class MultiModuleGitProject :
+        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+        BaseSetReleaseVersionTaskIntegrationTest {
+
+        override fun setupRemoteBeforeClone() {
+            super.setupRemoteBeforeClone()
+
+            // Create dev branch in origin
+            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+            subModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
+        }
+    }
 
     @Nested
     inner class SingleModuleGitProject :
