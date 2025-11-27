@@ -19,7 +19,7 @@ abstract class ScmProjectBaseIntegrationTest(
         get() = workingDir.resolve("${ScmConstants.REMOTE}/$PROJECT_NAME")
             .also { it.mkdirs() }
 
-    private val projectActionsMap = mutableMapOf<String, ProjectActions<File>>()
+    protected val projectActionsMap = mutableMapOf<String, ProjectActions<File>>()
 
     final override fun getProjectVersion(projectDir: File, branch: String?): Version {
         if (branch != null) {
@@ -29,12 +29,6 @@ abstract class ScmProjectBaseIntegrationTest(
         return projectActionsMap.computeIfAbsent(projectDir.path) {
             GradleProjectActions(FileSystemProjectFile(projectDir))
         }.getVersion()
-    }
-
-    final override fun setProjectVersion(projectDir: File, version: Version) {
-        projectActionsMap.computeIfAbsent(projectDir.path) {
-            GradleProjectActions(FileSystemProjectFile(projectDir))
-        }.setVersion(version)
     }
 
     protected abstract fun setupRemoteBeforeClone()

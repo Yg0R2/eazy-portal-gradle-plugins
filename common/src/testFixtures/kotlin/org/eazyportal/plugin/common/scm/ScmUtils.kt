@@ -14,6 +14,18 @@ object GitUtils : ScmUtils() {
         projectDir.git("add", *filePaths)
     }
 
+    override fun addSubmodule(projectDir: File, subModuleDir: File) {
+        projectDir.git(
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            "--name", // TODO: git ignores this ?
+            subModuleDir.name,
+            subModuleDir.resolve(".git").absolutePath,
+        )
+    }
+
     override fun checkout(projectDir: File, toBranch: String) {
         projectDir.git("checkout", toBranch)
     }
@@ -119,6 +131,8 @@ object GitUtils : ScmUtils() {
 abstract class ScmUtils {
 
     abstract fun add(projectDir: File, vararg filePaths: String)
+
+    abstract fun addSubmodule(projectDir: File, subModuleDir: File)
 
     abstract fun checkout(projectDir: File, toBranch: String)
 

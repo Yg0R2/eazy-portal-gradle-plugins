@@ -11,8 +11,9 @@ interface ScmProjectIntegrationTest {
     val projectDir: File
     val remoteProjectDir: File
 
+    // TODO: maybe remove it?
     fun getProjectVersion(projectDir: File, branch: String? = null): Version
 
-    fun setProjectVersion(projectDir: File, version: Version)
+    fun setProjectVersion(version: Version)
 
 }

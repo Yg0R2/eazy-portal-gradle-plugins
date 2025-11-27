@@ -22,7 +22,7 @@ class FinalizeReleaseVersionTaskIntegrationTest {
         @Test
         fun `test 'run' should finalize release version`() {
             // GIVEN
-            setProjectVersion(projectDir, RELEASE_001)
+            setProjectVersion( RELEASE_001)
 
             // WHEN
             val actual = createGradleRunner(projectDir, FINALIZE_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")

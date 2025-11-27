@@ -22,7 +22,7 @@ class FinalizeSnapshotVersionTaskIntegrationTest {
         @Test
         fun `test 'run' should finalize snapshot version`() {
             // GIVEN
-            setProjectVersion(projectDir, SNAPSHOT_002)
+            setProjectVersion(SNAPSHOT_002)
 
             // WHEN
             val actual = createGradleRunner(projectDir, FINALIZE_SNAPSHOT_VERSION_TASK_NAME, "-DforceRelease=true")
