@@ -4,8 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-import org.eazyportal.plugin.release.core.TestScmActions
-import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.gradle.testkit.runner.BuildResult
 import java.io.File
 import kotlin.reflect.KClass
@@ -13,48 +11,46 @@ import kotlin.reflect.KClass
 object TestCaseBuilder {
 
     class Given<T : BaseScmProjectTestCase>(
-        private val baseTest: T,
+        private val testCase: T,
         configureProjectBlock: T.() -> Unit,
     ) {
 
         init {
-            baseTest.initializeProject()
+            testCase.initializeProject()
 
-            configureProjectBlock(baseTest)
+            configureProjectBlock(testCase)
         }
 
         fun whenGradleTaskSucceeds(taskName: String): When<T> =
-            createGradleRunner(baseTest.projectFile.getFile(), taskName)
+            createGradleRunner(testCase.projectFile.getFile(), taskName)
                 .build()
-                .let { When(baseTest, it) }
+                .let { When(testCase, it) }
 
     }
 
     class When<T : BaseScmProjectTestCase>(
-        private val baseTest: T,
+        private val testCase: T,
         private val result: BuildResult,
     ) {
 
-        fun thenAssert(assertBlock: T.() -> Unit): Then<T> =
-            Then(baseTest, result)
+        fun thenAssert(assertBlock: T.(Then<T>) -> Unit) {
+            testCase.assertBlock(Then(testCase, result))
+        }
 
     }
 
-    class Then<T : BaseScmProjectTestCase>(
-        private val baseTest: T,
+    class Then<T: BaseScmProjectTestCase>(
+        private val testCase: T,
         private val buildResult: BuildResult,
     ) {
 
-//        val scmActions: TestScmActions<File> = baseTest.scmActions
-//        val scmConfig: ScmConfig = baseTest.scmConfig
-
         fun scmCommits(block: ListAssert<String>.() -> Unit) {
-            block(assertThat(baseTest.scmActions.getCommits(baseTest.projectFile)))
+            block(assertThat(testCase.scmActions.getCommits(testCase.projectFile)))
         }
 
         fun scmStatus(block: ListAssert<String>.() -> Unit) {
             block(
-                assertThat(baseTest.scmActions.status(baseTest.projectFile))
+                assertThat(testCase.scmActions.status(testCase.projectFile))
             )
         }
 
@@ -73,15 +69,6 @@ object TestCaseBuilder {
     ): Given<out T> =
         Given(
             clazz.java.getDeclaredConstructor(File::class.java).newInstance(workingDir),
-            configureProjectBlock,
-        )
-
-    inline fun <reified T : BaseScmProjectTestCase> givenTestCase(
-        workingDir: File,
-        noinline configureProjectBlock: T.() -> Unit = {},
-    ): Given<T> =
-        Given(
-            T::class.java.getDeclaredConstructor(File::class.java).newInstance(workingDir),
             configureProjectBlock,
         )
 

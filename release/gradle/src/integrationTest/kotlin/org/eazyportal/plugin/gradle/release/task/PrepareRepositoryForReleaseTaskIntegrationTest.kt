@@ -36,7 +36,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
         testBranch: String,
         projectFileProvider: T.() -> ProjectFile<File>,
         remoteProjectFileProvider: T.() -> ProjectFile<File>,
-        @TempDir workingDir: File
+        @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFileProvider(this), testBranch)
@@ -44,24 +44,24 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             createAndCommitDummyFile(projectFileProvider(this), CHORE_COMMIT_MESSAGE)
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
-                taskOutput {
-                    result.contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                it.taskOutput {
+                    contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                scmCommits {
-                    result.doesNotContain(CHORE_COMMIT_MESSAGE)
+                it.scmCommits {
+                    doesNotContain(CHORE_COMMIT_MESSAGE)
                 }
             }
     }
 
     @MethodSource("shouldCleanLocalChangesTestCases")
-    @ParameterizedTest(name = "[{index}] {0}")
+    @ParameterizedTest
     fun <T : BaseScmProjectTestCase> `test 'run' should clean local file changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
         projectFileProvider: T.() -> ProjectFile<File>,
         remoteProjectFileProvider: T.() -> ProjectFile<File>,
-        @TempDir workingDir: File
+        @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFileProvider(this), testBranch)
@@ -69,12 +69,12 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             createDummyFile(projectFileProvider(this))
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
-                taskOutput {
-                    result.contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                it.taskOutput {
+                    contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                scmStatus {
-                    result.contains(
+                it.scmStatus {
+                    contains(
                         "On branch $testBranch",
                         "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
                         "nothing to commit, working tree clean",
@@ -84,13 +84,13 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
     }
 
     @MethodSource("shouldCleanLocalChangesTestCases")
-    @ParameterizedTest(name = "[{index}] {0}")
+    @ParameterizedTest
     fun <T : BaseScmProjectTestCase> `test 'run' should pull remote changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
         projectFileProvider: T.() -> ProjectFile<File>,
         remoteProjectFileProvider: T.() -> ProjectFile<File>,
-        @TempDir workingDir: File
+        @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(remoteProjectFileProvider(), scmConfig.releaseBranch)
@@ -102,24 +102,41 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             scmActions.checkout(projectFileProvider(), testBranch)
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
-
-            }
-            .thenAssert {
-                taskOutput {
+                it.taskOutput {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
-                remoteProjectFileProvider()
-                assertThat(scmActions.)
-                scmCommits {
-                    contains("chore: commit on $testBranch")
-                        .containsExactlyElementsOf(
-                            scmActions.getCommits(
-                                remoteProjectFileProvider(),
-                                scmConfig.releaseBranch,
-                                scmConfig.featureBranch
-                            )
+
+                // TODO: fix Trunk
+                assertThat(
+                    scmActions.getCommits(
+                        projectFileProvider(),
+                        scmConfig.releaseBranch,
+                        scmConfig.featureBranch,
+                    )
+                ).contains("chore: commit on ${scmConfig.featureBranch}")
+                    .containsExactlyElementsOf(
+                        scmActions.getCommits(
+                            remoteProjectFileProvider(),
+                            scmConfig.releaseBranch,
+                            scmConfig.featureBranch,
                         )
-                }
+                    )
+
+                // TODO: fix Trunk
+                assertThat(
+                    scmActions.getCommits(
+                        projectFileProvider(),
+                        scmConfig.featureBranch,
+                        scmConfig.releaseBranch,
+                    )
+                ).contains("chore: commit on ${scmConfig.releaseBranch}")
+                    .containsExactlyElementsOf(
+                        scmActions.getCommits(
+                            remoteProjectFileProvider(),
+                            scmConfig.featureBranch,
+                            scmConfig.releaseBranch,
+                        )
+                    )
             }
     }
 

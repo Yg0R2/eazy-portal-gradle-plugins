@@ -23,8 +23,8 @@ abstract class BaseProjectTestCase(
 }
 
 abstract class BaseScmProjectTestCase(
-    open val scmConfig: ScmConfig,
     open val scmActions: TestScmActions<File>,
+    open val scmConfig: ScmConfig,
     override val workingDir: File,
 ) : BaseProjectTestCase(workingDir) {
 
@@ -56,18 +56,18 @@ abstract class BaseScmProjectTestCase(
 }
 
 abstract class BaseSingleModuleScmProjectTestCase(
-    override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
     override val workingDir: File,
-) : BaseScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
 }
 
 class SingleModuleGitFlowScmProjectTestCase(
     override val workingDir: File,
 ) : BaseSingleModuleScmProjectTestCase(
-    ScmConfig.GIT_FLOW,
     TestGitActions(CommandLineExecutor()),
+    ScmConfig.GIT_FLOW,
     workingDir,
 ) {
 
@@ -96,8 +96,8 @@ class SingleModuleGitFlowScmProjectTestCase(
 class SingleModuleTrunkFlowScmProjectTestCase(
     override val workingDir: File,
 ) : BaseSingleModuleScmProjectTestCase(
-    ScmConfig.TRUNK_BASED_FLOW,
     TestGitActions(CommandLineExecutor()),
+    ScmConfig.TRUNK_BASED_FLOW,
     workingDir,
 ) {
 
@@ -124,12 +124,12 @@ class SingleModuleTrunkFlowScmProjectTestCase(
 class SingleModuleCustomFlowScmProjectTestCase(
     override val workingDir: File,
 ) : BaseSingleModuleScmProjectTestCase(
+    TestGitActions(CommandLineExecutor()),
     ScmConfig(
         featureBranch = "dummy-feature-branch",
         releaseBranch = "dummy-release-branch",
         remote = "upstream"
     ),
-    TestGitActions(CommandLineExecutor()),
     workingDir,
 ) {
 
@@ -163,10 +163,10 @@ class SingleModuleCustomFlowScmProjectTestCase(
 }
 
 abstract class BaseMultiModuleScmProjectTestCase(
-    override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
     override val workingDir: File,
-) : BaseScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
     protected val submoduleProjectFile: ProjectFile<File>
         get() = projectFile.resolve(SUBMODULE_NAME)
@@ -180,25 +180,25 @@ abstract class BaseMultiModuleScmProjectTestCase(
 }
 
 abstract class BaseMultiModuleGitFlowScmProjectTestCase(
-    override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
     override val workingDir: File,
-) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseMultiModuleScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
 }
 
 abstract class BaseMultiModuleTrunkFlowScmProjectTestCase(
-    override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
     override val workingDir: File,
-) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseMultiModuleScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
 }
 
 abstract class BaseMultiModuleCustomFlowScmProjectTestCase(
-    override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
+    override val scmConfig: ScmConfig,
     override val workingDir: File,
-) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseMultiModuleScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
 }
