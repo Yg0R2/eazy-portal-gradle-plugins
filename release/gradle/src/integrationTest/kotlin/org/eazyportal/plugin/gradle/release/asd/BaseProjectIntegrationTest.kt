@@ -44,6 +44,7 @@ abstract class BaseScmProjectTestCase(
     ) {
         createDummyFile(projectFile)
 
+        scmActions.add(projectFile, ".")
         scmActions.commit(projectFile, commitMessage)
     }
 
