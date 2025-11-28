@@ -5,7 +5,8 @@ import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
-import org.eazyportal.plugin.gradle.release.TestBuilder.givenSingleModuleGitFlowGitProject
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
@@ -23,8 +24,9 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
     @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
     @ParameterizedTest
-    fun `test 'run' should clean local changes`(testBranch: String, @TempDir tempDir: File) {
-        givenSingleModuleGitFlowGitProject(tempDir) {
+    fun `test 'run' should clean local changes`(testBranch: String, @TempDir workingDir: File) {
+        TestCaseBuilder.givenTestCase<SingleModuleGitFlowScmProjectTestCase>(workingDir) {
+//        givenSingleModuleGitFlowGitProject(workingDir) {
             scmActions.checkout(projectFile, testBranch)
 
 //            createDummyFile(projectFile)
@@ -35,10 +37,9 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 }
 
                 scmStatus {
-                    contains(
+                    result.contains(
                         "On branch $testBranch",
-//                        "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
-                        "Your branch is up to date with 'origin/$testBranch'.",
+                        "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
                         "nothing to commit, working tree clean",
                     )
                 }

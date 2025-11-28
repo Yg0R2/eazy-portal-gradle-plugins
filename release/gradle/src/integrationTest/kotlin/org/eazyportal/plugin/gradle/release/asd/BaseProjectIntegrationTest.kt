@@ -3,30 +3,27 @@ package org.eazyportal.plugin.gradle.release.asd
 import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestScmActions
+import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
-import org.eazyportal.plugin.release.core.scm.ScmActions
-import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-abstract class BaseProjectIntegrationTest {
-
-    lateinit var workingDir: File
+abstract class BaseProjectTestCase(
+    protected open val workingDir: File,
+) {
 
     abstract fun initializeProject()
 
-    protected abstract fun configureProject()
-
 }
 
-abstract class BaseScmProjectIntegrationTest(
+abstract class BaseScmProjectTestCase(
     open val scmConfig: ScmConfig,
-    open val scmActions: TestScmActions<File>
-) : BaseProjectIntegrationTest() {
+    open val scmActions: TestScmActions<File>,
+    override val workingDir: File,
+) : BaseProjectTestCase(workingDir) {
 
     val projectFile: ProjectFile<File>
         get() = workingDir.resolve(PROJECT_NAME)
@@ -40,17 +37,21 @@ abstract class BaseScmProjectIntegrationTest(
 
 }
 
-abstract class BaseSingleModuleScmProjectIntegrationTest(
+abstract class BaseSingleModuleScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
 
-abstract class BaseSingleModuleGitFlowScmProjectIntegrationTest(
-    override val scmConfig: ScmConfig,
-    override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+class SingleModuleGitFlowScmProjectTestCase(
+    override val workingDir: File,
+) : BaseSingleModuleScmProjectTestCase(
+    ScmConfig.GIT_FLOW,
+    TestGitActions(CommandLineExecutor()),
+    workingDir,
+) {
 
     override fun initializeProject() {
         GradleProjectBuilder(
@@ -64,30 +65,31 @@ abstract class BaseSingleModuleGitFlowScmProjectIntegrationTest(
         scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
 
         scmActions.clone(remoteProjectFile, projectFile)
-
-        configureProject()
     }
 
 }
 
-abstract class BaseSingleModuleTrunkFlowScmProjectIntegrationTest(
+abstract class BaseSingleModuleTrunkFlowScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseSingleModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
 
-abstract class BaseSingleModuleCustomFlowScmProjectIntegrationTest(
+abstract class BaseSingleModuleCustomFlowScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseSingleModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
 
-abstract class BaseMultiModuleScmProjectIntegrationTest(
+abstract class BaseMultiModuleScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
     protected val submoduleProjectFile: ProjectFile<File>
         get() = projectFile.resolve(SUBMODULE_NAME)
@@ -100,23 +102,26 @@ abstract class BaseMultiModuleScmProjectIntegrationTest(
 
 }
 
-abstract class BaseMultiModuleGitFlowScmProjectIntegrationTest(
+abstract class BaseMultiModuleGitFlowScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
 
-abstract class BaseMultiModuleTrunkFlowScmProjectIntegrationTest(
+abstract class BaseMultiModuleTrunkFlowScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
 
-abstract class BaseMultiModuleCustomFlowScmProjectIntegrationTest(
+abstract class BaseMultiModuleCustomFlowScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectIntegrationTest(scmConfig, scmActions) {
+    override val workingDir: File,
+) : BaseMultiModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
 
 }
