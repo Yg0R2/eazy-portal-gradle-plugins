@@ -2,6 +2,8 @@ package org.eazyportal.plugin.gradle.release.asd
 
 import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestScmActions
@@ -10,6 +12,7 @@ import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
+import java.util.UUID
 
 abstract class BaseProjectTestCase(
     protected open val workingDir: File,
@@ -35,6 +38,20 @@ abstract class BaseScmProjectTestCase(
             .also { it.mkdirs() }
             .let { FileSystemProjectFile(it) }
 
+    fun createAndCommitDummyFile(
+        projectFile: ProjectFile<File>,
+        commitMessage: String = CHORE_COMMIT_MESSAGE,
+    ) {
+        createDummyFile(projectFile)
+
+        scmActions.commit(projectFile, commitMessage)
+    }
+
+    fun createDummyFile(projectFile: ProjectFile<File>) {
+        projectFile.resolve(DUMMY_FILE_NAME)
+            .writeText(UUID.randomUUID().toString())
+    }
+
 }
 
 abstract class BaseSingleModuleScmProjectTestCase(
@@ -57,6 +74,12 @@ class SingleModuleGitFlowScmProjectTestCase(
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
             projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
+                }
+                """.trimIndent()
         ).build()
 
         scmActions.initializeRepository(remoteProjectFile)
@@ -69,19 +92,72 @@ class SingleModuleGitFlowScmProjectTestCase(
 
 }
 
-abstract class BaseSingleModuleTrunkFlowScmProjectTestCase(
-    override val scmConfig: ScmConfig,
-    override val scmActions: TestScmActions<File>,
+class SingleModuleTrunkFlowScmProjectTestCase(
     override val workingDir: File,
-) : BaseSingleModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseSingleModuleScmProjectTestCase(
+    ScmConfig.TRUNK_BASED_FLOW,
+    TestGitActions(CommandLineExecutor()),
+    workingDir,
+) {
+
+    override fun initializeProject() {
+        GradleProjectBuilder(
+            projectDir = remoteProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteProjectFile)
+
+        scmActions.clone(remoteProjectFile, projectFile)
+    }
+
 
 }
 
-abstract class BaseSingleModuleCustomFlowScmProjectTestCase(
-    override val scmConfig: ScmConfig,
-    override val scmActions: TestScmActions<File>,
+class SingleModuleCustomFlowScmProjectTestCase(
     override val workingDir: File,
-) : BaseSingleModuleScmProjectTestCase(scmConfig, scmActions, workingDir) {
+) : BaseSingleModuleScmProjectTestCase(
+    ScmConfig(
+        featureBranch = "dummy-feature-branch",
+        releaseBranch = "dummy-release-branch",
+        remote = "upstream"
+    ),
+    TestGitActions(CommandLineExecutor()),
+    workingDir,
+) {
+
+    override fun initializeProject() {
+        GradleProjectBuilder(
+            projectDir = remoteProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
+                        featureBranch = "dummy-feature-branch",
+                        releaseBranch = "dummy-release-branch",
+                        remote = "upstream"
+                    )
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteProjectFile)
+
+        // Create remote branches
+        scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
+        scmActions.execute(remoteProjectFile, "branch", scmConfig.releaseBranch)
+
+        scmActions.clone(remoteProjectFile, projectFile)
+
+        scmActions.execute(projectFile,"remote", "rename", "origin", scmConfig.remote)
+    }
 
 }
 
