@@ -35,9 +35,8 @@ object TestCaseBuilder {
         private val result: BuildResult,
     ) {
 
-        fun thenAssert(assertBlock: Then<T>.() -> Unit) {
-            assertBlock(Then(baseTest, result))
-        }
+        fun thenAssert(assertBlock: T.() -> Unit): Then<T> =
+            Then(baseTest, result)
 
     }
 
@@ -46,41 +45,24 @@ object TestCaseBuilder {
         private val buildResult: BuildResult,
     ) {
 
-        fun scmCommits(block: ThenContext<ListAssert<String>>.() -> Unit) {
+//        val scmActions: TestScmActions<File> = baseTest.scmActions
+//        val scmConfig: ScmConfig = baseTest.scmConfig
+
+        fun scmCommits(block: ListAssert<String>.() -> Unit) {
+            block(assertThat(baseTest.scmActions.getCommits(baseTest.projectFile)))
+        }
+
+        fun scmStatus(block: ListAssert<String>.() -> Unit) {
             block(
-                ThenContext(
-                    scmActions = baseTest.scmActions,
-                    scmConfig = baseTest.scmConfig,
-                    result = assertThat(baseTest.scmActions.getCommits(baseTest.projectFile))
-                )
+                assertThat(baseTest.scmActions.status(baseTest.projectFile))
             )
         }
 
-        fun scmStatus(block: ThenContext<ListAssert<String>>.() -> Unit) {
+        fun taskOutput(block: ListAssert<String>.() -> Unit) {
             block(
-                ThenContext(
-                    scmActions = baseTest.scmActions,
-                    scmConfig = baseTest.scmConfig,
-                    result = assertThat(baseTest.scmActions.status(baseTest.projectFile))
-                )
+                assertThat(buildResult.output.lines()),
             )
         }
-
-        fun taskOutput(block: ThenContext<ListAssert<String>>.() -> Unit) {
-            block(
-                ThenContext(
-                    scmActions = baseTest.scmActions,
-                    scmConfig = baseTest.scmConfig,
-                    result = assertThat(buildResult.output.lines()),
-                )
-            )
-        }
-
-        class ThenContext<A : Any>(
-            val scmActions: TestScmActions<File>,
-            val scmConfig: ScmConfig,
-            val result: A,
-        )
 
     }
 
@@ -88,7 +70,7 @@ object TestCaseBuilder {
         clazz: KClass<out T>,
         workingDir: File,
         configureProjectBlock: T.() -> Unit = {},
-    ): Given<T> =
+    ): Given<out T> =
         Given(
             clazz.java.getDeclaredConstructor(File::class.java).newInstance(workingDir),
             configureProjectBlock,
