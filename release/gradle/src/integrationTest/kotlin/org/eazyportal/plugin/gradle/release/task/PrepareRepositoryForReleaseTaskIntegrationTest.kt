@@ -2,29 +2,49 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
+import org.eazyportal.plugin.gradle.release.TestBuilder.givenSingleModuleGitFlowGitProject
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.ProjectFile
-import org.eazyportal.plugin.release.core.scm.GitActions
 import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import java.io.File
 
 class PrepareRepositoryForReleaseTaskIntegrationTest {
+
+    @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
+    @ParameterizedTest
+    fun `test 'run' should clean local changes`(testBranch: String, @TempDir tempDir: File) {
+        givenSingleModuleGitFlowGitProject(tempDir) {
+            scmActions.checkout(projectFile, testBranch)
+
+//            createDummyFile(projectFile)
+        }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+            .thenAssert {
+                taskOutput {
+                    contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                }
+
+                scmStatus {
+                    contains(
+                        "On branch $testBranch",
+//                        "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
+                        "Your branch is up to date with 'origin/$testBranch'.",
+                        "nothing to commit, working tree clean",
+                    )
+                }
+            }
+    }
+
 
     @Nested
     inner class MultiModuleGitFlow : MultiModuleScmProjectBaseIntegrationTest1(

@@ -18,4 +18,16 @@ tasks {
 
         dependsOn(*includedBuildPublishTasks, *subprojectPublishTasks)
     }
+
+    test {
+        val subprojectTestsTasks = rootProject.subprojects
+            .flatMap {
+                listOf(
+                    ":${it.name}:test",
+                    ":${it.name}:integrationTest",
+                )
+            }.toTypedArray()
+
+        dependsOn(subprojectTestsTasks)
+    }
 }
