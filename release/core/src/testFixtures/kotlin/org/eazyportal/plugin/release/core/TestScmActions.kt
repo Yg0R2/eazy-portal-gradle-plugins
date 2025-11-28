@@ -20,7 +20,10 @@ interface TestScmActions<T : Any> : ScmActions<T> {
         vararg gitCommands: String,
     ): List<String>
 
-    fun initializeRepository(projectFile: ProjectFile<T>)
+    fun initializeRepository(
+        projectFile: ProjectFile<T>,
+        branchName: String = "main",
+    )
 
     fun status(projectFile: ProjectFile<T>): List<String>
 

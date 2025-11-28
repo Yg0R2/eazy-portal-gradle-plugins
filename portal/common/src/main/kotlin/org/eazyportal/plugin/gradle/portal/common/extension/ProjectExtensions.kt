@@ -23,7 +23,7 @@ fun Project.getType(): ProjectTypes =
         ProjectTypes.ROOT
     } else {
         entries.filter { it != ProjectTypes.ROOT }
-            .first { name.endsWith(it.suffix) }
+            .first { name.endsWith(it.suffix) } // TODO: fix unknown type
     }.also { logger.info("[ProjectExtensions.getType] - project $name type is $it") }
 
 fun Project.isTypeOf(projectType: ProjectTypes): Boolean =

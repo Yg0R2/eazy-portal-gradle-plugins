@@ -12,6 +12,7 @@ import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCas
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
@@ -137,34 +138,18 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
                 // TODO: fix Trunk
                 assertThat(
-                    scmActions.getCommits(
-                        projectFile,
-                        scmConfig.releaseBranch,
-                        scmConfig.featureBranch,
-                    )
+                    scmActions.getCommits(projectFile, scmConfig.releaseBranch, scmConfig.featureBranch)
                 ).contains("chore: commit on ${scmConfig.featureBranch}")
                     .containsExactlyElementsOf(
-                        scmActions.getCommits(
-                            remoteProjectFile,
-                            scmConfig.releaseBranch,
-                            scmConfig.featureBranch,
-                        )
+                        scmActions.getCommits(remoteProjectFile, scmConfig.releaseBranch, scmConfig.featureBranch)
                     )
 
                 // TODO: fix Trunk
                 assertThat(
-                    scmActions.getCommits(
-                        projectFile,
-                        scmConfig.featureBranch,
-                        scmConfig.releaseBranch,
-                    )
+                    scmActions.getCommits(projectFile, scmConfig.featureBranch, scmConfig.releaseBranch)
                 ).contains("chore: commit on ${scmConfig.releaseBranch}")
                     .containsExactlyElementsOf(
-                        scmActions.getCommits(
-                            remoteProjectFile,
-                            scmConfig.featureBranch,
-                            scmConfig.releaseBranch,
-                        )
+                        scmActions.getCommits(remoteProjectFile, scmConfig.featureBranch, scmConfig.releaseBranch)
                     )
             }
     }
@@ -212,6 +197,10 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
                 Arguments.of(
                     classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
                     ScmConstants.RELEASE_BRANCH,
                 ),
 

@@ -40,11 +40,14 @@ class TestGitActions<T : Any>(
         )
     }
 
-    override fun initializeRepository(projectFile: ProjectFile<T>) {
+    override fun initializeRepository(
+        projectFile: ProjectFile<T>,
+        branchName: String,
+    ) {
         projectFile.resolve("README.adoc")
             .writeText("= EazyPortal - $PROJECT_NAME")
 
-        execute(projectFile, "init", "--initial-branch=main")
+        execute(projectFile, "init", "--initial-branch=$branchName")
         add(projectFile, ".")
         commit(projectFile, "initial commit")
 

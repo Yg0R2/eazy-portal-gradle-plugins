@@ -148,7 +148,14 @@ class GitActionsTest {
         } returns listOf(currentBranchName)
 
         every {
-            commandExecutor.execute(projectFile, GIT_EXECUTABLE, "reset", "--hard", "$remote/$currentBranchName")
+            commandExecutor.execute(
+                projectFile,
+                GIT_EXECUTABLE,
+                "reset",
+                "--hard",
+                "--recurse-submodules",
+                "$remote/$currentBranchName",
+            )
         } returns emptyList()
 
         // WHEN
@@ -167,7 +174,14 @@ class GitActionsTest {
                 "--recurse-submodules",
             )
             commandExecutor.execute(projectFile, GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD")
-            commandExecutor.execute(projectFile, GIT_EXECUTABLE, "reset", "--hard", "$remote/$currentBranchName")
+            commandExecutor.execute(
+                projectFile,
+                GIT_EXECUTABLE,
+                "reset",
+                "--hard",
+                "--recurse-submodules",
+                "$remote/$currentBranchName",
+            )
         }
     }
 
