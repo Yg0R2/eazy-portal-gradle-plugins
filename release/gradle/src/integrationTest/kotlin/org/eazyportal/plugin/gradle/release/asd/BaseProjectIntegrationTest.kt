@@ -89,6 +89,10 @@ class SingleModuleGitFlowScmProjectTestCase(
         scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
 
         scmActions.clone(remoteProjectFile, projectFile)
+
+        // Create local feature branch
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
     }
 
 }
@@ -158,6 +162,10 @@ class SingleModuleCustomFlowScmProjectTestCase(
         scmActions.clone(remoteProjectFile, projectFile)
 
         scmActions.execute(projectFile,"remote", "rename", "origin", scmConfig.remote)
+
+        // Create local feature branch
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
     }
 
 }
@@ -168,22 +176,68 @@ abstract class BaseMultiModuleScmProjectTestCase(
     override val workingDir: File,
 ) : BaseScmProjectTestCase(scmActions, scmConfig, workingDir) {
 
-    protected val submoduleProjectFile: ProjectFile<File>
+    val submoduleProjectFile: ProjectFile<File>
         get() = projectFile.resolve(SUBMODULE_NAME)
             .also { it.getFile().mkdirs() }
 
-    protected val remoteSubmoduleProjectFile: ProjectFile<File>
+    val remoteSubmoduleProjectFile: ProjectFile<File>
         get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
             .also { it.mkdirs() }
             .let { FileSystemProjectFile(it) }
 
 }
 
-abstract class BaseMultiModuleGitFlowScmProjectTestCase(
-    override val scmActions: TestScmActions<File>,
-    override val scmConfig: ScmConfig,
+class MultiModuleGitFlowScmProjectTestCase(
     override val workingDir: File,
-) : BaseMultiModuleScmProjectTestCase(scmActions, scmConfig, workingDir) {
+) : BaseMultiModuleScmProjectTestCase(
+    TestGitActions(CommandLineExecutor()),
+    ScmConfig.GIT_FLOW,
+    workingDir,
+) {
+
+    override fun initializeProject() {
+        GradleProjectBuilder(
+            projectDir = remoteProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteProjectFile)
+
+        GradleProjectBuilder(
+            projectDir = remoteSubmoduleProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteSubmoduleProjectFile)
+
+        scmActions.addSubmodule(remoteProjectFile, remoteSubmoduleProjectFile)
+        scmActions.commit(remoteProjectFile, "chore: add $SUBMODULE_NAME submodule")
+
+        // Create remote feature branch
+        scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
+        scmActions.execute(remoteSubmoduleProjectFile, "branch", scmConfig.featureBranch)
+
+        scmActions.clone(remoteProjectFile, projectFile)
+
+        // Create local feature branch
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
+
+        scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+        scmActions.checkout(submoduleProjectFile, scmConfig.releaseBranch)
+    }
 
 }
 

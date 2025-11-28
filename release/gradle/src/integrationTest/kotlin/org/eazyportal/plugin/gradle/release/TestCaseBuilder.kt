@@ -3,7 +3,9 @@ package org.eazyportal.plugin.gradle.release
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.gradle.testkit.runner.BuildResult
 import java.io.File
 import kotlin.reflect.KClass
@@ -44,14 +46,42 @@ object TestCaseBuilder {
         private val buildResult: BuildResult,
     ) {
 
-        fun scmCommits(block: ListAssert<String>.() -> Unit) {
-            block(assertThat(testCase.scmActions.getCommits(testCase.projectFile)))
+        fun scmCommits(
+            projectFile: ProjectFile<File>,
+            block: ListAssert<String>.() -> Unit,
+        ) {
+            block(assertThat(testCase.scmActions.getCommits(projectFile)))
         }
 
-        fun scmStatus(block: ListAssert<String>.() -> Unit) {
-            block(
-                assertThat(testCase.scmActions.status(testCase.projectFile))
-            )
+        fun scmLocalCommits(block: ListAssert<String>.() -> Unit) {
+            scmCommits(testCase.projectFile, block)
+        }
+
+        fun scmRemoteCommits(block: ListAssert<String>.() -> Unit) {
+            scmCommits(testCase.remoteProjectFile, block)
+        }
+
+        fun scmLocalStatus(block: ListAssert<String>.() -> Unit) {
+            scmStatus(testCase.projectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                block(assertThat(testCase.scmActions.status(testCase.submoduleProjectFile)))
+            }
+        }
+
+        fun scmRemoteStatus(block: ListAssert<String>.() -> Unit) {
+            scmStatus(testCase.remoteProjectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                block(assertThat(testCase.scmActions.status(testCase.remoteSubmoduleProjectFile)))
+            }
+        }
+
+        fun scmStatus(
+            projectFile: ProjectFile<File>,
+            block: ListAssert<String>.() -> Unit,
+        ) {
+            block(assertThat(testCase.scmActions.status(projectFile)))
         }
 
         fun taskOutput(block: ListAssert<String>.() -> Unit) {

@@ -4,10 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
@@ -34,21 +36,19 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
     fun <T : BaseScmProjectTestCase> `test 'run' should clean local commits`(
         testCaseClass: KClass<T>,
         testBranch: String,
-        projectFileProvider: T.() -> ProjectFile<File>,
-        remoteProjectFileProvider: T.() -> ProjectFile<File>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
-            scmActions.checkout(projectFileProvider(this), testBranch)
+            scmActions.checkout(projectFile, testBranch)
 
-            createAndCommitDummyFile(projectFileProvider(this), CHORE_COMMIT_MESSAGE)
+            createAndCommitDummyFile(projectFile, CHORE_COMMIT_MESSAGE)
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                it.scmCommits {
+                it.scmLocalCommits {
                     doesNotContain(CHORE_COMMIT_MESSAGE)
                 }
             }
@@ -59,21 +59,19 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
     fun <T : BaseScmProjectTestCase> `test 'run' should clean local file changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
-        projectFileProvider: T.() -> ProjectFile<File>,
-        remoteProjectFileProvider: T.() -> ProjectFile<File>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
-            scmActions.checkout(projectFileProvider(this), testBranch)
+            scmActions.checkout(projectFile, testBranch)
 
-            createDummyFile(projectFileProvider(this))
+            createDummyFile(projectFile)
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                it.scmStatus {
+                it.scmLocalStatus {
                     contains(
                         "On branch $testBranch",
                         "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
@@ -88,18 +86,16 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
     fun <T : BaseScmProjectTestCase> `test 'run' should pull remote changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
-        projectFileProvider: T.() -> ProjectFile<File>,
-        remoteProjectFileProvider: T.() -> ProjectFile<File>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
-            scmActions.checkout(remoteProjectFileProvider(), scmConfig.releaseBranch)
-            createAndCommitDummyFile(remoteProjectFileProvider(), "chore: commit on ${scmConfig.releaseBranch}")
+            scmActions.checkout(remoteProjectFile, scmConfig.releaseBranch)
+            createAndCommitDummyFile(remoteProjectFile, "chore: commit on ${scmConfig.releaseBranch}")
 
-            scmActions.checkout(remoteProjectFileProvider(), scmConfig.featureBranch)
-            createAndCommitDummyFile(remoteProjectFileProvider(), "chore: commit on ${scmConfig.featureBranch}")
+            scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
+            createAndCommitDummyFile(remoteProjectFile, "chore: commit on ${scmConfig.featureBranch}")
 
-            scmActions.checkout(projectFileProvider(), testBranch)
+            scmActions.checkout(projectFile, testBranch)
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
@@ -109,14 +105,14 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 // TODO: fix Trunk
                 assertThat(
                     scmActions.getCommits(
-                        projectFileProvider(),
+                        projectFile,
                         scmConfig.releaseBranch,
                         scmConfig.featureBranch,
                     )
                 ).contains("chore: commit on ${scmConfig.featureBranch}")
                     .containsExactlyElementsOf(
                         scmActions.getCommits(
-                            remoteProjectFileProvider(),
+                            remoteProjectFile,
                             scmConfig.releaseBranch,
                             scmConfig.featureBranch,
                         )
@@ -125,14 +121,14 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 // TODO: fix Trunk
                 assertThat(
                     scmActions.getCommits(
-                        projectFileProvider(),
+                        projectFile,
                         scmConfig.featureBranch,
                         scmConfig.releaseBranch,
                     )
                 ).contains("chore: commit on ${scmConfig.releaseBranch}")
                     .containsExactlyElementsOf(
                         scmActions.getCommits(
-                            remoteProjectFileProvider(),
+                            remoteProjectFile,
                             scmConfig.featureBranch,
                             scmConfig.releaseBranch,
                         )
@@ -140,53 +136,59 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             }
     }
 
-    private class TestArguments<T : BaseScmProjectTestCase>(
-        private val testCaseClass: KClass<T>,
-        private val testBranch: String,
-        private val projectFileProvider: T.() -> ProjectFile<File> = { projectFile },
-        private val remoteProjectFileProvider: T.() -> ProjectFile<File> = { remoteProjectFile },
-    ) : Arguments {
-
-        override fun get(): Array<out Any?> =
-            arrayOf(
-                testCaseClass,
-                testBranch,
-                projectFileProvider,
-                remoteProjectFileProvider,
-            )
-
-        override fun toString(): String =
-            testCaseClass.java.simpleName
-
-    }
-
+//    private class TestArguments<T : BaseScmProjectTestCase>(
+//        private val testCaseClass: KClass<T>,
+//        private val testBranch: String,
+//        private val projectFileProvider: T.() -> ProjectFile<File> = { projectFile },
+//        private val remoteProjectFileProvider: T.() -> ProjectFile<File> = { remoteProjectFile },
+//    ) : Arguments {
+//
+//        override fun get(): Array<out Any?> =
+//            arrayOf(
+//                testCaseClass,
+//                testBranch,
+//                projectFileProvider,
+//                remoteProjectFileProvider,
+//            )
+//
+//        override fun toString(): String =
+//            testCaseClass.java.simpleName
+//
+//    }
+//
     companion object {
         @JvmStatic
-        private fun shouldCleanLocalChangesTestCases(): List<TestArguments<out BaseScmProjectTestCase>> =
+        private fun shouldCleanLocalChangesTestCases(): List<Arguments> =
             listOf(
-                TestArguments(
-                    testCaseClass = SingleModuleGitFlowScmProjectTestCase::class,
-                    testBranch = ScmConstants.RELEASE_BRANCH,
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
                 ),
-                TestArguments(
-                    testCaseClass = SingleModuleGitFlowScmProjectTestCase::class,
-                    testBranch = ScmConstants.RELEASE_BRANCH,
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
                 ),
-                TestArguments(
-                    testCaseClass = SingleModuleGitFlowScmProjectTestCase::class,
-                    testBranch = ScmConstants.FEATURE_BRANCH,
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
                 ),
-                TestArguments(
-                    testCaseClass = SingleModuleTrunkFlowScmProjectTestCase::class,
-                    testBranch = ScmConstants.RELEASE_BRANCH,
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
                 ),
-                TestArguments(
-                    testCaseClass = SingleModuleCustomFlowScmProjectTestCase::class,
-                    testBranch = "dummy-release-branch",
+
+                Arguments.of(
+                    classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
                 ),
-                TestArguments(
-                    testCaseClass = SingleModuleCustomFlowScmProjectTestCase::class,
-                    testBranch = "dummy-feature-branch",
+
+                Arguments.of(
+                    classNamed(SingleModuleCustomFlowScmProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(SingleModuleCustomFlowScmProjectTestCase::class),
+                    "dummy-feature-branch",
                 ),
             )
 
