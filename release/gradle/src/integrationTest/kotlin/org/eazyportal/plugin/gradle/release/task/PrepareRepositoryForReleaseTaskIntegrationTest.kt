@@ -2,6 +2,7 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
@@ -49,21 +50,26 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                         "nothing to commit, working tree clean",
                     )
                 }
+
+                scmCommits {
+                    result.doesNotContain(CHORE_COMMIT_MESSAGE)
+                }
             }
     }
 
-    private class ShouldCleanLocalCommentTestCaseArguments(
-        private val clazz: KClass<out BaseScmProjectTestCase>,
-        private val testBranch: String
+    private class ShouldCleanLocalCommentTestCaseArguments<T : BaseScmProjectTestCase>(
+        private val clazz: KClass<out T>,
+        private val projectFileProvider: T.() -> ProjectFile<File>,
+        private val testBranch: String,
     ) : Arguments {
 
         override fun get(): Array<out Any> =
             arrayOf(
                 { workingDir: File ->
                     TestCaseBuilder.givenTestCase(clazz, workingDir) {
-                        scmActions.checkout(projectFile, testBranch)
+                        scmActions.checkout(projectFileProvider(), testBranch)
 
-                        createAndCommitDummyFile(projectFile)
+                        createAndCommitDummyFile(projectFileProvider())
                     }
                 },
                 testBranch,
@@ -71,18 +77,19 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
     }
 
-    private class ShouldCleanLocalFileChangesTestCaseArguments(
-        private val clazz: KClass<out BaseScmProjectTestCase>,
-        private val testBranch: String
+    private class ShouldCleanLocalFileChangesTestCaseArguments<T : BaseScmProjectTestCase>(
+        private val clazz: KClass<out T>,
+        private val projectFileProvider: T.() -> ProjectFile<File>,
+        private val testBranch: String,
     ) : Arguments {
 
         override fun get(): Array<out Any> =
             arrayOf(
                 { workingDir: File ->
                     TestCaseBuilder.givenTestCase(clazz, workingDir) {
-                        scmActions.checkout(projectFile, testBranch)
+                        scmActions.checkout(projectFileProvider(), testBranch)
 
-                        createDummyFile(projectFile)
+                        createDummyFile(projectFileProvider())
                     }
                 },
                 testBranch,
@@ -94,24 +101,54 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
         @JvmStatic
         private fun shouldCleanLocalChangesTestCases(): List<Arguments> =
             listOf(
+                ShouldCleanLocalCommentTestCaseArguments(
+                    SingleModuleGitFlowScmProjectTestCase::class,
+                    { projectFile },
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                ShouldCleanLocalCommentTestCaseArguments(
+                    SingleModuleGitFlowScmProjectTestCase::class,
+                    { projectFile },
+                    ScmConstants.FEATURE_BRANCH,
+                ),
+                ShouldCleanLocalCommentTestCaseArguments(
+                    SingleModuleTrunkFlowScmProjectTestCase::class,
+                    { projectFile },
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                ShouldCleanLocalCommentTestCaseArguments(
+                    SingleModuleCustomFlowScmProjectTestCase::class,
+                    { projectFile },
+                    "dummy-release-branch",
+                ),
+                ShouldCleanLocalCommentTestCaseArguments(
+                    SingleModuleCustomFlowScmProjectTestCase::class,
+                    { projectFile },
+                    "dummy-feature-branch",
+                ),
                 ShouldCleanLocalFileChangesTestCaseArguments(
                     SingleModuleGitFlowScmProjectTestCase::class,
+                    { projectFile },
                     ScmConstants.RELEASE_BRANCH,
                 ),
                 ShouldCleanLocalFileChangesTestCaseArguments(
                     SingleModuleGitFlowScmProjectTestCase::class,
+                    { projectFile },
                     ScmConstants.FEATURE_BRANCH,
                 ),
                 ShouldCleanLocalFileChangesTestCaseArguments(
                     SingleModuleTrunkFlowScmProjectTestCase::class,
+                    { projectFile },
                     ScmConstants.RELEASE_BRANCH,
                 ),
                 ShouldCleanLocalFileChangesTestCaseArguments(
                     SingleModuleCustomFlowScmProjectTestCase::class,
+                    { projectFile },
                     "dummy-release-branch",
                 ),
                 ShouldCleanLocalFileChangesTestCaseArguments(
                     SingleModuleCustomFlowScmProjectTestCase::class,
+                    { projectFile },
                     "dummy-feature-branch",
                 ),
             )

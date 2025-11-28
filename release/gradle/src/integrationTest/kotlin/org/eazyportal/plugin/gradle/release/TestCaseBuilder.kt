@@ -46,12 +46,12 @@ object TestCaseBuilder {
         private val buildResult: BuildResult,
     ) {
 
-        fun taskOutput(block: ThenContext<ListAssert<String>>.() -> Unit) {
+        fun scmCommits(block: ThenContext<ListAssert<String>>.() -> Unit) {
             block(
                 ThenContext(
                     scmActions = baseTest.scmActions,
                     scmConfig = baseTest.scmConfig,
-                    result = assertThat(buildResult.output.lines()),
+                    result = assertThat(baseTest.scmActions.getCommits(baseTest.projectFile))
                 )
             )
         }
@@ -62,6 +62,16 @@ object TestCaseBuilder {
                     scmActions = baseTest.scmActions,
                     scmConfig = baseTest.scmConfig,
                     result = assertThat(baseTest.scmActions.status(baseTest.projectFile))
+                )
+            )
+        }
+
+        fun taskOutput(block: ThenContext<ListAssert<String>>.() -> Unit) {
+            block(
+                ThenContext(
+                    scmActions = baseTest.scmActions,
+                    scmConfig = baseTest.scmConfig,
+                    result = assertThat(buildResult.output.lines()),
                 )
             )
         }
