@@ -37,7 +37,7 @@ open class GitActions<T: Any>(
         execute(projectFile, "fetch", remote, "--tags", "--prune", "--prune-tags", "--recurse-submodules")
 
         val currentBranchName = getCurrentBranch(projectFile)
-        execute(projectFile, "reset", "--hard", "$remote/$currentBranchName")
+        execute(projectFile, "reset", "--hard", "--recurse-submodules", "$remote/$currentBranchName")
 
         branches.asSequence()
             .filter { it != currentBranchName }

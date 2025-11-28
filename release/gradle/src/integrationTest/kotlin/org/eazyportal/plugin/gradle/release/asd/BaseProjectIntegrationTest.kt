@@ -249,10 +249,73 @@ abstract class BaseMultiModuleTrunkFlowScmProjectTestCase(
 
 }
 
-abstract class BaseMultiModuleCustomFlowScmProjectTestCase(
-    override val scmActions: TestScmActions<File>,
-    override val scmConfig: ScmConfig,
+class MultiModuleCustomFlowScmProjectTestCase(
     override val workingDir: File,
-) : BaseMultiModuleScmProjectTestCase(scmActions, scmConfig, workingDir) {
+) : BaseMultiModuleScmProjectTestCase(
+    TestGitActions(CommandLineExecutor()),
+    ScmConfig(
+        featureBranch = "dummy-feature-branch",
+        releaseBranch = "dummy-release-branch",
+        remote = "upstream"
+    ),
+    workingDir,
+) {
+
+    override fun initializeProject() {
+        GradleProjectBuilder(
+            projectDir = remoteProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
+                        featureBranch = "dummy-feature-branch",
+                        releaseBranch = "dummy-release-branch",
+                        remote = "upstream"
+                    )
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteProjectFile)
+
+        GradleProjectBuilder(
+            projectDir = remoteSubmoduleProjectFile.getFile(),
+            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
+        ).withExtraProjectConfig(
+            """
+                eazyRelease {
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
+                        featureBranch = "dummy-feature-branch",
+                        releaseBranch = "dummy-release-branch",
+                        remote = "upstream"
+                    )
+                }
+                """.trimIndent()
+        ).build()
+
+        scmActions.initializeRepository(remoteSubmoduleProjectFile)
+
+        scmActions.addSubmodule(remoteProjectFile, remoteSubmoduleProjectFile)
+        scmActions.commit(remoteProjectFile, "chore: add $SUBMODULE_NAME submodule")
+
+        // Create remote feature branch
+        scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
+        scmActions.execute(remoteProjectFile, "branch", scmConfig.releaseBranch)
+        scmActions.execute(remoteSubmoduleProjectFile, "branch", scmConfig.featureBranch)
+        scmActions.execute(remoteSubmoduleProjectFile, "branch", scmConfig.releaseBranch)
+
+        scmActions.clone(remoteProjectFile, projectFile)
+
+        scmActions.execute(projectFile,"remote", "rename", "origin", scmConfig.remote)
+        scmActions.execute(submoduleProjectFile,"remote", "rename", "origin", scmConfig.remote)
+
+        // Create local feature branch
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
+
+        scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+        scmActions.checkout(submoduleProjectFile, scmConfig.releaseBranch)
+    }
 
 }

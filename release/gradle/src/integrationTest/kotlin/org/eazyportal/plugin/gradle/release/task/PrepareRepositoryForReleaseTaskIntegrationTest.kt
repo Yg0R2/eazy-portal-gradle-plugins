@@ -8,7 +8,9 @@ import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
@@ -42,6 +44,12 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             scmActions.checkout(projectFile, testBranch)
 
             createAndCommitDummyFile(projectFile, CHORE_COMMIT_MESSAGE)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, testBranch)
+
+                createAndCommitDummyFile(submoduleProjectFile, CHORE_COMMIT_MESSAGE)
+            }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
@@ -65,18 +73,33 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             scmActions.checkout(projectFile, testBranch)
 
             createDummyFile(projectFile)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, testBranch)
+
+                createDummyFile(submoduleProjectFile)
+            }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                it.scmLocalStatus {
+                it.scmStatus(projectFile) {
                     contains(
                         "On branch $testBranch",
                         "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
                         "nothing to commit, working tree clean",
                     )
+                }
+
+                if (this is MultiModuleGitFlowScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "HEAD detached at refs/heads/$testBranch",
+                            "nothing to commit, working tree clean",
+                        )
+                    }
                 }
             }
     }
@@ -96,6 +119,16 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             createAndCommitDummyFile(remoteProjectFile, "chore: commit on ${scmConfig.featureBranch}")
 
             scmActions.checkout(projectFile, testBranch)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
+                createAndCommitDummyFile(remoteSubmoduleProjectFile, "chore: commit on ${scmConfig.releaseBranch}")
+
+                scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
+                createAndCommitDummyFile(remoteSubmoduleProjectFile, "chore: commit on ${scmConfig.featureBranch}")
+
+                scmActions.checkout(submoduleProjectFile, testBranch)
+            }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
@@ -136,7 +169,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
             }
     }
 
-//    private class TestArguments<T : BaseScmProjectTestCase>(
+    //    private class TestArguments<T : BaseScmProjectTestCase>(
 //        private val testCaseClass: KClass<T>,
 //        private val testBranch: String,
 //        private val projectFileProvider: T.() -> ProjectFile<File> = { projectFile },
@@ -166,7 +199,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 ),
                 Arguments.of(
                     classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
+                    ScmConstants.FEATURE_BRANCH,
                 ),
                 Arguments.of(
                     classNamed(MultiModuleGitFlowScmProjectTestCase::class),
@@ -174,7 +207,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 ),
                 Arguments.of(
                     classNamed(MultiModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
+                    ScmConstants.FEATURE_BRANCH,
                 ),
 
                 Arguments.of(
@@ -188,6 +221,14 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 ),
                 Arguments.of(
                     classNamed(SingleModuleCustomFlowScmProjectTestCase::class),
+                    "dummy-feature-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomFlowScmProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomFlowScmProjectTestCase::class),
                     "dummy-feature-branch",
                 ),
             )

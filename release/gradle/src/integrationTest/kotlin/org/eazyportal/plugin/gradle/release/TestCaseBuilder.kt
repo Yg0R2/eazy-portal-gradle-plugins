@@ -55,10 +55,18 @@ object TestCaseBuilder {
 
         fun scmLocalCommits(block: ListAssert<String>.() -> Unit) {
             scmCommits(testCase.projectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                scmCommits(testCase.submoduleProjectFile, block)
+            }
         }
 
         fun scmRemoteCommits(block: ListAssert<String>.() -> Unit) {
             scmCommits(testCase.remoteProjectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                scmCommits(testCase.remoteSubmoduleProjectFile, block)
+            }
         }
 
         fun scmLocalStatus(block: ListAssert<String>.() -> Unit) {
