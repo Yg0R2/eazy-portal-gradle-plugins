@@ -28,9 +28,7 @@ class FinalizeReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
         }.whenGradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
-                    contains(
-                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
-                    )
+                    contains("> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME")
                 }
 
                 it.projectVersion {
@@ -45,8 +43,15 @@ class FinalizeReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
                             "initial commit",
                         )
                     }
+
+                    it.scmCommits(submoduleProjectFile) {
+                        containsExactly(
+                            "Release version: $RELEASE_001",
+                            "initial commit",
+                        )
+                    }
                 } else {
-                    it.scmCommits(projectFile) {
+                    it.scmLocalCommits {
                         containsExactly(
                             "Release version: $RELEASE_001",
                             "initial commit",
