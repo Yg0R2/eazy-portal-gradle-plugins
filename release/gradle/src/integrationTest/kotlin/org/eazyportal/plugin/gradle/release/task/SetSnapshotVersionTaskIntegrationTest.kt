@@ -1,98 +1,65 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
-import org.eazyportal.plugin.common.cli.CommandLineUtils.git
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
+import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
-import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.version.model.Version
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import kotlin.reflect.KClass
 
-class SetSnapshotVersionTaskIntegrationTest {
+class SetSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseSetSnapshotVersionTaskIntegrationTest {
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should fail when project version is not release version`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
+            setProjectVersion(SNAPSHOT_001)
+        }.whenGradleTaskFails(SET_SNAPSHOT_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Execution failed for task ':$SET_SNAPSHOT_VERSION_TASK_NAME'.",
+                        "> Project already on ${Version.DEVELOPMENT_VERSION_SUFFIX} version.",
+                    )
+                }
 
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
-
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_001)
+                }
+            }
     }
 
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseSetSnapshotVersionTaskIntegrationTest {
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should set snapshot version`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
+            setProjectVersion(RELEASE_001)
+        }.whenGradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
 
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-    }
-
-    private interface BaseSetSnapshotVersionTaskIntegrationTest : ScmProjectIntegrationTest {
-
-        @BeforeEach
-        fun setUp() {
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-        }
-
-        @Test
-        fun `test 'run' should fail when project version is not release version`() {
-            // GIVEN
-            scmUtils.createDummyFile(projectDir)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, SET_SNAPSHOT_VERSION_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "Execution failed for task ':$SET_SNAPSHOT_VERSION_TASK_NAME'.",
-                    "> Project already on ${Version.DEVELOPMENT_VERSION_SUFFIX} version.",
-                )
-
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(SNAPSHOT_001)
-        }
-
-        @Test
-        fun `test 'run' should set snapshot version`() {
-            // GIVEN
-            projectDir.copyIntoFromResources(
-                SetSnapshotVersionTaskIntegrationTest::class.java.simpleName,
-                "$GRADLE_PROPERTIES_FILE_NAME.release-version"
-            ).renameTo(projectDir.resolve(GRADLE_PROPERTIES_FILE_NAME))
-
-            // WHEN
-            createGradleRunner(projectDir, SET_SNAPSHOT_VERSION_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(SNAPSHOT_002)
-        }
-
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_002)
+                }
+            }
     }
 
 }
