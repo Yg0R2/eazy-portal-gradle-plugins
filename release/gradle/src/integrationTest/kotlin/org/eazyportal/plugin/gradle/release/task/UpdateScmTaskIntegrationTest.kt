@@ -1,118 +1,120 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.cli.CommandLineUtils.git
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
+
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.junit.classNamed
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomizedProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomizedProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.eazyportal.plugin.release.core.scm.ScmConstants
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import kotlin.reflect.KClass
 
-class UpdateScmTaskIntegrationTest {
+class UpdateScmTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseUpdateScmTaskIntegrationTest {
+    @MethodSource("testCases")
+    @ParameterizedTest
+    fun `test 'run' should update SCM with commits`(
+        testCaseClass: KClass<T>,
+        testBranch: String,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, testBranch)
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
+            createAndCommitDummyFile(projectFile)
 
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, testBranch)
 
-        @BeforeEach
-        fun setUpSubModule() {
-            // Initialize both branch locally
-            scmUtils.checkout(subModuleDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.checkout(subModuleDir, ScmConstants.RELEASE_BRANCH)
-        }
+                createAndCommitDummyFile(submoduleProjectFile)
+            }
+        }.whenGradleTaskSucceeds(UPDATE_SCM_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains("> Task :$UPDATE_SCM_TASK_NAME")
+                }
 
-        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-        @ParameterizedTest
-        fun `test 'run' should update SCM submodule with commits`(testBranch: String) {
-            // GIVEN
-            scmUtils.checkout(subModuleDir, testBranch)
+                it.scmCommits(projectFile) {
+                    contains(CHORE_COMMIT_MESSAGE)
+                }
 
-            scmUtils.createDummyCommit(subModuleDir, testBranch)
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmCommits(submoduleProjectFile) {
+                        contains(CHORE_COMMIT_MESSAGE)
+                    }
+                }
 
-            // WHEN
-            val actual = createGradleRunner(projectDir, UPDATE_SCM_TASK_NAME)
-                .build()
+                // Workaround for using none-bare repository
+                scmActions.clean(remoteProjectFile)
+                scmActions.checkout(remoteProjectFile, testBranch)
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    scmActions.clean(remoteSubmoduleProjectFile)
+                    scmActions.checkout(remoteSubmoduleProjectFile, testBranch)
+                }
 
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$UPDATE_SCM_TASK_NAME")
-
-            // Workaround for using none-bare repository
-            scmUtils.clean(remoteProjectDir)
-            scmUtils.checkout(remoteProjectDir, testBranch)
-            scmUtils.clean(remoteSubModuleDir)
-            scmUtils.checkout(remoteSubModuleDir, testBranch)
-
-            assertThat(scmUtils.getCommits(projectDir))
-                .containsExactlyElementsOf(scmUtils.getCommits(remoteProjectDir))
-            assertThat(scmUtils.getCommits(subModuleDir))
-                .containsExactlyElementsOf(scmUtils.getCommits(remoteSubModuleDir))
-        }
-
+                it.scmCompareCommits()
+            }
     }
 
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseUpdateScmTaskIntegrationTest {
+    companion object {
+        @JvmStatic
+        private fun testCases(): List<Arguments> =
+            listOf(
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.FEATURE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.FEATURE_BRANCH,
+                ),
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
+                Arguments.of(
+                    classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
 
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-    }
-
-    private interface BaseUpdateScmTaskIntegrationTest : ScmProjectIntegrationTest {
-
-        @BeforeEach
-        fun setUp() {
-            // Initialize both branch locally
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-        }
-
-        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-        @ParameterizedTest
-        fun `test 'run' should update SCM with commits`(testBranch: String) {
-            // GIVEN
-            scmUtils.checkout(projectDir, testBranch)
-
-            scmUtils.createDummyCommit(projectDir, testBranch)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, UPDATE_SCM_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$UPDATE_SCM_TASK_NAME")
-
-            // Workaround for using none-bare repository
-            scmUtils.clean(remoteProjectDir)
-            scmUtils.checkout(remoteProjectDir, testBranch)
-
-            assertThat(scmUtils.getCommits(projectDir))
-                .containsExactlyElementsOf(scmUtils.getCommits(remoteProjectDir))
-        }
-
+                Arguments.of(
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
+                    "dummy-feature-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
+                    "dummy-feature-branch",
+                ),
+            )
     }
 
 }
