@@ -1,64 +1,79 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.cli.CommandLineUtils.git
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.task.SetSnapshotVersionTaskIntegrationTest.BaseSetSnapshotVersionTaskIntegrationTest
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
-import org.eazyportal.plugin.release.core.scm.ScmConstants
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import kotlin.reflect.KClass
 
-class FinalizeSnapshotVersionTaskIntegrationTest {
+class FinalizeSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseFinalizeSnapshotVersionTaskIntegrationTest
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should fail when there is nothing to commit`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir)
+            .whenGradleTaskFails(FINALIZE_SNAPSHOT_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME FAILED",
+                        "nothing to commit, working tree clean",
+                    )
+                }
+            }
+    }
 
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseFinalizeSnapshotVersionTaskIntegrationTest
-
-    private interface BaseFinalizeSnapshotVersionTaskIntegrationTest : ScmProjectIntegrationTest {
-
-        @Test
-        fun `test 'run' should finalize snapshot version`() {
-            // GIVEN
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should finalize snapshot version`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
             setProjectVersion(SNAPSHOT_002)
+        }.whenGradleTaskSucceeds(FINALIZE_SNAPSHOT_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains("> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME")
+                }
 
-            // WHEN
-            val actual = createGradleRunner(projectDir, FINALIZE_SNAPSHOT_VERSION_TASK_NAME, "-DforceRelease=true")
-                .build()
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_002)
+                }
 
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
-                )
-        }
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmCommits(projectFile) {
+                        containsExactly(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "chore: add $SUBMODULE_NAME submodule",
+                            "initial commit",
+                        )
+                    }
 
-        @Test
-        fun `test 'run' should fail when there is nothing to commit`() {
-            // GIVEN
-            // WHEN
-            val actual = createGradleRunner(projectDir, FINALIZE_SNAPSHOT_VERSION_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME FAILED",
-                    "nothing to commit, working tree clean",
-                )
-        }
-
+                    it.scmCommits(submoduleProjectFile) {
+                        containsExactly(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "initial commit",
+                        )
+                    }
+                } else {
+                    it.scmLocalCommits {
+                        containsExactly(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "initial commit",
+                        )
+                    }
+                }
+            }
     }
 
 }
