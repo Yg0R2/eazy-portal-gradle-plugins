@@ -5,6 +5,7 @@ import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestScmActions
@@ -12,8 +13,11 @@ import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
+import org.junit.jupiter.api.Named
+import org.junit.jupiter.params.provider.Arguments
 import java.io.File
 import java.util.UUID
 import kotlin.io.path.absolutePathString
@@ -27,14 +31,61 @@ abstract class BaseProjectTestCase(
 
     companion object {
         @JvmStatic
-        fun testCases(): List<KClass<out BaseScmProjectTestCase>> =
+        fun testCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
             listOf(
-                SingleModuleGitFlowScmProjectTestCase::class,
-                MultiModuleGitFlowScmProjectTestCase::class,
-                SingleModuleTrunkFlowScmProjectTestCase::class,
-                MultiModuleTrunkFlowScmProjectTestCase::class,
-                SingleModuleCustomizedProjectTestCase::class,
-                MultiModuleCustomizedProjectTestCase::class,
+                classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
+                classNamed(SingleModuleCustomizedProjectTestCase::class),
+                classNamed(MultiModuleCustomizedProjectTestCase::class),
+            )
+
+        @JvmStatic
+        private fun testCasesWithBranch(): List<Arguments> =
+            listOf(
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.FEATURE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.FEATURE_BRANCH,
+                ),
+
+                Arguments.of(
+                    classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+
+                Arguments.of(
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
+                    "dummy-feature-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
+                    "dummy-release-branch",
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
+                    "dummy-feature-branch",
+                ),
             )
     }
 

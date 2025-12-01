@@ -3,28 +3,22 @@ package org.eazyportal.plugin.gradle.release.task
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomizedProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
-import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
 class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @MethodSource("testCases")
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should clean local commits`(
         testCaseClass: KClass<T>,
@@ -63,7 +57,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
             }
     }
 
-    @MethodSource("testCases")
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should clean local file changes`(
         testCaseClass: KClass<T>,
@@ -109,7 +103,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
             }
     }
 
-    @MethodSource("testCases")
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should pull remote changes`(
         testCaseClass: KClass<T>,
@@ -207,55 +201,6 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                     }
                 }
             }
-    }
-
-    companion object {
-        @JvmStatic
-        private fun testCases(): List<Arguments> =
-            listOf(
-                Arguments.of(
-                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.FEATURE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.FEATURE_BRANCH,
-                ),
-
-                Arguments.of(
-                    classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
-
-                Arguments.of(
-                    classNamed(SingleModuleCustomizedProjectTestCase::class),
-                    "dummy-release-branch",
-                ),
-                Arguments.of(
-                    classNamed(SingleModuleCustomizedProjectTestCase::class),
-                    "dummy-feature-branch",
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleCustomizedProjectTestCase::class),
-                    "dummy-release-branch",
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleCustomizedProjectTestCase::class),
-                    "dummy-feature-branch",
-                ),
-            )
     }
 
 }
