@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
@@ -156,7 +157,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                         it.scmCommits(projectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
-                                "chore: add dummy-ui submodule",
+                                "chore: add $SUBMODULE_NAME submodule",
                                 "chore: commit on ${scmConfig.featureBranch}",
                                 "chore: commit on ${scmConfig.releaseBranch}"
                             ) // flaky

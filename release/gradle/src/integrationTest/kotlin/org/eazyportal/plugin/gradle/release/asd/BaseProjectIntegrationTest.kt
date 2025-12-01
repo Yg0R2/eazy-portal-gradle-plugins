@@ -78,6 +78,8 @@ abstract class BaseScmProjectTestCase(
             GradleProjectActions(projectFile)
         }.getVersion()
 
+    abstract fun setProjectVersion(version: Version)
+
 }
 
 abstract class BaseSingleModuleScmProjectTestCase(
@@ -85,6 +87,12 @@ abstract class BaseSingleModuleScmProjectTestCase(
     override val scmConfig: ScmConfig,
     override val workingDir: File,
 ) : BaseScmProjectTestCase(scmActions, scmConfig, workingDir) {
+
+    override fun setProjectVersion(version: Version) {
+        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
+            GradleProjectActions(projectFile)
+        }.setVersion(version)
+    }
 
 }
 
@@ -214,6 +222,16 @@ abstract class BaseMultiModuleScmProjectTestCase(
         get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
             .also { it.mkdirs() }
             .let { FileSystemProjectFile(it) }
+
+    override fun setProjectVersion(version: Version) {
+        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
+            GradleProjectActions(projectFile)
+        }.setVersion(version)
+
+        projectActionsMap.computeIfAbsent(submoduleProjectFile.getPath().absolutePathString()) {
+            GradleProjectActions(submoduleProjectFile)
+        }.setVersion(version)
+    }
 
 }
 

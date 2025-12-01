@@ -1,61 +1,82 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import kotlin.reflect.KClass
 
-class FinalizeReleaseVersionTaskIntegrationTest {
+class FinalizeReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseFinalizeReleaseVersionTaskIntegrationTest
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should finalize release version`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
 
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseFinalizeReleaseVersionTaskIntegrationTest
+            setProjectVersion(RELEASE_001)
+        }.whenGradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+                    )
+                }
 
-    private interface BaseFinalizeReleaseVersionTaskIntegrationTest : ScmProjectIntegrationTest {
+                it.projectVersion {
+                    isEqualTo(RELEASE_001)
+                }
 
-        @Test
-        fun `test 'run' should finalize release version`() {
-            // GIVEN
-            setProjectVersion( RELEASE_001)
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmCommits(projectFile) {
+                        containsExactly(
+                            "Release version: $RELEASE_001",
+                            "chore: add $SUBMODULE_NAME submodule",
+                            "initial commit",
+                        )
+                    }
+                } else {
+                    it.scmCommits(projectFile) {
+                        containsExactly(
+                            "Release version: $RELEASE_001",
+                            "initial commit",
+                        )
+                    }
+                }
+            }
+    }
 
-            // WHEN
-            val actual = createGradleRunner(projectDir, FINALIZE_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
-                .build()
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should fail when there is nothing to commit`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        }.whenGradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
+                        "nothing to commit, working tree clean",
+                    )
+                }
 
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
-                )
-        }
-
-        @Test
-        fun `test 'run' should fail when there is nothing to commit`() {
-            // GIVEN
-            // WHEN
-            val actual = createGradleRunner(projectDir, FINALIZE_RELEASE_VERSION_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
-                    "nothing to commit, working tree clean",
-                )
-        }
-
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_001)
+                }
+            }
     }
 
 }
