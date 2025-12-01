@@ -2,10 +2,12 @@ package org.eazyportal.plugin.gradle.release
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
+import org.assertj.core.api.ObjectAssert
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
 import java.io.File
 import kotlin.reflect.KClass
@@ -23,8 +25,19 @@ object TestCaseBuilder {
             configureProjectBlock(testCase)
         }
 
-        fun whenGradleTaskSucceeds(taskName: String): When<T> =
-            createGradleRunner(testCase.projectFile.getFile(), taskName)
+        fun whenGradleTaskFails(
+            taskName: String,
+            vararg arguments: String,
+        ): When<T> =
+            createGradleRunner(testCase.projectFile.getFile(), taskName, *arguments)
+                .buildAndFail()
+                .let { When(testCase, it) }
+
+        fun whenGradleTaskSucceeds(
+            taskName: String,
+            vararg arguments: String,
+        ): When<T> =
+            createGradleRunner(testCase.projectFile.getFile(), taskName, *arguments)
                 .build()
                 .let { When(testCase, it) }
 
@@ -45,6 +58,16 @@ object TestCaseBuilder {
         private val testCase: T,
         private val buildResult: BuildResult,
     ) {
+
+        fun projectVersion(
+            versionBlock: ObjectAssert<Version>.() -> Unit,
+        ) {
+            versionBlock(assertThat(testCase.getProjectVersion(testCase.projectFile)))
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                versionBlock(assertThat(testCase.getProjectVersion(testCase.submoduleProjectFile)))
+            }
+        }
 
         fun scmCommits(
             projectFile: ProjectFile<File>,

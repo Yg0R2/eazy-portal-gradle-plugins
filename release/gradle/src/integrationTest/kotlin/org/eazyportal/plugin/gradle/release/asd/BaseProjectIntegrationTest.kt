@@ -5,20 +5,38 @@ import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
 import java.util.UUID
+import kotlin.io.path.absolutePathString
+import kotlin.reflect.KClass
 
 abstract class BaseProjectTestCase(
     protected open val workingDir: File,
 ) {
 
     abstract fun initializeProject()
+
+    companion object {
+        @JvmStatic
+        fun testCases(): List<KClass<out BaseScmProjectTestCase>> =
+            listOf(
+                SingleModuleGitFlowScmProjectTestCase::class,
+                MultiModuleGitFlowScmProjectTestCase::class,
+                SingleModuleTrunkFlowScmProjectTestCase::class,
+                MultiModuleTrunkFlowScmProjectTestCase::class,
+                SingleModuleCustomizedProjectTestCase::class,
+                MultiModuleCustomizedProjectTestCase::class,
+            )
+    }
 
 }
 
@@ -27,6 +45,8 @@ abstract class BaseScmProjectTestCase(
     open val scmConfig: ScmConfig,
     override val workingDir: File,
 ) : BaseProjectTestCase(workingDir) {
+
+    protected val projectActionsMap: MutableMap<String, ProjectActions<File>> = mutableMapOf()
 
     val projectFile: ProjectFile<File>
         get() = workingDir.resolve(PROJECT_NAME)
@@ -52,6 +72,11 @@ abstract class BaseScmProjectTestCase(
         projectFile.resolve(DUMMY_FILE_NAME)
             .writeText(UUID.randomUUID().toString())
     }
+
+    fun getProjectVersion(projectFile: ProjectFile<File>): Version =
+        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
+            GradleProjectActions(projectFile)
+        }.getVersion()
 
 }
 
@@ -125,7 +150,7 @@ class SingleModuleTrunkFlowScmProjectTestCase(
 
 }
 
-class SingleModuleCustomFlowScmProjectTestCase(
+class SingleModuleCustomizedProjectTestCase(
     override val workingDir: File,
 ) : BaseSingleModuleScmProjectTestCase(
     TestGitActions(CommandLineExecutor()),
@@ -144,6 +169,12 @@ class SingleModuleCustomFlowScmProjectTestCase(
         ).withExtraProjectConfig(
             """
                 eazyRelease {
+                    conventionalCommitTypes = listOf(
+                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
+                            listOf("dummy"),
+                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.MAJOR,
+                         )
+                    )
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
                         featureBranch = "${scmConfig.featureBranch}",
                         releaseBranch = "${scmConfig.releaseBranch}",
@@ -286,7 +317,7 @@ class MultiModuleTrunkFlowScmProjectTestCase(
 
 }
 
-class MultiModuleCustomFlowScmProjectTestCase(
+class MultiModuleCustomizedProjectTestCase(
     override val workingDir: File,
 ) : BaseMultiModuleScmProjectTestCase(
     TestGitActions(CommandLineExecutor()),
@@ -305,6 +336,12 @@ class MultiModuleCustomFlowScmProjectTestCase(
         ).withExtraProjectConfig(
             """
                 eazyRelease {
+                    conventionalCommitTypes = listOf(
+                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
+                            listOf("dummy"),
+                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.MAJOR,
+                         )
+                    )
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
                         featureBranch = "${scmConfig.featureBranch}",
                         releaseBranch = "${scmConfig.releaseBranch}",

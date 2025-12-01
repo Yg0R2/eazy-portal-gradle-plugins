@@ -6,10 +6,10 @@ import org.eazyportal.plugin.common.junit.classNamed
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -239,19 +239,19 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                 ),
 
                 Arguments.of(
-                    classNamed(SingleModuleCustomFlowScmProjectTestCase::class),
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
                     "dummy-release-branch",
                 ),
                 Arguments.of(
-                    classNamed(SingleModuleCustomFlowScmProjectTestCase::class),
+                    classNamed(SingleModuleCustomizedProjectTestCase::class),
                     "dummy-feature-branch",
                 ),
                 Arguments.of(
-                    classNamed(MultiModuleCustomFlowScmProjectTestCase::class),
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
                     "dummy-release-branch",
                 ),
                 Arguments.of(
-                    classNamed(MultiModuleCustomFlowScmProjectTestCase::class),
+                    classNamed(MultiModuleCustomizedProjectTestCase::class),
                     "dummy-feature-branch",
                 ),
             )

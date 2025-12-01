@@ -1,127 +1,105 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
-import org.eazyportal.plugin.common.cli.CommandLineUtils.git
-import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
+import org.eazyportal.plugin.common.ScmTestFixtures.FEATURE_COMMIT_MESSAGE
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomizedProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_010
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_100
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
-import org.eazyportal.plugin.release.core.scm.ScmConstants
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import kotlin.reflect.KClass
 
-class SetReleaseVersionTaskIntegrationTest {
+class SetReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseSetReleaseVersionTaskIntegrationTest {
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should fail when there are no acceptable commits`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Ignoring missing Git tag from release version calculation.",
+                        "Ignoring invalid commit: initial commit",
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                    )
+                }
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
-
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_001)
+                }
+            }
     }
 
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseSetReleaseVersionTaskIntegrationTest {
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should set release version`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
 
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
+            if ((this is SingleModuleCustomizedProjectTestCase) || (this is MultiModuleCustomizedProjectTestCase)) {
+                createAndCommitDummyFile(projectFile, "dummy: configure custom ConventionalCommitTypes")
+            } else {
+                createAndCommitDummyFile(projectFile, FEATURE_COMMIT_MESSAGE)
+            }
+        }.whenGradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Ignoring missing Git tag from release version calculation.",
+                        "Ignoring invalid commit: initial commit",
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                    )
+                }
 
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
+                if ((this is SingleModuleCustomizedProjectTestCase) || (this is MultiModuleCustomizedProjectTestCase)) {
+                    it.projectVersion {
+                        isEqualTo(RELEASE_100)
+                    }
+                } else {
+                    it.projectVersion {
+                        isEqualTo(RELEASE_010)
+                    }
+                }
+            }
     }
 
-    private interface BaseSetReleaseVersionTaskIntegrationTest : ScmProjectIntegrationTest {
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'run' should set release version when release is forced`(
+        testCaseClass: KClass<T>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        }.whenGradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Ignoring missing Git tag from release version calculation.",
+                        "Ignoring invalid commit: initial commit",
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                    )
+                }
 
-        @BeforeEach
-        fun setUp() {
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-        }
-
-        @Test
-        fun `test 'run' should fail when there are no acceptable commits`() {
-            // GIVEN
-            // WHEN
-            val actual = createGradleRunner(projectDir, SET_RELEASE_VERSION_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains(
-                    "Ignoring missing Git tag from release version calculation.",
-                    "Ignoring invalid commit: initial commit",
-                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                )
-
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(SNAPSHOT_001)
-        }
-
-        @Test
-        fun `test 'run' should set release version when release is forced`() {
-            // GIVEN
-            // WHEN
-            createGradleRunner(projectDir, SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(RELEASE_001)
-        }
-
-        @Test
-        fun `test 'run' should set release version`() {
-            // GIVEN
-            projectDir.copyIntoFromResources(SetReleaseVersionTaskIntegrationTest::class.java.simpleName, "src")
-
-            scmUtils.add(projectDir, ".")
-            scmUtils.commit(projectDir, "feature: add request")
-
-            // WHEN
-            createGradleRunner(projectDir, SET_RELEASE_VERSION_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(RELEASE_010)
-        }
-
-        @Test
-        fun `test 'run' should set release version based on custom ConventionalCommitType`() {
-            // GIVEN
-            projectDir.copyIntoFromResources(
-                SetReleaseVersionTaskIntegrationTest::class.java.simpleName,
-                "build.gradle.kts.customConventionalCommitTypes"
-            ).renameTo(projectDir.resolve("build.gradle.kts"))
-
-            scmUtils.add(projectDir, ".")
-            scmUtils.commit(projectDir, "dummy: configure custom ConventionalCommitTypes")
-
-            // WHEN
-            createGradleRunner(projectDir, SET_RELEASE_VERSION_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(getProjectVersion(projectDir))
-                .isEqualTo(RELEASE_100)
-        }
-
+                it.projectVersion {
+                    isEqualTo(RELEASE_001)
+                }
+            }
     }
 
 }
