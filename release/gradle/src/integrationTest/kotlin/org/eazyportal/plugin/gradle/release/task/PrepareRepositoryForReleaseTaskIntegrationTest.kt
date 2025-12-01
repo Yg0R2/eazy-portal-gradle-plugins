@@ -1,12 +1,8 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.junit.classNamed
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest1
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest1
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
@@ -17,26 +13,19 @@ import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomFlowScmProject
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
-import org.eazyportal.plugin.release.core.TestGitActions
-import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
-import org.eazyportal.plugin.release.core.scm.model.ScmConfig
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class PrepareRepositoryForReleaseTaskIntegrationTest {
+class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
-    @MethodSource("shouldCleanLocalChangesTestCases")
+    @MethodSource("testCases")
     @ParameterizedTest
-    fun <T : BaseScmProjectTestCase> `test 'run' should clean local commits`(
+    fun `test 'run' should clean local commits`(
         testCaseClass: KClass<T>,
         testBranch: String,
         @TempDir workingDir: File,
@@ -60,12 +49,22 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                 it.scmLocalCommits {
                     doesNotContain(CHORE_COMMIT_MESSAGE)
                 }
+
+                it.scmCompareCommits()
+
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmCommits(submoduleProjectFile) {
+                        doesNotContain(CHORE_COMMIT_MESSAGE)
+                    }
+
+                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
+                }
             }
     }
 
-    @MethodSource("shouldCleanLocalChangesTestCases")
+    @MethodSource("testCases")
     @ParameterizedTest
-    fun <T : BaseScmProjectTestCase> `test 'run' should clean local file changes`(
+    fun `test 'run' should clean local file changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
         @TempDir workingDir: File,
@@ -94,6 +93,8 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     )
                 }
 
+                it.scmCompareCommits()
+
                 if (this is MultiModuleGitFlowScmProjectTestCase) {
                     it.scmStatus(submoduleProjectFile) {
                         contains(
@@ -101,13 +102,15 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                             "nothing to commit, working tree clean",
                         )
                     }
+
+                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }
 
-    @MethodSource("shouldCleanLocalChangesTestCases")
+    @MethodSource("testCases")
     @ParameterizedTest
-    fun <T : BaseScmProjectTestCase> `test 'run' should pull remote changes`(
+    fun `test 'run' should pull remote changes`(
         testCaseClass: KClass<T>,
         testBranch: String,
         @TempDir workingDir: File,
@@ -136,47 +139,78 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                // TODO: fix Trunk
-                assertThat(
-                    scmActions.getCommits(projectFile, scmConfig.releaseBranch, scmConfig.featureBranch)
-                ).contains("chore: commit on ${scmConfig.featureBranch}")
-                    .containsExactlyElementsOf(
-                        scmActions.getCommits(remoteProjectFile, scmConfig.releaseBranch, scmConfig.featureBranch)
-                    )
+                when (this) {
+                    is SingleModuleTrunkFlowScmProjectTestCase -> {
+                        it.scmCommits(projectFile) {
+                            containsExactlyInAnyOrder(
+                                "initial commit",
+                                "chore: commit on ${scmConfig.featureBranch}",
+                                "chore: commit on ${scmConfig.releaseBranch}"
+                            ) // flaky
+                        }
 
-                // TODO: fix Trunk
-                assertThat(
-                    scmActions.getCommits(projectFile, scmConfig.featureBranch, scmConfig.releaseBranch)
-                ).contains("chore: commit on ${scmConfig.releaseBranch}")
-                    .containsExactlyElementsOf(
-                        scmActions.getCommits(remoteProjectFile, scmConfig.featureBranch, scmConfig.releaseBranch)
-                    )
+                        it.scmCompareCommits()
+                    }
+
+                    is MultiModuleTrunkFlowScmProjectTestCase -> {
+                        it.scmCommits(projectFile) {
+                            containsExactlyInAnyOrder(
+                                "initial commit",
+                                "chore: add dummy-ui submodule",
+                                "chore: commit on ${scmConfig.featureBranch}",
+                                "chore: commit on ${scmConfig.releaseBranch}"
+                            ) // flaky
+                        }
+
+                        it.scmCompareCommits(projectFile, remoteProjectFile)
+
+                        // local submodule should have only 1 commit, which is par of the main project
+                        it.scmCommits(submoduleProjectFile) {
+                            containsExactly(
+                                "initial commit",
+                            )
+                        }
+
+                        // remote submodule should have all commits
+                        it.scmCommits(remoteSubmoduleProjectFile) {
+                            containsExactlyInAnyOrder(
+                                "initial commit",
+                                "chore: commit on ${scmConfig.featureBranch}",
+                                "chore: commit on ${scmConfig.releaseBranch}"
+                            ) // flaky
+                        }
+                    }
+
+                    else -> {
+                        assertThat(
+                            scmActions.getCommits(projectFile, scmConfig.releaseBranch, scmConfig.featureBranch)
+                        ).contains("chore: commit on ${scmConfig.featureBranch}")
+                            .containsExactlyElementsOf(
+                                scmActions.getCommits(
+                                    remoteProjectFile,
+                                    scmConfig.releaseBranch,
+                                    scmConfig.featureBranch
+                                )
+                            )
+
+                        assertThat(
+                            scmActions.getCommits(projectFile, scmConfig.featureBranch, scmConfig.releaseBranch)
+                        ).contains("chore: commit on ${scmConfig.releaseBranch}")
+                            .containsExactlyElementsOf(
+                                scmActions.getCommits(
+                                    remoteProjectFile,
+                                    scmConfig.featureBranch,
+                                    scmConfig.releaseBranch
+                                )
+                            )
+                    }
+                }
             }
     }
 
-    //    private class TestArguments<T : BaseScmProjectTestCase>(
-//        private val testCaseClass: KClass<T>,
-//        private val testBranch: String,
-//        private val projectFileProvider: T.() -> ProjectFile<File> = { projectFile },
-//        private val remoteProjectFileProvider: T.() -> ProjectFile<File> = { remoteProjectFile },
-//    ) : Arguments {
-//
-//        override fun get(): Array<out Any?> =
-//            arrayOf(
-//                testCaseClass,
-//                testBranch,
-//                projectFileProvider,
-//                remoteProjectFileProvider,
-//            )
-//
-//        override fun toString(): String =
-//            testCaseClass.java.simpleName
-//
-//    }
-//
     companion object {
         @JvmStatic
-        private fun shouldCleanLocalChangesTestCases(): List<Arguments> =
+        private fun testCases(): List<Arguments> =
             listOf(
                 Arguments.of(
                     classNamed(SingleModuleGitFlowScmProjectTestCase::class),
@@ -221,227 +255,6 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     "dummy-feature-branch",
                 ),
             )
-
-    }
-
-
-    @Nested
-    inner class MultiModuleGitFlow : MultiModuleScmProjectBaseIntegrationTest1(
-        TestGitActions(CommandLineExecutor()),
-        ScmConfig.GIT_FLOW,
-    ) {
-
-        override fun setUpBeforeClone() {
-            // Create remote feature branch
-            scmActions.execute(remoteProjectFile, "branch", ScmConstants.FEATURE_BRANCH)
-            scmActions.execute(remoteSubmoduleProjectFile, "branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-        @ParameterizedTest
-        fun `test 'run' should clean local changes`(testBranch: String) {
-            // GIVEN
-            scmActions.checkout(projectFile, testBranch)
-
-            createDummyFile(submoduleProjectFile)
-
-            // WHEN
-            val actual = createGradleRunner(projectFile.getFile(), PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
-
-            assertThat(scmActions.status(projectFile))
-                .contains(
-                    "On branch $testBranch",
-                    "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
-                    "nothing to commit, working tree clean",
-                )
-        }
-
-    }
-
-    @Nested
-    inner class MultiModuleTrunkFlow : MultiModuleScmProjectBaseIntegrationTest1(
-        TestGitActions(CommandLineExecutor()),
-        ScmConfig.TRUNK_BASED_FLOW,
-    ) {
-
-        override fun initializeRepository(initProjectFile: ProjectFile<File>) {
-            GradleProjectBuilder(
-                projectDir = initProjectFile.getFile(),
-                projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-            ).withExtraProjectConfig(
-                """
-                eazyRelease {
-                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
-                }
-                """.trimIndent()
-            ).build()
-
-            scmActions.initializeRepository(initProjectFile)
-        }
-
-        @Test
-        fun `test 'run' should clean local changes`() {
-            // GIVEN
-            createDummyFile(submoduleProjectFile)
-
-            // WHEN
-            val actual = createGradleRunner(projectFile.getFile(), PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
-
-            assertThat(scmActions.status(projectFile))
-                .contains(
-                    "On branch ${scmConfig.releaseBranch}",
-                    "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                    "nothing to commit, working tree clean",
-                )
-        }
-
-    }
-
-    @Nested
-    inner class SingleModuleGitFlow : SingleModuleScmProjectBaseIntegrationTest1(
-        TestGitActions(CommandLineExecutor()),
-        ScmConfig.GIT_FLOW,
-    ) {
-
-        override fun setUpBeforeClone() {
-            // Create remote feature branch
-            scmActions.execute(remoteProjectFile, "branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-        @ParameterizedTest
-        fun `test 'run' should clean local changes`(testBranch: String) {
-            // GIVEN
-            scmActions.checkout(projectFile, testBranch)
-
-            createDummyFile(projectFile)
-
-            // WHEN
-            val actual = createGradleRunner(projectFile.getFile(), PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
-
-            assertThat(scmActions.status(projectFile))
-                .contains(
-                    "On branch $testBranch",
-                    "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
-                    "nothing to commit, working tree clean",
-                )
-        }
-    }
-
-    @Nested
-    inner class SingleModuleTrunkFlow : SingleModuleScmProjectBaseIntegrationTest1(
-        TestGitActions(CommandLineExecutor()),
-        ScmConfig.TRUNK_BASED_FLOW,
-    ) {
-
-        override fun initializeRepository(initProjectFile: ProjectFile<File>) {
-            GradleProjectBuilder(
-                projectDir = initProjectFile.getFile(),
-                projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-            ).withExtraProjectConfig(
-                """
-                eazyRelease {
-                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
-                }
-                """.trimIndent()
-            ).build()
-
-            scmActions.initializeRepository(initProjectFile)
-        }
-
-        @Test
-        fun `test 'run' should clean local changes`() {
-            // GIVEN
-            createDummyFile(projectFile)
-
-            // WHEN
-            val actual = createGradleRunner(projectFile.getFile(), PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertThat(actual.output.lines())
-                .contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
-
-            assertThat(scmActions.status(projectFile))
-                .contains(
-                    "On branch ${scmConfig.releaseBranch}",
-                    "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                    "nothing to commit, working tree clean",
-                )
-        }
-
-//        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-//        @ParameterizedTest
-//        fun `test 'run' update release and feature branches`(testBranch: String) {
-//            // GIVEN
-//            scmUtils.createDummyCommit(
-//                remoteProjectFile,
-//                ScmConstants.RELEASE_BRANCH,
-//                "chore: commit on ${ScmConstants.RELEASE_BRANCH}"
-//            )
-//            scmUtils.createDummyCommit(
-//                remoteProjectFile,
-//                ScmConstants.FEATURE_BRANCH,
-//                "chore: commit on ${ScmConstants.FEATURE_BRANCH}"
-//            )
-//
-//            scmUtils.checkout(projectDir, testBranch)
-//
-//            // WHEN
-//            val actual =
-//                createGradleRunner(projectDir, PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
-//                    .build()
-//
-//            // THEN
-//            assertThat(actual.output.lines())
-//                .contains("> Task :${PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME}")
-//
-//            assertThat(
-//                scmUtils.getCommits(
-//                    remoteProjectFile,
-//                    ScmConstants.RELEASE_BRANCH,
-//                    ScmConstants.FEATURE_BRANCH,
-//                )
-//            ).contains("chore: commit on ${ScmConstants.FEATURE_BRANCH}")
-//                .containsExactlyElementsOf(
-//                    scmUtils.getCommits(
-//                        projectDir,
-//                        ScmConstants.RELEASE_BRANCH,
-//                        ScmConstants.FEATURE_BRANCH,
-//                    )
-//                )
-//
-//            assertThat(
-//                scmUtils.getCommits(
-//                    remoteProjectFile,
-//                    ScmConstants.FEATURE_BRANCH,
-//                    ScmConstants.RELEASE_BRANCH,
-//                )
-//            ).contains("chore: commit on ${ScmConstants.RELEASE_BRANCH}")
-//                .containsExactlyElementsOf(
-//                    scmUtils.getCommits(
-//                        projectDir,
-//                        ScmConstants.FEATURE_BRANCH,
-//                        ScmConstants.RELEASE_BRANCH,
-//                    )
-//                )
-//        }
-
     }
 
 }
