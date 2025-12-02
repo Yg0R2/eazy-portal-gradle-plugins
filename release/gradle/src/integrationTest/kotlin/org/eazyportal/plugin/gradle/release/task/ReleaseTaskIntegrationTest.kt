@@ -151,38 +151,54 @@ class ReleaseTaskIntegrationTest {
     }
 
     @Test
-    fun `test 'release' on multi module trunk flow project should fail from release branch when there are acceptable commits on feature branch`(
+    fun `test 'release' on multi module trunk flow project should succeed from release branch when there are acceptable commits`(
         @TempDir workingDir: File,
     ) {
         givenTestCase(MultiModuleTrunkFlowScmProjectTestCase::class, workingDir) {
             val initialVersion = Version.of(INITIAL_TAG)
 
-            scmActions.tag(remoteSubmoduleProjectFile, initialVersion)
-            scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
-            createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
-
-            // Workaround for using none-bare repository as origin (Update origin with submodule changes)
-            scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
-
             scmActions.tag(remoteProjectFile, initialVersion)
+
             scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
             createAndCommitDummyFile(remoteProjectFile, FIX_COMMIT_MESSAGE)
 
+            scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
+            createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+            // Workaround for using none-bare repository as origin (fetch submodule changes)
+            scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
+
+            scmActions.add(remoteProjectFile, ".")
+            scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
+
             scmActions.checkout(projectFile, scmConfig.releaseBranch)
-        }.whenGradleTaskFails(RELEASE_TASK_NAME)
+        }.whenGradleTaskSucceeds(RELEASE_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
                     contains(
-                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                        "> There are no acceptable commits.",
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+                        "> Task :build",
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$UPDATE_SCM_TASK_NAME",
+                        "> Task :$RELEASE_TASK_NAME",
                     )
                 }
 
-                assertFailedRelease(
-                    featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
+                val expectedCommits = listOf(
+                    "New SNAPSHOT version: $SNAPSHOT_002",
+                    "Release version: $RELEASE_001",
+                    FIX_COMMIT_MESSAGE,
+                )
+
+                assertSucceededRelease(
+                    releaseBranchCommits = expectedCommits,
+                    featureBranchCommits = expectedCommits,
                 )
             }
     }
+
 
     private fun BaseScmProjectTestCase.assertFailedRelease(
         releaseBranchCommits: List<String> = emptyList(),
