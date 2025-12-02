@@ -126,6 +126,12 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, "chore: commit on ${scmConfig.featureBranch}")
 
+                // Workaround for using none-bare repository as origin (fetch submodule changes)
+                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
+
+                scmActions.add(remoteProjectFile, ".")
+                scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
+
                 scmActions.checkout(submoduleProjectFile, testBranch)
             }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
@@ -153,27 +159,21 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                                 "initial commit",
                                 "chore: add $SUBMODULE_NAME submodule",
                                 "chore: commit on ${scmConfig.featureBranch}",
-                                "chore: commit on ${scmConfig.releaseBranch}"
+                                "chore: commit on ${scmConfig.releaseBranch}",
+                                "chore: include $SUBMODULE_NAME changes"
                             ) // flaky
                         }
 
                         it.scmCompareCommits(projectFile, remoteProjectFile)
 
-                        // local submodule should have only 1 commit, which is par of the main project
                         it.scmCommits(submoduleProjectFile) {
-                            containsExactly(
-                                "initial commit",
-                            )
-                        }
-
-                        // remote submodule should have all commits
-                        it.scmCommits(remoteSubmoduleProjectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: commit on ${scmConfig.featureBranch}",
                                 "chore: commit on ${scmConfig.releaseBranch}"
                             ) // flaky
                         }
+                        it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                     }
 
                     else -> {
