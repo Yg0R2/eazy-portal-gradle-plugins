@@ -22,20 +22,18 @@ class SetSnapshotVersionAction<T : Any>(
             .let(snapshotVersionProvider::provide)
 
         projectContext.all.asSequence().forEach { (projectActions, projectFile) ->
-            checkoutToFeatureBranch(projectFile)
+            if (scmActions.getCurrentBranch(projectFile) != scmConfig.featureBranch) {
+                scmActions.checkout(projectFile, scmConfig.featureBranch)
+            }
+
+            if (scmConfig.releaseBranch != scmConfig.featureBranch) {
+                scmActions.mergeNoCommit(projectFile, scmConfig.releaseBranch)
+            }
 
             projectActions.setVersion(snapshotVersion)
         }
 
         LOGGER.info("Snapshot version set to: $snapshotVersion")
-    }
-
-    private fun checkoutToFeatureBranch(projectFile: ProjectFile<T>) {
-        if (scmConfig.releaseBranch != scmConfig.featureBranch) {
-            scmActions.checkout(projectFile, scmConfig.featureBranch)
-// TODO: release-branch is master, feature-branch is current branch (where build started)
-            scmActions.mergeNoCommit(projectFile, scmConfig.releaseBranch)
-        }
     }
 
     companion object {

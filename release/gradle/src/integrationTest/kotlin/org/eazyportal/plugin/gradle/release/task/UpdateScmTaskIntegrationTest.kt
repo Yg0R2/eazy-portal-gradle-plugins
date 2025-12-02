@@ -46,7 +46,7 @@ class UpdateScmTaskIntegrationTest<T : BaseScmProjectTestCase> {
                     }
                 }
 
-                // Workaround for using none-bare repository
+                // Workaround for using none-bare repository as origin
                 scmActions.clean(remoteProjectFile)
                 scmActions.checkout(remoteProjectFile, testBranch)
                 if (this is BaseMultiModuleScmProjectTestCase) {

@@ -1,6 +1,8 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.plugin.common.GradleTestFixtures
+import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
@@ -9,10 +11,11 @@ import org.eazyportal.plugin.common.scm.GitUtils
 import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
 import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.RELEASE_TASK_NAME
@@ -26,6 +29,7 @@ import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -35,12 +39,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class ReleaseTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'release' should fail when there are no acceptable commits`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         testBranch: String,
         @TempDir workingDir: File,
     ) {
@@ -55,15 +59,29 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
             scmActions.checkout(projectFile, testBranch)
         }.whenGradleTaskFails(RELEASE_TASK_NAME)
-            .thenAssertFailedRelease()
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                        "> There are no acceptable commits.",
+                    )
+                }
+
+                assertFailedRelease()
+            }
     }
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
+        assumeFalse {
+            (testCaseClass == SingleModuleTrunkFlowScmProjectTestCase::class) ||
+                    (testCaseClass == MultiModuleTrunkFlowScmProjectTestCase::class)
+        }
+
         givenTestCase(testCaseClass, workingDir) {
             val initialVersion = Version.of(INITIAL_TAG)
 
@@ -71,6 +89,9 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
             if (this@givenTestCase is BaseMultiModuleScmProjectTestCase) {
                 scmActions.tag(remoteSubmoduleProjectFile, initialVersion)
+
+                scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
+                createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
             }
 
             scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
@@ -78,43 +99,116 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
             scmActions.checkout(projectFile, scmConfig.releaseBranch)
         }.whenGradleTaskFails(RELEASE_TASK_NAME)
-            .thenAssertFailedRelease(
-                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
-            )
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                        "> There are no acceptable commits.",
+                    )
+                }
+
+                assertFailedRelease(
+                    featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
+                )
+            }
     }
 
-    private fun TestCaseBuilder.When<out T>.thenAssertFailedRelease(
+    @Test
+    fun `test 'release' on single module trunk flow project should succeed from release branch when there are acceptable commits`(
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(SingleModuleTrunkFlowScmProjectTestCase::class, workingDir) {
+            val initialVersion = Version.of(INITIAL_TAG)
+
+            scmActions.tag(remoteProjectFile, initialVersion)
+
+            scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
+            createAndCommitDummyFile(remoteProjectFile, FIX_COMMIT_MESSAGE)
+
+            scmActions.checkout(projectFile, scmConfig.releaseBranch)
+        }.whenGradleTaskSucceeds(RELEASE_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+                        "> Task :build",
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$UPDATE_SCM_TASK_NAME",
+                        "> Task :$RELEASE_TASK_NAME",
+                    )
+                }
+
+                val expectedCommits = listOf(
+                    "New SNAPSHOT version: $SNAPSHOT_002",
+                    "Release version: $RELEASE_001",
+                    FIX_COMMIT_MESSAGE,
+                )
+
+                assertSucceededRelease(
+                    releaseBranchCommits = expectedCommits,
+                    featureBranchCommits = expectedCommits,
+                )
+            }
+    }
+
+    @Test
+    fun `test 'release' on multi module trunk flow project should fail from release branch when there are acceptable commits on feature branch`(
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(MultiModuleTrunkFlowScmProjectTestCase::class, workingDir) {
+            val initialVersion = Version.of(INITIAL_TAG)
+
+            scmActions.tag(remoteSubmoduleProjectFile, initialVersion)
+            scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
+            createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+            // Workaround for using none-bare repository as origin (Update origin with submodule changes)
+            scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
+
+            scmActions.tag(remoteProjectFile, initialVersion)
+            scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
+            createAndCommitDummyFile(remoteProjectFile, FIX_COMMIT_MESSAGE)
+
+            scmActions.checkout(projectFile, scmConfig.releaseBranch)
+        }.whenGradleTaskFails(RELEASE_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                        "> There are no acceptable commits.",
+                    )
+                }
+
+                assertFailedRelease(
+                    featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
+                )
+            }
+    }
+
+    private fun BaseScmProjectTestCase.assertFailedRelease(
         releaseBranchCommits: List<String> = emptyList(),
         featureBranchCommits: List<String> = emptyList(),
     ) {
-        thenAssert {
-            it.taskOutput {
-                contains(
-                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                    "> There are no acceptable commits.",
-                )
-            }
+        scmActions.clean(projectFile)
+        scmActions.clean(remoteProjectFile)
 
-            scmActions.clean(projectFile)
-            scmActions.clean(remoteProjectFile)
+        // assert project version
+        listOf(scmConfig.releaseBranch, scmConfig.releaseBranch).forEach { branch ->
+            scmActions.checkout(projectFile, branch)
+            assertThat(getProjectVersion(projectFile))
+                .isEqualTo(SNAPSHOT_001)
 
-            // assert project version
-            listOf(scmConfig.releaseBranch, scmConfig.releaseBranch).forEach { branch ->
-                scmActions.checkout(projectFile, branch)
-                assertThat(getProjectVersion(projectFile))
-                    .isEqualTo(SNAPSHOT_001)
-
-                scmActions.checkout(remoteProjectFile, branch)
-                assertThat(getProjectVersion(remoteProjectFile))
-                    .isEqualTo(SNAPSHOT_001)
-            }
-
-            assertRepositories(projectFile, remoteProjectFile, releaseBranchCommits, featureBranchCommits)
+            scmActions.checkout(remoteProjectFile, branch)
+            assertThat(getProjectVersion(remoteProjectFile))
+                .isEqualTo(SNAPSHOT_001)
         }
 
+        assertRepositories(projectFile, remoteProjectFile, releaseBranchCommits, featureBranchCommits)
     }
 
-    private fun TestCaseBuilder.When<out T>.thenAssertSucceededRelease(
+    private fun BaseScmProjectTestCase.assertSucceededRelease(
         releaseBranchCommits: List<String> = listOf(
             "Release version: $RELEASE_001",
             FIX_COMMIT_MESSAGE,
@@ -125,47 +219,39 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
             FIX_COMMIT_MESSAGE,
         ),
     ) {
-        thenAssert {
-            it.taskOutput {
-                contains(
-                    "> Task :$SET_RELEASE_VERSION_TASK_NAME",
-                    "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
-                    "> Task :build",
-                    "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
-                    "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
-                    "> Task :$UPDATE_SCM_TASK_NAME",
-                    "> Task :$RELEASE_TASK_NAME",
-                )            }
+        scmActions.clean(projectFile)
+        scmActions.clean(remoteProjectFile)
 
-            scmActions.clean(projectFile)
-            scmActions.clean(projectFile)
+        // assert project version
+        scmActions.checkout(projectFile, scmConfig.featureBranch)
+        assertThat(getProjectVersion(projectFile))
+            .isEqualTo(SNAPSHOT_002)
+        scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
+        assertThat(getProjectVersion(remoteProjectFile))
+            .isEqualTo(SNAPSHOT_002)
 
-            // assert project version
-            scmActions.checkout(projectFile, scmConfig.featureBranch)
-            assertThat(getProjectVersion(projectFile))
-                .isEqualTo(SNAPSHOT_002)
-            scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
-            assertThat(getProjectVersion(remoteProjectFile))
-                .isEqualTo(SNAPSHOT_002)
-
-            scmActions.checkout(projectFile, scmConfig.releaseBranch)
-            assertThat(getProjectVersion(projectFile))
-                .isEqualTo(RELEASE_001)
-            scmActions.checkout(remoteProjectFile, scmConfig.releaseBranch)
-            assertThat(getProjectVersion(remoteProjectFile))
-                .isEqualTo(RELEASE_001)
-
-            assertRepositories(
-                projectFile,
-                remoteProjectFile,
-                releaseBranchCommits,
-                featureBranchCommits,
-                RELEASE_001.toString(),
-            )
+        val newVersion = if (this is SingleModuleTrunkFlowScmProjectTestCase) {
+            SNAPSHOT_002
+        } else {
+            RELEASE_001
         }
+        scmActions.checkout(projectFile, scmConfig.releaseBranch)
+        assertThat(getProjectVersion(projectFile))
+            .isEqualTo(newVersion)
+        scmActions.checkout(remoteProjectFile, scmConfig.releaseBranch)
+        assertThat(getProjectVersion(remoteProjectFile))
+            .isEqualTo(newVersion)
+
+        assertRepositories(
+            projectFile,
+            remoteProjectFile,
+            releaseBranchCommits,
+            featureBranchCommits,
+            RELEASE_001.toString(),
+        )
     }
 
-    fun T.assertRepositories(
+    fun BaseScmProjectTestCase.assertRepositories(
         projectFile: ProjectFile<File>,
         remoteProjectFile: ProjectFile<File>,
         releaseBranchCommits: List<String> = emptyList(),
@@ -196,17 +282,12 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
         val expectedTags = setOf(lastTag, INITIAL_TAG)
 
-        assertThat(scmActions.getTags(projectFile))
+        assertThat(scmActions.getTags(projectFile, INITIAL_TAG))
             .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
 
-        assertThat(scmActions.getTags(remoteProjectFile))
+        assertThat(scmActions.getTags(remoteProjectFile, INITIAL_TAG))
             .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
     }
-
-
-
-
-
 
 
     @Nested
@@ -304,7 +385,13 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
         ) {
             super.assertRepositories(projectDir, remoteProjectDir, releaseBranchCommits, featureBranchCommits, lastTag)
 
-            super.assertRepositories(subModuleDir, remoteSubModuleDir, releaseBranchCommits, featureBranchCommits, lastTag)
+            super.assertRepositories(
+                subModuleDir,
+                remoteSubModuleDir,
+                releaseBranchCommits,
+                featureBranchCommits,
+                lastTag
+            )
         }
 
     }
@@ -560,7 +647,7 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
 
             assertRepositories(
                 releaseBranchCommits = releaseBranchCommits,
-                featureBranchCommits= featureBranchCommits,
+                featureBranchCommits = featureBranchCommits,
                 lastTag = RELEASE_001.toString(),
             )
         }
@@ -573,9 +660,21 @@ class ReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
             lastTag: String = INITIAL_TAG,
         ) {
             // assert commits
-            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, "${ScmConstants.REMOTE}/${ScmConstants.RELEASE_BRANCH}"))
+            assertThat(
+                scmUtils.getCommits(
+                    projectDir,
+                    INITIAL_TAG,
+                    "${ScmConstants.REMOTE}/${ScmConstants.RELEASE_BRANCH}"
+                )
+            )
                 .containsExactlyElementsOf(releaseBranchCommits)
-            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, "${ScmConstants.REMOTE}/${ScmConstants.FEATURE_BRANCH}"))
+            assertThat(
+                scmUtils.getCommits(
+                    projectDir,
+                    INITIAL_TAG,
+                    "${ScmConstants.REMOTE}/${ScmConstants.FEATURE_BRANCH}"
+                )
+            )
                 .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
             assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, ScmConstants.RELEASE_BRANCH))
                 .containsExactlyElementsOf(releaseBranchCommits)

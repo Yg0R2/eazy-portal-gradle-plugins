@@ -20,6 +20,7 @@ open class GitActions<T: Any>(
 
     override fun clean(projectFile: ProjectFile<T>) {
         execute(projectFile, "clean", "-fdx")
+        execute(projectFile, "reset", "--hard")
     }
 
     override fun commit(projectFile: ProjectFile<T>, message: String) {

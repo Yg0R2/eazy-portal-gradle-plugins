@@ -9,6 +9,7 @@ import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -24,6 +25,16 @@ object TestCaseBuilder {
 
             configureProjectBlock(testCase)
         }
+
+        fun whenGradleTask(
+            taskName: String,
+            vararg arguments: String,
+            gradleTaskBlock: T.(GradleRunner) -> BuildResult,
+        ): When<T> =
+            When(
+                testCase,
+                testCase.gradleTaskBlock(createGradleRunner(testCase.projectFile.getFile(), taskName, *arguments))
+            )
 
         fun whenGradleTaskFails(
             taskName: String,
@@ -54,7 +65,7 @@ object TestCaseBuilder {
 
     }
 
-    class Then<T: BaseScmProjectTestCase>(
+    class Then<T : BaseScmProjectTestCase>(
         private val testCase: T,
         private val buildResult: BuildResult,
     ) {
