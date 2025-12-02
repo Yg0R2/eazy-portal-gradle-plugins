@@ -8,9 +8,6 @@ import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
 import org.eazyportal.plugin.common.scm.GitUtils
-import org.eazyportal.plugin.gradle.release.MultiModuleScmProjectBaseIntegrationTest
-import org.eazyportal.plugin.gradle.release.ScmProjectIntegrationTest
-import org.eazyportal.plugin.gradle.release.SingleModuleScmProjectBaseIntegrationTest
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
@@ -290,419 +287,419 @@ class ReleaseTaskIntegrationTest {
     }
 
 
-    @Nested
-    inner class MultiModuleGitProject :
-        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseReleaseTaskIntegrationTest {
-
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
-
-            remoteProjectDir.git("tag", INITIAL_TAG)
-            remoteSubModuleDir.git("tag", INITIAL_TAG)
-
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-        @Test
-        fun `test 'release' should fail from release branch when there are acceptable commits on submodule feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertFailedRelease(
-                actual = actual,
-                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE),
-            )
-        }
-
-        @Test
-        fun `test 'release' should succeed from release branch when there are acceptable commits on submodule release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        @Test
-        fun `test 'release' should fal from feature branch when there are acceptable commits on submodule release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertFailedRelease(
-                actual = actual,
-                releaseBranchCommits = listOf(FIX_COMMIT_MESSAGE),
-            )
-        }
-
-        @Test
-        fun `test 'release' should succeed from feature branch when there are acceptable commits on submodule feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        override fun assertRepositories(
-            projectDir: File,
-            remoteProjectDir: File,
-            releaseBranchCommits: List<String>,
-            featureBranchCommits: List<String>,
-            lastTag: String
-        ) {
-            super.assertRepositories(projectDir, remoteProjectDir, releaseBranchCommits, featureBranchCommits, lastTag)
-
-            super.assertRepositories(
-                subModuleDir,
-                remoteSubModuleDir,
-                releaseBranchCommits,
-                featureBranchCommits,
-                lastTag
-            )
-        }
-
-    }
-
-    @Nested
-    inner class SingleModuleGitProject :
-        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
-        BaseReleaseTaskIntegrationTest {
-
-        override fun setupRemoteBeforeClone() {
-            super.setupRemoteBeforeClone()
-
-            remoteProjectDir.git("tag", INITIAL_TAG)
-
-            // Create dev branch in origin
-            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
-        }
-
-    }
-
-    private interface BaseReleaseTaskIntegrationTest : ScmProjectIntegrationTest {
-
-        @CsvSource(ScmConstants.FEATURE_BRANCH, ScmConstants.RELEASE_BRANCH)
-        @ParameterizedTest
-        fun `test 'release' should fail when there are no acceptable commits`(testBranch: String) {
-            // GIVEN
-            scmUtils.checkout(projectDir, testBranch)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertFailedRelease(actual)
-        }
-
-        @Test
-        fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertFailedRelease(
-                actual = actual,
-                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE),
-            )
-        }
-
-        @Test
-        fun `test 'release' should succeed from release branch when there are acceptable commits on release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        @Test
-        fun `test 'release' should fal from feature branch when there are acceptable commits on release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .buildAndFail()
-
-            // THEN
-            assertFailedRelease(
-                actual = actual,
-                releaseBranchCommits = listOf(FIX_COMMIT_MESSAGE),
-            )
-        }
-
-        @Test
-        fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        @Test
-        fun `test 'release with forceRelease' should succeed when there are no acceptable commits`() {
-            // GIVEN
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertSucceededRelease(
-                actual = actual,
-                releaseBranchCommits = listOf("Release version: $RELEASE_001"),
-                featureBranchCommits = listOf("New SNAPSHOT version: $SNAPSHOT_002", "Release version: $RELEASE_001"),
-            )
-        }
-
-        @Test
-        fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertSucceededRelease(
-                actual = actual,
-                releaseBranchCommits = listOf("Release version: $RELEASE_001"),
-            )
-        }
-
-        @Test
-        fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        @Test
-        fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on release branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        @Test
-        fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on feature branch`() {
-            // GIVEN
-            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
-
-            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
-            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
-
-            // WHEN
-            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
-                .build()
-
-            // THEN
-            assertSucceededRelease(actual)
-        }
-
-        fun assertFailedRelease(
-            actual: BuildResult,
-            releaseBranchCommits: List<String> = emptyList(),
-            featureBranchCommits: List<String> = emptyList(),
-        ) {
-            assertThat(actual.output.lines())
-                .contains(
-                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                    "> There are no acceptable commits.",
-                )
-
-            scmUtils.clean(projectDir)
-            scmUtils.clean(remoteProjectDir)
-
-            // assert project version
-            listOf(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH).forEach {
-                assertThat(getProjectVersion(projectDir, it))
-                    .isEqualTo(SNAPSHOT_001)
-                assertThat(getProjectVersion(remoteProjectDir, it))
-                    .isEqualTo(SNAPSHOT_001)
-            }
-
-            assertRepositories(
-                releaseBranchCommits = releaseBranchCommits,
-                featureBranchCommits = featureBranchCommits,
-            )
-        }
-
-        fun assertSucceededRelease(
-            actual: BuildResult,
-            releaseBranchCommits: List<String> = listOf(
-                "Release version: $RELEASE_001",
-                FIX_COMMIT_MESSAGE,
-            ),
-            featureBranchCommits: List<String> = listOf(
-                "New SNAPSHOT version: $SNAPSHOT_002",
-                "Release version: $RELEASE_001",
-                FIX_COMMIT_MESSAGE,
-            ),
-        ) {
-            assertThat(actual.output.lines())
-                .contains(
-                    "> Task :$SET_RELEASE_VERSION_TASK_NAME",
-                    "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
-                    "> Task :build",
-                    "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
-                    "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
-                    "> Task :$UPDATE_SCM_TASK_NAME",
-                    "> Task :$RELEASE_TASK_NAME",
-                )
-
-            scmUtils.clean(projectDir)
-            scmUtils.clean(remoteProjectDir)
-
-            // assert project version
-            assertThat(getProjectVersion(projectDir, ScmConstants.FEATURE_BRANCH))
-                .isEqualTo(SNAPSHOT_002)
-            assertThat(getProjectVersion(remoteProjectDir, ScmConstants.FEATURE_BRANCH))
-                .isEqualTo(SNAPSHOT_002)
-
-            assertThat(getProjectVersion(projectDir, ScmConstants.RELEASE_BRANCH))
-                .isEqualTo(RELEASE_001)
-            assertThat(getProjectVersion(remoteProjectDir, ScmConstants.RELEASE_BRANCH))
-                .isEqualTo(RELEASE_001)
-
-            assertRepositories(
-                releaseBranchCommits = releaseBranchCommits,
-                featureBranchCommits = featureBranchCommits,
-                lastTag = RELEASE_001.toString(),
-            )
-        }
-
-        fun assertRepositories(
-            projectDir: File = this@BaseReleaseTaskIntegrationTest.projectDir,
-            remoteProjectDir: File = this@BaseReleaseTaskIntegrationTest.remoteProjectDir,
-            releaseBranchCommits: List<String> = emptyList(),
-            featureBranchCommits: List<String> = emptyList(),
-            lastTag: String = INITIAL_TAG,
-        ) {
-            // assert commits
-            assertThat(
-                scmUtils.getCommits(
-                    projectDir,
-                    INITIAL_TAG,
-                    "${ScmConstants.REMOTE}/${ScmConstants.RELEASE_BRANCH}"
-                )
-            )
-                .containsExactlyElementsOf(releaseBranchCommits)
-            assertThat(
-                scmUtils.getCommits(
-                    projectDir,
-                    INITIAL_TAG,
-                    "${ScmConstants.REMOTE}/${ScmConstants.FEATURE_BRANCH}"
-                )
-            )
-                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
-            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, ScmConstants.RELEASE_BRANCH))
-                .containsExactlyElementsOf(releaseBranchCommits)
-            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, ScmConstants.FEATURE_BRANCH))
-                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
-
-            assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, ScmConstants.RELEASE_BRANCH))
-                .containsExactlyElementsOf(releaseBranchCommits)
-            assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, ScmConstants.FEATURE_BRANCH))
-                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
-
-            // assert tags
-            assertThat(scmUtils.getLastTag(projectDir, ScmConstants.RELEASE_BRANCH))
-                .isEqualTo(lastTag)
-
-            assertThat(scmUtils.getLastTag(remoteProjectDir, ScmConstants.RELEASE_BRANCH))
-                .isEqualTo(lastTag)
-
-            val expectedTags = setOf(lastTag, INITIAL_TAG)
-
-            assertThat(scmUtils.getTags(projectDir))
-                .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
-
-            assertThat(scmUtils.getTags(remoteProjectDir))
-                .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
-        }
-
-    }
+//    @Nested
+//    inner class MultiModuleGitProject :
+//        MultiModuleScmProjectBaseIntegrationTest(GitUtils),
+//        BaseReleaseTaskIntegrationTest {
+//
+//        override fun setupRemoteBeforeClone() {
+//            super.setupRemoteBeforeClone()
+//
+//            remoteProjectDir.git("tag", INITIAL_TAG)
+//            remoteSubModuleDir.git("tag", INITIAL_TAG)
+//
+//            // Create dev branch in origin
+//            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+//            remoteSubModuleDir.git("branch", ScmConstants.FEATURE_BRANCH)
+//        }
+//
+//        @Test
+//        fun `test 'release' should fail from release branch when there are acceptable commits on submodule feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .buildAndFail()
+//
+//            // THEN
+//            assertFailedRelease(
+//                actual = actual,
+//                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release' should succeed from release branch when there are acceptable commits on submodule release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release' should fal from feature branch when there are acceptable commits on submodule release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .buildAndFail()
+//
+//            // THEN
+//            assertFailedRelease(
+//                actual = actual,
+//                releaseBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release' should succeed from feature branch when there are acceptable commits on submodule feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteSubModuleDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        override fun assertRepositories(
+//            projectDir: File,
+//            remoteProjectDir: File,
+//            releaseBranchCommits: List<String>,
+//            featureBranchCommits: List<String>,
+//            lastTag: String
+//        ) {
+//            super.assertRepositories(projectDir, remoteProjectDir, releaseBranchCommits, featureBranchCommits, lastTag)
+//
+//            super.assertRepositories(
+//                subModuleDir,
+//                remoteSubModuleDir,
+//                releaseBranchCommits,
+//                featureBranchCommits,
+//                lastTag
+//            )
+//        }
+//
+//    }
+//
+//    @Nested
+//    inner class SingleModuleGitProject :
+//        SingleModuleScmProjectBaseIntegrationTest(GitUtils),
+//        BaseReleaseTaskIntegrationTest {
+//
+//        override fun setupRemoteBeforeClone() {
+//            super.setupRemoteBeforeClone()
+//
+//            remoteProjectDir.git("tag", INITIAL_TAG)
+//
+//            // Create dev branch in origin
+//            remoteProjectDir.git("branch", ScmConstants.FEATURE_BRANCH)
+//        }
+//
+//    }
+//
+//    private interface BaseReleaseTaskIntegrationTest : ScmProjectIntegrationTest {
+//
+//        @CsvSource(ScmConstants.FEATURE_BRANCH, ScmConstants.RELEASE_BRANCH)
+//        @ParameterizedTest
+//        fun `test 'release' should fail when there are no acceptable commits`(testBranch: String) {
+//            // GIVEN
+//            scmUtils.checkout(projectDir, testBranch)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .buildAndFail()
+//
+//            // THEN
+//            assertFailedRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release' should fail from release branch when there are acceptable commits on feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .buildAndFail()
+//
+//            // THEN
+//            assertFailedRelease(
+//                actual = actual,
+//                featureBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release' should succeed from release branch when there are acceptable commits on release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release' should fal from feature branch when there are acceptable commits on release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .buildAndFail()
+//
+//            // THEN
+//            assertFailedRelease(
+//                actual = actual,
+//                releaseBranchCommits = listOf(FIX_COMMIT_MESSAGE),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME)
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release with forceRelease' should succeed when there are no acceptable commits`() {
+//            // GIVEN
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(
+//                actual = actual,
+//                releaseBranchCommits = listOf("Release version: $RELEASE_001"),
+//                featureBranchCommits = listOf("New SNAPSHOT version: $SNAPSHOT_002", "Release version: $RELEASE_001"),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(
+//                actual = actual,
+//                releaseBranchCommits = listOf("Release version: $RELEASE_001"),
+//            )
+//        }
+//
+//        @Test
+//        fun `test 'release with forceRelease' should succeed from release branch when there are acceptable commits on release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.RELEASE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on release branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.RELEASE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        @Test
+//        fun `test 'release with forceRelease' should succeed from feature branch when there are acceptable commits on feature branch`() {
+//            // GIVEN
+//            scmUtils.createDummyCommit(remoteProjectDir, ScmConstants.FEATURE_BRANCH, FIX_COMMIT_MESSAGE)
+//
+//            scmUtils.checkout(projectDir, ScmConstants.FEATURE_BRANCH)
+//            scmUtils.fetch(projectDir, ScmConstants.REMOTE)
+//
+//            // WHEN
+//            val actual = createGradleRunner(projectDir, RELEASE_TASK_NAME, "-DforceRelease=true")
+//                .build()
+//
+//            // THEN
+//            assertSucceededRelease(actual)
+//        }
+//
+//        fun assertFailedRelease(
+//            actual: BuildResult,
+//            releaseBranchCommits: List<String> = emptyList(),
+//            featureBranchCommits: List<String> = emptyList(),
+//        ) {
+//            assertThat(actual.output.lines())
+//                .contains(
+//                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+//                    "> There are no acceptable commits.",
+//                )
+//
+//            scmUtils.clean(projectDir)
+//            scmUtils.clean(remoteProjectDir)
+//
+//            // assert project version
+//            listOf(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH).forEach {
+//                assertThat(getProjectVersion(projectDir, it))
+//                    .isEqualTo(SNAPSHOT_001)
+//                assertThat(getProjectVersion(remoteProjectDir, it))
+//                    .isEqualTo(SNAPSHOT_001)
+//            }
+//
+//            assertRepositories(
+//                releaseBranchCommits = releaseBranchCommits,
+//                featureBranchCommits = featureBranchCommits,
+//            )
+//        }
+//
+//        fun assertSucceededRelease(
+//            actual: BuildResult,
+//            releaseBranchCommits: List<String> = listOf(
+//                "Release version: $RELEASE_001",
+//                FIX_COMMIT_MESSAGE,
+//            ),
+//            featureBranchCommits: List<String> = listOf(
+//                "New SNAPSHOT version: $SNAPSHOT_002",
+//                "Release version: $RELEASE_001",
+//                FIX_COMMIT_MESSAGE,
+//            ),
+//        ) {
+//            assertThat(actual.output.lines())
+//                .contains(
+//                    "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+//                    "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+//                    "> Task :build",
+//                    "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
+//                    "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
+//                    "> Task :$UPDATE_SCM_TASK_NAME",
+//                    "> Task :$RELEASE_TASK_NAME",
+//                )
+//
+//            scmUtils.clean(projectDir)
+//            scmUtils.clean(remoteProjectDir)
+//
+//            // assert project version
+//            assertThat(getProjectVersion(projectDir, ScmConstants.FEATURE_BRANCH))
+//                .isEqualTo(SNAPSHOT_002)
+//            assertThat(getProjectVersion(remoteProjectDir, ScmConstants.FEATURE_BRANCH))
+//                .isEqualTo(SNAPSHOT_002)
+//
+//            assertThat(getProjectVersion(projectDir, ScmConstants.RELEASE_BRANCH))
+//                .isEqualTo(RELEASE_001)
+//            assertThat(getProjectVersion(remoteProjectDir, ScmConstants.RELEASE_BRANCH))
+//                .isEqualTo(RELEASE_001)
+//
+//            assertRepositories(
+//                releaseBranchCommits = releaseBranchCommits,
+//                featureBranchCommits = featureBranchCommits,
+//                lastTag = RELEASE_001.toString(),
+//            )
+//        }
+//
+//        fun assertRepositories(
+//            projectDir: File = this@BaseReleaseTaskIntegrationTest.projectDir,
+//            remoteProjectDir: File = this@BaseReleaseTaskIntegrationTest.remoteProjectDir,
+//            releaseBranchCommits: List<String> = emptyList(),
+//            featureBranchCommits: List<String> = emptyList(),
+//            lastTag: String = INITIAL_TAG,
+//        ) {
+//            // assert commits
+//            assertThat(
+//                scmUtils.getCommits(
+//                    projectDir,
+//                    INITIAL_TAG,
+//                    "${ScmConstants.REMOTE}/${ScmConstants.RELEASE_BRANCH}"
+//                )
+//            )
+//                .containsExactlyElementsOf(releaseBranchCommits)
+//            assertThat(
+//                scmUtils.getCommits(
+//                    projectDir,
+//                    INITIAL_TAG,
+//                    "${ScmConstants.REMOTE}/${ScmConstants.FEATURE_BRANCH}"
+//                )
+//            )
+//                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
+//            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, ScmConstants.RELEASE_BRANCH))
+//                .containsExactlyElementsOf(releaseBranchCommits)
+//            assertThat(scmUtils.getCommits(projectDir, INITIAL_TAG, ScmConstants.FEATURE_BRANCH))
+//                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
+//
+//            assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, ScmConstants.RELEASE_BRANCH))
+//                .containsExactlyElementsOf(releaseBranchCommits)
+//            assertThat(scmUtils.getCommits(remoteProjectDir, INITIAL_TAG, ScmConstants.FEATURE_BRANCH))
+//                .containsExactlyInAnyOrderElementsOf(featureBranchCommits) // flaky
+//
+//            // assert tags
+//            assertThat(scmUtils.getLastTag(projectDir, ScmConstants.RELEASE_BRANCH))
+//                .isEqualTo(lastTag)
+//
+//            assertThat(scmUtils.getLastTag(remoteProjectDir, ScmConstants.RELEASE_BRANCH))
+//                .isEqualTo(lastTag)
+//
+//            val expectedTags = setOf(lastTag, INITIAL_TAG)
+//
+//            assertThat(scmUtils.getTags(projectDir))
+//                .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
+//
+//            assertThat(scmUtils.getTags(remoteProjectDir))
+//                .containsExactlyInAnyOrderElementsOf(expectedTags) // flaky
+//        }
+//
+//    }
 
 }
 
