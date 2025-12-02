@@ -20,7 +20,6 @@ open class GitActions<T: Any>(
 
     override fun clean(projectFile: ProjectFile<T>) {
         execute(projectFile, "clean", "-fdx")
-        execute(projectFile, "reset", "--hard")
     }
 
     override fun commit(projectFile: ProjectFile<T>, message: String) {
@@ -37,12 +36,16 @@ open class GitActions<T: Any>(
     override fun fetch(projectFile: ProjectFile<T>, remote: String, vararg branches: String) {
         execute(projectFile, "fetch", remote, "--tags", "--prune", "--prune-tags", "--recurse-submodules")
 
-        val currentBranchName = getCurrentBranch(projectFile)
-        execute(projectFile, "reset", "--hard", "--recurse-submodules", "$remote/$currentBranchName")
+        val allProjectFiles = getSubmodules(projectFile).map { projectFile.resolve(it) } + projectFile
 
-        branches.asSequence()
-            .filter { it != currentBranchName }
-            .forEach { execute(projectFile, "branch", "-f", it, "$remote/$it") }
+        allProjectFiles.forEach { project ->
+            val currentBranchName = getCurrentBranch(project)
+            execute(project, "reset", "--hard", "$remote/$currentBranchName")
+
+            branches.asSequence()
+                .filter { it != currentBranchName }
+                .forEach { execute(project, "branch", "-f", it, "$remote/$it") }
+        }
     }
 
     override fun getCommits(projectFile: ProjectFile<T>, fromRef: String?, toRef: String): List<String> =
