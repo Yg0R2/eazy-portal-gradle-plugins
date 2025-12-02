@@ -29,6 +29,24 @@ class FinalizeSnapshotVersionTaskIntegrationTest {
                         "nothing to commit, working tree clean",
                     )
                 }
+
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.releaseBranch}",
+                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
+                        "nothing to commit, working tree clean"
+                    )
+                }
+
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
+                            "nothing to commit, working tree clean"
+                        )
+                    }
+                }
             }
     }
 
@@ -46,11 +64,23 @@ class FinalizeSnapshotVersionTaskIntegrationTest {
                     contains("> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME")
                 }
 
-                it.projectVersion {
-                    isEqualTo(SNAPSHOT_002)
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.releaseBranch}",
+                        "Your branch is ahead of '${scmConfig.remote}/${scmConfig.releaseBranch}' by 1 commit.",
+                        "nothing to commit, working tree clean"
+                    )
                 }
 
                 if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.releaseBranch}",
+                            "Your branch is ahead of '${scmConfig.remote}/${scmConfig.releaseBranch}' by 1 commit.",
+                            "nothing to commit, working tree clean"
+                        )
+                    }
+
                     it.scmCommits(projectFile) {
                         containsExactly(
                             "New SNAPSHOT version: $SNAPSHOT_002",
@@ -72,6 +102,10 @@ class FinalizeSnapshotVersionTaskIntegrationTest {
                             "initial commit",
                         )
                     }
+                }
+
+                it.projectVersion {
+                    isEqualTo(SNAPSHOT_002)
                 }
             }
     }

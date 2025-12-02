@@ -87,7 +87,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                it.scmCompareCommitsAnd {
+                it.scmStatus(projectFile) {
                     contains(
                         "On branch $testBranch",
                         "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
@@ -95,13 +95,17 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     )
                 }
 
+                it.scmCompareCommitsAnd()
+
                 if (this is MultiModuleGitFlowScmProjectTestCase) {
-                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile) {
+                    it.scmStatus(submoduleProjectFile) {
                         contains(
                             "HEAD detached at refs/heads/$testBranch",
                             "nothing to commit, working tree clean",
                         )
                     }
+
+                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }

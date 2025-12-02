@@ -1,6 +1,9 @@
 package org.eazyportal.plugin.gradle.release.task
 
+import org.eazyportal.plugin.common.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
@@ -34,6 +37,24 @@ class SetSnapshotVersionTaskIntegrationTest {
                     )
                 }
 
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.featureBranch}",
+                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                        "nothing to commit, working tree clean"
+                    )
+                }
+
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "nothing to commit, working tree clean"
+                        )
+                    }
+                }
+
                 it.projectVersion {
                     isEqualTo(SNAPSHOT_001)
                 }
@@ -54,6 +75,30 @@ class SetSnapshotVersionTaskIntegrationTest {
             .thenAssert {
                 it.taskOutput {
                     contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
+
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.featureBranch}",
+                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                        "Changes not staged for commit:",
+                        "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                        "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                    )
+                }
+
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes to be committed:",
+                            "new file:   $DUMMY_FILE_NAME",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                        )
+                    }
                 }
 
                 it.projectVersion {

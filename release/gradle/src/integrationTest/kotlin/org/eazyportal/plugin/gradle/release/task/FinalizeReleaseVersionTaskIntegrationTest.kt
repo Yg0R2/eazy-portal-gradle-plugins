@@ -31,11 +31,23 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                     contains("> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME")
                 }
 
-                it.projectVersion {
-                    isEqualTo(RELEASE_001)
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.featureBranch}",
+                        "Your branch is ahead of '${scmConfig.remote}/${scmConfig.featureBranch}' by 1 commit.",
+                        "nothing to commit, working tree clean"
+                    )
                 }
 
                 if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is ahead of '${scmConfig.remote}/${scmConfig.featureBranch}' by 1 commit.",
+                            "nothing to commit, working tree clean"
+                        )
+                    }
+
                     it.scmCommits(projectFile) {
                         containsExactly(
                             "Release version: $RELEASE_001",
@@ -58,6 +70,10 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                         )
                     }
                 }
+
+                it.projectVersion {
+                    isEqualTo(RELEASE_001)
+                }
             }
     }
 
@@ -76,6 +92,24 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                         "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
                         "nothing to commit, working tree clean",
                     )
+                }
+
+                it.scmStatus(projectFile) {
+                    contains(
+                        "On branch ${scmConfig.featureBranch}",
+                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                        "nothing to commit, working tree clean"
+                    )
+                }
+
+                if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmStatus(submoduleProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "nothing to commit, working tree clean"
+                        )
+                    }
                 }
 
                 it.projectVersion {
