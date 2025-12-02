@@ -31,18 +31,27 @@ abstract class BaseProjectTestCase(
 
     companion object {
         @JvmStatic
-        fun testCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
+        fun singleModuleTestCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
             listOf(
                 classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                classNamed(MultiModuleGitFlowScmProjectTestCase::class),
                 classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
-                classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
                 classNamed(SingleModuleCustomizedProjectTestCase::class),
-                classNamed(MultiModuleCustomizedProjectTestCase::class),
             )
 
         @JvmStatic
-        private fun testCasesWithBranch(): List<Arguments> =
+        fun multiModuleTestCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
+            listOf(
+                classNamed(SingleModuleGitFlowScmProjectTestCase::class),
+                classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
+                classNamed(SingleModuleCustomizedProjectTestCase::class),
+            )
+
+        @JvmStatic
+        fun testCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
+            singleModuleTestCases() + multiModuleTestCases()
+
+        @JvmStatic
+        private fun singleModuleTestCasesWithBranch(): List<Arguments> =
             listOf(
                 Arguments.of(
                     classNamed(SingleModuleGitFlowScmProjectTestCase::class),
@@ -50,14 +59,6 @@ abstract class BaseProjectTestCase(
                 ),
                 Arguments.of(
                     classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.FEATURE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
-                Arguments.of(
-                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
                     ScmConstants.FEATURE_BRANCH,
                 ),
 
@@ -65,10 +66,6 @@ abstract class BaseProjectTestCase(
                     classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
                     ScmConstants.RELEASE_BRANCH,
                 ),
-                Arguments.of(
-                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
-                    ScmConstants.RELEASE_BRANCH,
-                ),
 
                 Arguments.of(
                     classNamed(SingleModuleCustomizedProjectTestCase::class),
@@ -78,6 +75,24 @@ abstract class BaseProjectTestCase(
                     classNamed(SingleModuleCustomizedProjectTestCase::class),
                     "dummy-feature-branch",
                 ),
+            )
+        @JvmStatic
+        private fun multiModuleTestCasesWithBranch(): List<Arguments> =
+            listOf(
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+                Arguments.of(
+                    classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                    ScmConstants.FEATURE_BRANCH,
+                ),
+
+                Arguments.of(
+                    classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
+                    ScmConstants.RELEASE_BRANCH,
+                ),
+
                 Arguments.of(
                     classNamed(MultiModuleCustomizedProjectTestCase::class),
                     "dummy-release-branch",
@@ -87,6 +102,9 @@ abstract class BaseProjectTestCase(
                     "dummy-feature-branch",
                 ),
             )
+        @JvmStatic
+        private fun testCasesWithBranch(): List<Arguments> =
+            singleModuleTestCasesWithBranch() + multiModuleTestCasesWithBranch()
     }
 
 }
@@ -115,7 +133,7 @@ abstract class BaseScmProjectTestCase(
     ) {
         createDummyFile(projectFile)
 
-        scmActions.add(projectFile, ".")
+        scmActions.add(projectFile, DUMMY_FILE_NAME)
         scmActions.commit(projectFile, commitMessage)
     }
 
@@ -445,6 +463,8 @@ class MultiModuleCustomizedProjectTestCase(
         // Create remote feature branch
         scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
         scmActions.execute(remoteSubmoduleProjectFile, "branch", scmConfig.featureBranch)
+
+        scmActions.execute(remoteProjectFile.resolve(SUBMODULE_NAME),"remote", "rename", "origin", scmConfig.remote)
 
         scmActions.clone(remoteProjectFile, projectFile)
 

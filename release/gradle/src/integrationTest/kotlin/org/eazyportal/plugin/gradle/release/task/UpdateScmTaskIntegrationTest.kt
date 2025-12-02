@@ -54,7 +54,7 @@ class UpdateScmTaskIntegrationTest<T : BaseScmProjectTestCase> {
                     scmActions.checkout(remoteSubmoduleProjectFile, testBranch)
                 }
 
-                it.scmCompareCommits()
+                it.scmCompareCommitsAnd()
             }
     }
 

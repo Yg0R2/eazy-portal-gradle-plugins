@@ -16,12 +16,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class PrepareRepositoryForReleaseTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should clean local commits`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         testBranch: String,
         @TempDir workingDir: File,
     ) {
@@ -34,6 +34,9 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                 scmActions.checkout(submoduleProjectFile, testBranch)
 
                 createAndCommitDummyFile(submoduleProjectFile, CHORE_COMMIT_MESSAGE)
+
+                scmActions.add(projectFile, SUBMODULE_NAME)
+                scmActions.commit(projectFile, "chore: include $SUBMODULE_NAME changes")
             }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
@@ -45,14 +48,18 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                     doesNotContain(CHORE_COMMIT_MESSAGE)
                 }
 
-                it.scmCompareCommits()
+                it.scmCompareCommitsAnd()
 
                 if (this is BaseMultiModuleScmProjectTestCase) {
+                    it.scmCommits(projectFile) {
+                        doesNotContain("chore: include $SUBMODULE_NAME changes")
+                    }
+
                     it.scmCommits(submoduleProjectFile) {
                         doesNotContain(CHORE_COMMIT_MESSAGE)
                     }
 
-                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
+                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }
@@ -60,7 +67,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should clean local file changes`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         testBranch: String,
         @TempDir workingDir: File,
     ) {
@@ -80,7 +87,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                     contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
                 }
 
-                it.scmStatus(projectFile) {
+                it.scmCompareCommitsAnd {
                     contains(
                         "On branch $testBranch",
                         "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
@@ -88,17 +95,13 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                     )
                 }
 
-                it.scmCompareCommits()
-
                 if (this is MultiModuleGitFlowScmProjectTestCase) {
-                    it.scmStatus(submoduleProjectFile) {
+                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile) {
                         contains(
                             "HEAD detached at refs/heads/$testBranch",
                             "nothing to commit, working tree clean",
                         )
                     }
-
-                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }
@@ -106,20 +109,22 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'run' should pull remote changes`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         testBranch: String,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, testBranch)
+
             scmActions.checkout(remoteProjectFile, scmConfig.releaseBranch)
             createAndCommitDummyFile(remoteProjectFile, "chore: commit on ${scmConfig.releaseBranch}")
 
             scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
             createAndCommitDummyFile(remoteProjectFile, "chore: commit on ${scmConfig.featureBranch}")
 
-            scmActions.checkout(projectFile, testBranch)
-
             if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, testBranch)
+
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, "chore: commit on ${scmConfig.releaseBranch}")
 
@@ -131,8 +136,6 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
 
                 scmActions.add(remoteProjectFile, ".")
                 scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
-
-                scmActions.checkout(submoduleProjectFile, testBranch)
             }
         }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
             .thenAssert {
@@ -142,19 +145,17 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
 
                 when (this) {
                     is SingleModuleTrunkFlowScmProjectTestCase -> {
-                        it.scmCommits(projectFile) {
+                        it.scmCompareCommitsAnd {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: commit on ${scmConfig.featureBranch}",
                                 "chore: commit on ${scmConfig.releaseBranch}"
                             ) // flaky
                         }
-
-                        it.scmCompareCommits()
                     }
 
                     is MultiModuleTrunkFlowScmProjectTestCase -> {
-                        it.scmCommits(projectFile) {
+                        it.scmCompareCommitsAnd(projectFile, remoteProjectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: add $SUBMODULE_NAME submodule",
@@ -164,16 +165,13 @@ class PrepareRepositoryForReleaseTaskIntegrationTest<T : BaseScmProjectTestCase>
                             ) // flaky
                         }
 
-                        it.scmCompareCommits(projectFile, remoteProjectFile)
-
-                        it.scmCommits(submoduleProjectFile) {
+                        it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: commit on ${scmConfig.featureBranch}",
                                 "chore: commit on ${scmConfig.releaseBranch}"
                             ) // flaky
                         }
-                        it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                     }
 
                     else -> {

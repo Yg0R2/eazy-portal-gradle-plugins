@@ -13,12 +13,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class SetSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class SetSnapshotVersionTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should fail when project version is not release version`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
@@ -43,7 +43,7 @@ class SetSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should set snapshot version`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {

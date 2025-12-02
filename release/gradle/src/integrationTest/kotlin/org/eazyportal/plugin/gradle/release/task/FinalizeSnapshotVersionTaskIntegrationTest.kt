@@ -12,12 +12,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class FinalizeSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class FinalizeSnapshotVersionTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should fail when there is nothing to commit`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir)
@@ -35,7 +35,7 @@ class FinalizeSnapshotVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should finalize snapshot version`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {

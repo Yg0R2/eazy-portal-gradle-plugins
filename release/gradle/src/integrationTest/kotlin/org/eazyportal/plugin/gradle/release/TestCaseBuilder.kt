@@ -87,20 +87,24 @@ object TestCaseBuilder {
             block(assertThat(testCase.scmActions.getCommits(projectFile)))
         }
 
-        fun scmCompareCommits() {
-            scmCompareCommits(testCase.projectFile, testCase.remoteProjectFile)
+        fun scmCompareCommitsAnd(
+            block: ListAssert<String>.() -> Unit = {}
+        ) {
+            scmCompareCommitsAnd(testCase.projectFile, testCase.remoteProjectFile, block)
 
             if (testCase is BaseMultiModuleScmProjectTestCase) {
-                scmCompareCommits(testCase.submoduleProjectFile, testCase.remoteSubmoduleProjectFile)
+                scmCompareCommitsAnd(testCase.submoduleProjectFile, testCase.remoteSubmoduleProjectFile, block)
             }
         }
 
-        fun scmCompareCommits(
+        fun scmCompareCommitsAnd(
             projectFile: ProjectFile<File>,
             remoteProjectFile: ProjectFile<File>,
+            block: ListAssert<String>.() -> Unit = {},
         ) {
             assertThat(testCase.scmActions.getCommits(projectFile))
                 .containsExactlyElementsOf(testCase.scmActions.getCommits(remoteProjectFile))
+                .block()
         }
 
         fun scmLocalCommits(block: ListAssert<String>.() -> Unit) {

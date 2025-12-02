@@ -16,12 +16,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class SetReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class SetReleaseVersionTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should fail when there are no acceptable commits`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
@@ -45,7 +45,7 @@ class SetReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should set release version`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
@@ -81,7 +81,7 @@ class SetReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should set release version when release is forced`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {

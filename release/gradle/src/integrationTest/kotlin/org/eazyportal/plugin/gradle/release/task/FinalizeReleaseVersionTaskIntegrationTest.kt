@@ -13,12 +13,12 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.reflect.KClass
 
-class FinalizeReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
+class FinalizeReleaseVersionTaskIntegrationTest {
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should finalize release version`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
@@ -64,7 +64,7 @@ class FinalizeReleaseVersionTaskIntegrationTest<T : BaseScmProjectTestCase> {
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should fail when there is nothing to commit`(
-        testCaseClass: KClass<T>,
+        testCaseClass: KClass<BaseScmProjectTestCase>,
         @TempDir workingDir: File,
     ) {
         givenTestCase(testCaseClass, workingDir) {
