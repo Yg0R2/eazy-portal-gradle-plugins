@@ -25,6 +25,12 @@ class TestGitActions<T : Any>(
         )
     }
 
+    override fun clean(projectFile: ProjectFile<T>) {
+        super.clean(projectFile)
+
+        execute(projectFile, "reset", "--hard")
+    }
+
     override fun clone(
         from: ProjectFile<T>,
         to: ProjectFile<T>,

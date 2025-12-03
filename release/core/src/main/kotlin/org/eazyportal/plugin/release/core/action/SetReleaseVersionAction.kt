@@ -27,11 +27,9 @@ class SetReleaseVersionAction<T : Any>(
         val releaseVersion = getReleaseVersion()
 
         projectContext.all.forEach { (projectActions, projectFile) ->
-            println("[HERE] ${scmActions.getCurrentBranch(projectFile)}")
             if (scmActions.getCurrentBranch(projectFile) != scmConfig.releaseBranch) {
                 scmActions.checkout(projectFile, scmConfig.releaseBranch)
             }
-            println("[HERE] ${scmActions.getCurrentBranch(projectFile)}")
 
             if (scmConfig.releaseBranch != scmConfig.featureBranch) {
                 scmActions.mergeNoCommit(projectFile, scmConfig.featureBranch)

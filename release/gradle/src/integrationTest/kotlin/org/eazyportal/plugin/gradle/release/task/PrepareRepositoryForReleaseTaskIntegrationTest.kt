@@ -97,10 +97,11 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
                 it.scmCompareCommitsAnd()
 
-                if (this is MultiModuleGitFlowScmProjectTestCase) {
+                if (this is BaseMultiModuleScmProjectTestCase) {
                     it.scmStatus(submoduleProjectFile) {
                         contains(
-                            "HEAD detached at refs/heads/$testBranch",
+                            "On branch $testBranch",
+                            "Your branch is up to date with '${scmConfig.remote}/$testBranch'.",
                             "nothing to commit, working tree clean",
                         )
                     }

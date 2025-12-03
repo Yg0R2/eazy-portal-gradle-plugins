@@ -75,6 +75,7 @@ class ReleaseTaskIntegrationTest {
         @TempDir workingDir: File,
     ) {
         assumeFalse {
+            // This testCase in invalid for these cases
             (testCaseClass == SingleModuleTrunkFlowScmProjectTestCase::class) ||
                     (testCaseClass == MultiModuleTrunkFlowScmProjectTestCase::class)
         }
@@ -189,6 +190,7 @@ class ReleaseTaskIntegrationTest {
                 val expectedCommits = listOf(
                     "New SNAPSHOT version: $SNAPSHOT_002",
                     "Release version: $RELEASE_001",
+                    "chore: include dummy-ui changes",
                     FIX_COMMIT_MESSAGE,
                 )
 
@@ -243,7 +245,7 @@ class ReleaseTaskIntegrationTest {
         assertThat(getProjectVersion(remoteProjectFile))
             .isEqualTo(SNAPSHOT_002)
 
-        val newVersion = if (this is SingleModuleTrunkFlowScmProjectTestCase) {
+        val newVersion = if ((this is SingleModuleTrunkFlowScmProjectTestCase) || (this is MultiModuleTrunkFlowScmProjectTestCase)) {
             SNAPSHOT_002
         } else {
             RELEASE_001

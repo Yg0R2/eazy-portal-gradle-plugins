@@ -439,10 +439,12 @@ class ReleaseIntegrationTest {
                         .isEqualTo(scmConfig.releaseBranch)
                 }
 
-                // TODO: pull remoteSubmoduleProjectFile changes to remoteProjectFile.dummy-ui
+                // Workaround for using none-bare repository as origin
+                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote, scmConfig.releaseBranch, scmConfig.featureBranch)
+
                 listOf(remoteProjectFile, remoteSubmoduleProjectFile).forEach { project ->
                     // Workaround for using none-bare repository as origin
-                    // TODO: reset --hard
+                    scmActions.clean(project)
 
                     it.scmStatus(project) {
                         contains(
@@ -484,8 +486,6 @@ class ReleaseIntegrationTest {
                     isEqualTo(SNAPSHOT_002)
                 }
             }
-
-
     }
 
     private fun BaseMultiModuleScmProjectTestCase.configureProject() {
