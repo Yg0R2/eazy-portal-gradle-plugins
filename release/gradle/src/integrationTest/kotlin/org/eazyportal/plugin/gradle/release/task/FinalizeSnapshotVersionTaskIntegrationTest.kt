@@ -41,7 +41,7 @@ class FinalizeSnapshotVersionTaskIntegrationTest {
                 if (this is BaseMultiModuleScmProjectTestCase) {
                     it.scmStatus(submoduleProjectFile) {
                         contains(
-                            "On branch ${scmConfig.featureBranch}",
+                            "On branch ${scmConfig.releaseBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
                             "nothing to commit, working tree clean"
                         )

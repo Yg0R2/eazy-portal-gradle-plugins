@@ -24,6 +24,10 @@ class FinalizeReleaseVersionTaskIntegrationTest {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFile, scmConfig.featureBranch)
 
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            }
+
             setProjectVersion(RELEASE_001)
         }.whenGradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
             .thenAssert {
@@ -85,6 +89,10 @@ class FinalizeReleaseVersionTaskIntegrationTest {
     ) {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFile, scmConfig.featureBranch)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            }
         }.whenGradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
             .thenAssert {
                 it.taskOutput {

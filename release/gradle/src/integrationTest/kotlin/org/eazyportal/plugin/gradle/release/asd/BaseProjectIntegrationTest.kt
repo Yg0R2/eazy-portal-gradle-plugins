@@ -41,9 +41,9 @@ abstract class BaseProjectTestCase(
         @JvmStatic
         fun multiModuleTestCases(): List<Named<KClass<out BaseScmProjectTestCase>>> =
             listOf(
-                classNamed(SingleModuleGitFlowScmProjectTestCase::class),
-                classNamed(SingleModuleTrunkFlowScmProjectTestCase::class),
-                classNamed(SingleModuleCustomizedProjectTestCase::class),
+                classNamed(MultiModuleGitFlowScmProjectTestCase::class),
+                classNamed(MultiModuleTrunkFlowScmProjectTestCase::class),
+                classNamed(MultiModuleCustomizedProjectTestCase::class),
             )
 
         @JvmStatic
@@ -398,8 +398,8 @@ class MultiModuleTrunkFlowScmProjectTestCase(
 
         scmActions.clone(remoteProjectFile, projectFile)
 
-        // Create local branch
-//        scmActions.checkout(submoduleProjectFile, scmConfig.releaseBranch)
+        // After clone the HEAD is detached
+        scmActions.checkout(submoduleProjectFile, scmConfig.releaseBranch)
     }
 
 }

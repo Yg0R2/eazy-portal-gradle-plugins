@@ -55,12 +55,11 @@ class ReleaseIntegrationTest {
                     remoteProjectFile,
                     remoteSubmoduleProjectFile,
                     projectFile,
+                    submoduleProjectFile,
                 ).forEach { project ->
                     assertThat(scmActions.getCurrentBranch(project))
                         .isEqualTo(scmConfig.releaseBranch)
                 }
-                assertThat(scmActions.getCurrentBranch(submoduleProjectFile))
-                    .isEqualTo("HEAD") // after cloning, submodule is detached
 
                 listOf(
                     remoteProjectFile,
@@ -75,10 +74,10 @@ class ReleaseIntegrationTest {
                     }
                 }
                 it.scmStatus(submoduleProjectFile) {
-                    // after cloning, submodule is detached
-                    first().matches { firstLine -> firstLine.startsWith("HEAD detached at") }
-
-                    contains("nothing to commit, working tree clean")
+                    contains(
+                        "On branch ${scmConfig.releaseBranch}",
+                        "nothing to commit, working tree clean",
+                    )
                 }
 
                 it.scmCommits(remoteProjectFile) {
@@ -121,15 +120,16 @@ class ReleaseIntegrationTest {
                     assertThat(scmActions.getCurrentBranch(project))
                         .isEqualTo(scmConfig.releaseBranch)
                 }
-                assertThat(scmActions.getCurrentBranch(projectFile))
-                    .isEqualTo(scmConfig.featureBranch)
-                assertThat(scmActions.getCurrentBranch(submoduleProjectFile))
-                    .isEqualTo("HEAD") // after cloning submodule is detached
+                listOf(projectFile, submoduleProjectFile).forEach { project ->
+                    assertThat(scmActions.getCurrentBranch(project))
+                        .isEqualTo(scmConfig.featureBranch)
+                }
 
                 listOf(
                     remoteProjectFile,
                     remoteSubmoduleProjectFile,
                     projectFile,
+                    submoduleProjectFile,
                 ).forEach { project ->
                     it.scmStatus(project) {
                         contains(
@@ -137,12 +137,6 @@ class ReleaseIntegrationTest {
                             "nothing to commit, working tree clean",
                         )
                     }
-                }
-                it.scmStatus(submoduleProjectFile) {
-                    // after cloning, submodule is detached
-                    first().matches { firstLine -> firstLine.startsWith("HEAD detached from") }
-
-                    contains("nothing to commit, working tree clean")
                 }
 
                 listOf(remoteProjectFile, projectFile).forEach { project ->

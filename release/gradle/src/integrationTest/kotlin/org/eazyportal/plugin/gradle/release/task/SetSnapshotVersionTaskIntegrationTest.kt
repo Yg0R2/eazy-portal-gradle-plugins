@@ -27,6 +27,10 @@ class SetSnapshotVersionTaskIntegrationTest {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFile, scmConfig.featureBranch)
 
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            }
+
             setProjectVersion(SNAPSHOT_001)
         }.whenGradleTaskFails(SET_SNAPSHOT_VERSION_TASK_NAME)
             .thenAssert {
@@ -70,6 +74,10 @@ class SetSnapshotVersionTaskIntegrationTest {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFile, scmConfig.featureBranch)
 
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            }
+
             setProjectVersion(RELEASE_001)
         }.whenGradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
             .thenAssert {
@@ -92,8 +100,6 @@ class SetSnapshotVersionTaskIntegrationTest {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                            "Changes to be committed:",
-                            "new file:   $DUMMY_FILE_NAME",
                             "Changes not staged for commit:",
                             "modified:   $GRADLE_PROPERTIES_FILE_NAME",
                             "no changes added to commit (use \"git add\" and/or \"git commit -a\")",

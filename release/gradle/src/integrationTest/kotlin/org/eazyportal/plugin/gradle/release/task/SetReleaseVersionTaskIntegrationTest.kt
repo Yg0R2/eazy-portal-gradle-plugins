@@ -31,6 +31,10 @@ class SetReleaseVersionTaskIntegrationTest {
     ) {
         givenTestCase(testCaseClass, workingDir) {
             scmActions.checkout(projectFile, scmConfig.featureBranch)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            }
         }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
             .thenAssert {
                 it.taskOutput {
@@ -117,8 +121,6 @@ class SetReleaseVersionTaskIntegrationTest {
                         contains(
                             "On branch ${scmConfig.releaseBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                            "Changes to be committed:",
-                            "new file:   $DUMMY_FILE_NAME",
                             "Changes not staged for commit:",
                             "modified:   $GRADLE_PROPERTIES_FILE_NAME",
                             "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
@@ -173,7 +175,6 @@ class SetReleaseVersionTaskIntegrationTest {
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
                             "Changes not staged for commit:",
                             "modified:   $GRADLE_PROPERTIES_FILE_NAME",
-                            "Asd",
                             "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
                         )
                     }
