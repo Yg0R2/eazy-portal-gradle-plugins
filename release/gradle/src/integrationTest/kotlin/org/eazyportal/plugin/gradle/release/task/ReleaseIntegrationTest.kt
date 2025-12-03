@@ -433,20 +433,18 @@ class ReleaseIntegrationTest {
                         .isEqualTo(scmConfig.releaseBranch)
                 }
 
-                // Workaround for using none-bare repository as origin
-                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote, scmConfig.releaseBranch, scmConfig.featureBranch)
-
-                listOf(remoteProjectFile, remoteSubmoduleProjectFile).forEach { project ->
-                    // Workaround for using none-bare repository as origin
-                    scmActions.clean(project)
-
-                    it.scmStatus(project) {
-                        contains(
-                            "On branch ${scmConfig.releaseBranch}",
-                            "nothing to commit, working tree clean",
-                        )
+                listOf(remoteProjectFile, remoteSubmoduleProjectFile)
+                    .onEach { project ->
+                        // Workaround for using none-bare repository as origin
+                        scmActions.clean(project)
+                    }.forEach { project ->
+                        it.scmStatus(project) {
+                            contains(
+                                "On branch ${scmConfig.releaseBranch}",
+                                "nothing to commit, working tree clean",
+                            )
+                        }
                     }
-                }
                 listOf(projectFile, submoduleProjectFile).forEach { project ->
                     it.scmStatus(project) {
                         contains(
@@ -491,9 +489,6 @@ class ReleaseIntegrationTest {
 
         scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
         createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
-
-        // Workaround for using none-bare repository as origin (fetch submodule changes)
-        scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
 
         scmActions.add(remoteProjectFile, ".")
         scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")

@@ -288,9 +288,11 @@ abstract class BaseMultiModuleScmProjectTestCase(
             .also { it.getFile().mkdirs() }
 
     val remoteSubmoduleProjectFile: ProjectFile<File>
-        get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
-            .also { it.mkdirs() }
-            .let { FileSystemProjectFile(it) }
+        get() = remoteProjectFile.resolve(SUBMODULE_NAME)
+            .also { it.getFile().mkdirs() }
+//        get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
+//            .also { it.mkdirs() }
+//            .let { FileSystemProjectFile(it) }
 
     override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
@@ -462,8 +464,6 @@ class MultiModuleCustomizedProjectTestCase(
         // Create remote feature branch
         scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
         scmActions.execute(remoteSubmoduleProjectFile, "branch", scmConfig.featureBranch)
-
-        scmActions.execute(remoteProjectFile.resolve(SUBMODULE_NAME),"remote", "rename", "origin", scmConfig.remote)
 
         scmActions.clone(remoteProjectFile, projectFile)
 

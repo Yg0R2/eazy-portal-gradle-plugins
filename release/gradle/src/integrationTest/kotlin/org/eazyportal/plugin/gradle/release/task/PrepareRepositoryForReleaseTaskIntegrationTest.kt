@@ -6,7 +6,6 @@ import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -135,9 +134,6 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, "chore: commit on ${scmConfig.featureBranch}")
-
-                // Workaround for using none-bare repository as origin (fetch submodule changes)
-                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote)
 
                 scmActions.add(remoteProjectFile, ".")
                 scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")

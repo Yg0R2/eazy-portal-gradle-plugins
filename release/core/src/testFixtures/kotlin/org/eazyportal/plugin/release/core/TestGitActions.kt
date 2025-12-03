@@ -15,13 +15,12 @@ class TestGitActions<T : Any>(
     ) {
         execute(
             projectFile,
-            "-c",
-            "protocol.file.allow=always",
+//            "-c",
+//            "protocol.file.allow=always",
             "submodule",
             "add",
-            "--name",
+            "file:///${submoduleProjectFile.resolve(".git").getPath()}",
             submoduleProjectFile.getName(),
-            submoduleProjectFile.resolve(".git").getPath().toString(),
         )
     }
 
