@@ -351,7 +351,6 @@ class MultiModuleGitFlowScmProjectTestCase(
         // Create local feature branch
         scmActions.checkout(projectFile, scmConfig.featureBranch)
         scmActions.checkout(projectFile, scmConfig.releaseBranch)
-
         scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
         scmActions.checkout(submoduleProjectFile, scmConfig.releaseBranch)
     }

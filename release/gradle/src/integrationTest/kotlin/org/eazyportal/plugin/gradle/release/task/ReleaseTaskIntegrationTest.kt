@@ -97,6 +97,10 @@ class ReleaseTaskIntegrationTest {
 
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote, scmConfig.releaseBranch, scmConfig.featureBranch)
+                scmActions.add(remoteProjectFile, ".")
+                scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
             }
 
             scmActions.checkout(projectFile, scmConfig.releaseBranch)
