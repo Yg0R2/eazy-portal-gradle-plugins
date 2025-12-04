@@ -15,16 +15,18 @@ class PrepareRepositoryForReleaseAction<T : Any>(
     override fun execute() {
         LOGGER.info("Preparing repository for release...")
 
-        projectContext.all.forEach { (_, projectFile) ->
-            scmActions.clean(projectFile)
-        }
+//        projectContext.all.forEach { (_, projectFile) ->
+//            scmActions.clean(projectFile)
+//        }
 
-        scmActions.fetch(
-            projectContext.root.projectFile,
-            scmConfig.remote,
-            scmConfig.releaseBranch,
-            scmConfig.featureBranch,
-        )
+        projectContext.all.reversed().forEach { (_, projectFile) ->
+            scmActions.fetch(
+                projectFile,
+                scmConfig.remote,
+                scmConfig.releaseBranch,
+                scmConfig.featureBranch,
+            )
+        }
     }
 
     companion object {

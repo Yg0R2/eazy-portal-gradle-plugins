@@ -294,9 +294,6 @@ abstract class BaseMultiModuleScmProjectTestCase(
     val remoteSubmoduleProjectFile: ProjectFile<File>
         get() = remoteProjectFile.resolve(SUBMODULE_NAME)
             .also { it.getFile().mkdirs() }
-//        get() = workingDir.resolve("${scmConfig.remote}/$SUBMODULE_NAME")
-//            .also { it.mkdirs() }
-//            .let { FileSystemProjectFile(it) }
 
     override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {

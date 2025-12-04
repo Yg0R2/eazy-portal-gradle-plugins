@@ -42,6 +42,44 @@ import kotlin.reflect.KClass
 
 class ReleaseTaskIntegrationTest {
 
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#singleModuleTestCasesWithBranch")
+    @ParameterizedTest
+    fun `test 'release' on single module project should fail when there are no acceptable commits`(
+        testCaseClass: KClass<BaseSingleModuleScmProjectTestCase>,
+        testBranch: String,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+
+        }
+    }
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#multiModuleTestCasesWithBranch")
+    @ParameterizedTest
+    fun `test 'release' on multi module project should fail when there are no acceptable commits`(
+        testCaseClass: KClass<BaseMultiModuleScmProjectTestCase>,
+        testBranch: String,
+        @TempDir workingDir: File,
+    ) {
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
     fun `test 'release' should fail when there are no acceptable commits`(

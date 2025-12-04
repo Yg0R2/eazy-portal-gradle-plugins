@@ -6,6 +6,7 @@ import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -16,6 +17,58 @@ import java.io.File
 import kotlin.reflect.KClass
 
 class PrepareRepositoryForReleaseTaskIntegrationTest {
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#singleModuleTestCasesWithBranch")
+    @ParameterizedTest
+    fun `test 'run' on single module project should clean local commits`(
+        testCaseClass: KClass<BaseSingleModuleScmProjectTestCase>,
+        testBranch: String,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(projectFile, testBranch)
+
+            createAndCommitDummyFile(projectFile, CHORE_COMMIT_MESSAGE)
+        }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+            .thenAssertTaskOutput {
+                contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+            }.thenAssertScm {
+                it.statusCleanIn(projectFile, scmConfig.releaseBranch)
+
+                it.commitsIn(projectFile) { doesNotContain(CHORE_COMMIT_MESSAGE) }
+
+                it.compareCommitsIn(projectFile, remoteProjectFile)
+            }
+    }
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#multiModuleTestCasesWithBranch")
+    @ParameterizedTest
+    fun `test 'run' on multi module project should clean local commits`(
+        testCaseClass: KClass<BaseMultiModuleScmProjectTestCase>,
+        testBranch: String,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            scmActions.checkout(submoduleProjectFile, testBranch)
+
+            createAndCommitDummyFile(submoduleProjectFile, CHORE_COMMIT_MESSAGE)
+
+            scmActions.add(projectFile, SUBMODULE_NAME)
+            scmActions.commit(projectFile, "chore: include $SUBMODULE_NAME changes")
+        }.whenGradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+            .thenAssertTaskOutput {
+                contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+            }.thenAssertScm {
+                it.statusCleanIn(projectFile, scmConfig.releaseBranch)
+                it.statusCleanIn(submoduleProjectFile, scmConfig.releaseBranch)
+
+                it.commitsIn(projectFile) { doesNotContain("chore: include $SUBMODULE_NAME changes") }
+                it.commitsIn(submoduleProjectFile) { doesNotContain(CHORE_COMMIT_MESSAGE) }
+
+                it.compareCommitsIn(projectFile, remoteProjectFile)
+                it.compareCommitsIn(submoduleProjectFile, remoteSubmoduleProjectFile)
+            }
+    }
 
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
     @ParameterizedTest
@@ -47,7 +100,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     doesNotContain(CHORE_COMMIT_MESSAGE)
                 }
 
-                it.scmCompareCommitsAnd()
+                it.scmCompareCommits()
 
                 if (this is BaseMultiModuleScmProjectTestCase) {
                     it.scmCommits(projectFile) {
@@ -58,7 +111,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                         doesNotContain(CHORE_COMMIT_MESSAGE)
                     }
 
-                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile)
+                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }
@@ -94,7 +147,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     )
                 }
 
-                it.scmCompareCommitsAnd()
+                it.scmCompareCommits()
 
                 if (this is BaseMultiModuleScmProjectTestCase) {
                     it.scmStatus(submoduleProjectFile) {
@@ -105,7 +158,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                         )
                     }
 
-                    it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile)
+                    it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile)
                 }
             }
     }
@@ -146,7 +199,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
                 when (this) {
                     is SingleModuleTrunkFlowScmProjectTestCase -> {
-                        it.scmCompareCommitsAnd {
+                        it.scmCompareCommits {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: commit on ${scmConfig.featureBranch}",
@@ -156,7 +209,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     }
 
                     is MultiModuleTrunkFlowScmProjectTestCase -> {
-                        it.scmCompareCommitsAnd(projectFile, remoteProjectFile) {
+                        it.scmCompareCommits(projectFile, remoteProjectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: add $SUBMODULE_NAME submodule",
@@ -166,7 +219,7 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                             ) // flaky
                         }
 
-                        it.scmCompareCommitsAnd(submoduleProjectFile, remoteSubmoduleProjectFile) {
+                        it.scmCompareCommits(submoduleProjectFile, remoteSubmoduleProjectFile) {
                             containsExactlyInAnyOrder(
                                 "initial commit",
                                 "chore: commit on ${scmConfig.featureBranch}",

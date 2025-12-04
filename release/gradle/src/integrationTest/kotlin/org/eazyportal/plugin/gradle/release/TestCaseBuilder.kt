@@ -59,9 +59,14 @@ object TestCaseBuilder {
         private val result: BuildResult,
     ) {
 
+        @Deprecated("")
         fun thenAssert(assertBlock: T.(Then<T>) -> Unit) {
             testCase.assertBlock(Then(testCase, result))
         }
+
+        fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
+            Then(testCase, result)
+                .also { it.thenAssertTaskOutput(block) }
 
     }
 
@@ -80,6 +85,7 @@ object TestCaseBuilder {
             }
         }
 
+        @Deprecated("")
         fun scmCommits(
             projectFile: ProjectFile<File>,
             block: ListAssert<String>.() -> Unit,
@@ -87,17 +93,103 @@ object TestCaseBuilder {
             block(assertThat(testCase.scmActions.getCommits(projectFile)))
         }
 
-        fun scmCompareCommitsAnd(
+        @Deprecated("")
+        fun scmCompareCommits(
             block: ListAssert<String>.() -> Unit = {}
         ) {
-            scmCompareCommitsAnd(testCase.projectFile, testCase.remoteProjectFile, block)
+            scmCompareCommits(testCase.projectFile, testCase.remoteProjectFile, block)
 
             if (testCase is BaseMultiModuleScmProjectTestCase) {
-                scmCompareCommitsAnd(testCase.submoduleProjectFile, testCase.remoteSubmoduleProjectFile, block)
+                scmCompareCommits(testCase.submoduleProjectFile, testCase.remoteSubmoduleProjectFile, block)
             }
         }
 
-        fun scmCompareCommitsAnd(
+        @Deprecated("")
+        fun scmCompareCommits(
+            projectFile: ProjectFile<File>,
+            remoteProjectFile: ProjectFile<File>,
+            alsoAssertBlock: ListAssert<String>.() -> Unit = {},
+        ) {
+            assertThat(testCase.scmActions.getCommits(projectFile))
+                .containsExactlyElementsOf(testCase.scmActions.getCommits(remoteProjectFile))
+                .alsoAssertBlock()
+        }
+
+        @Deprecated("")
+        fun scmLocalCommits(block: ListAssert<String>.() -> Unit) {
+            scmCommits(testCase.projectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                scmCommits(testCase.submoduleProjectFile, block)
+            }
+        }
+
+        @Deprecated("")
+        fun scmRemoteCommits(block: ListAssert<String>.() -> Unit) {
+            scmCommits(testCase.remoteProjectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                scmCommits(testCase.remoteSubmoduleProjectFile, block)
+            }
+        }
+
+        @Deprecated("")
+        fun scmLocalStatus(block: ListAssert<String>.() -> Unit) {
+            scmStatus(testCase.projectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                block(assertThat(testCase.scmActions.status(testCase.submoduleProjectFile)))
+            }
+        }
+
+        @Deprecated("")
+        fun scmRemoteStatus(block: ListAssert<String>.() -> Unit) {
+            scmStatus(testCase.remoteProjectFile, block)
+
+            if (testCase is BaseMultiModuleScmProjectTestCase) {
+                block(assertThat(testCase.scmActions.status(testCase.remoteSubmoduleProjectFile)))
+            }
+        }
+
+        @Deprecated("")
+        fun scmStatus(
+            projectFile: ProjectFile<File>,
+            block: ListAssert<String>.() -> Unit,
+        ) {
+            block(assertThat(testCase.scmActions.status(projectFile)))
+        }
+
+        @Deprecated("")
+        fun taskOutput(block: ListAssert<String>.() -> Unit) {
+            block(
+                assertThat(buildResult.output.lines()),
+            )
+        }
+
+        fun thenAssertScm(block: T.(ScmAssertion<T>) -> Unit): Then<T> =
+            apply {
+                testCase.block(ScmAssertion(testCase))
+            }
+
+        fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
+            apply {
+                block(assertThat(buildResult.output.lines()))
+            }
+
+    }
+
+    class ScmAssertion<T : BaseScmProjectTestCase>(
+        private val testCase: T,
+    ) {
+
+        fun commitsIn(
+            projectFile: ProjectFile<File>,
+            block: ListAssert<String>.() -> Unit,
+        ) {
+            block(assertThat(testCase.scmActions.getCommits(projectFile)))
+        }
+
+        fun compareCommitsIn(
             projectFile: ProjectFile<File>,
             remoteProjectFile: ProjectFile<File>,
             block: ListAssert<String>.() -> Unit = {},
@@ -107,49 +199,24 @@ object TestCaseBuilder {
                 .block()
         }
 
-        fun scmLocalCommits(block: ListAssert<String>.() -> Unit) {
-            scmCommits(testCase.projectFile, block)
-
-            if (testCase is BaseMultiModuleScmProjectTestCase) {
-                scmCommits(testCase.submoduleProjectFile, block)
+        fun statusCleanIn(
+            projectFile: ProjectFile<File>,
+            branch: String,
+        ) {
+            statusIn(projectFile) {
+                containsExactly(
+                    "On branch $branch",
+                    "Your branch is up to date with '${testCase.scmConfig.remote}/$branch'.",
+                    "nothing to commit, working tree clean",
+                )
             }
         }
 
-        fun scmRemoteCommits(block: ListAssert<String>.() -> Unit) {
-            scmCommits(testCase.remoteProjectFile, block)
-
-            if (testCase is BaseMultiModuleScmProjectTestCase) {
-                scmCommits(testCase.remoteSubmoduleProjectFile, block)
-            }
-        }
-
-        fun scmLocalStatus(block: ListAssert<String>.() -> Unit) {
-            scmStatus(testCase.projectFile, block)
-
-            if (testCase is BaseMultiModuleScmProjectTestCase) {
-                block(assertThat(testCase.scmActions.status(testCase.submoduleProjectFile)))
-            }
-        }
-
-        fun scmRemoteStatus(block: ListAssert<String>.() -> Unit) {
-            scmStatus(testCase.remoteProjectFile, block)
-
-            if (testCase is BaseMultiModuleScmProjectTestCase) {
-                block(assertThat(testCase.scmActions.status(testCase.remoteSubmoduleProjectFile)))
-            }
-        }
-
-        fun scmStatus(
+        fun statusIn(
             projectFile: ProjectFile<File>,
             block: ListAssert<String>.() -> Unit,
         ) {
             block(assertThat(testCase.scmActions.status(projectFile)))
-        }
-
-        fun taskOutput(block: ListAssert<String>.() -> Unit) {
-            block(
-                assertThat(buildResult.output.lines()),
-            )
         }
 
     }

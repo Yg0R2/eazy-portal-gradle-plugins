@@ -7,7 +7,7 @@ object GradleTestFixtures {
     const val SETTINGS_GRADLE_KTS_FILE_NAME = "settings.gradle.kts"
 
     const val PROJECT_NAME = "dummy-project"
-    const val SUBMODULE_NAME = "dummy-ui"
+    const val SUBMODULE_NAME = "dummy-ui" // TODO: have more then one submodule
     val SUBPROJECT_NAMES = setOf(
         "dummy-api",
         "dummy-application",
