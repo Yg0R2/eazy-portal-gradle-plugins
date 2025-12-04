@@ -6,6 +6,7 @@ import org.assertj.core.api.ObjectAssert
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
@@ -166,10 +167,41 @@ object TestCaseBuilder {
             )
         }
 
+        // Project asserts
+
+        fun thenAssertProjectVersion(
+            expectedVersion: Version,
+        ): Then<T> =
+            apply {
+                assertThat(testCase.getProjectVersion(testCase.projectFile))
+                    .isEqualTo(expectedVersion)
+
+                if (testCase is BaseMultiModuleScmProjectTestCase) {
+                    assertThat(testCase.getProjectVersion(testCase.submoduleProjectFile))
+                        .isEqualTo(expectedVersion)
+                }
+            }
+
+        // SCM asserts
+
         fun thenAssertScm(block: T.(ScmAssertion<T>) -> Unit): Then<T> =
             apply {
                 testCase.block(ScmAssertion(testCase))
             }
+
+        fun thenAssertScmIfMultiModule(block: BaseMultiModuleScmProjectTestCase.(ScmAssertion<T>) -> Unit): Then<T> =
+            apply {
+                (testCase as BaseMultiModuleScmProjectTestCase)
+                    .block(ScmAssertion(testCase))
+            }
+
+        fun thenAssertScmIfSingleModule(block: BaseSingleModuleScmProjectTestCase.(ScmAssertion<T>) -> Unit): Then<T> =
+            apply {
+                (testCase as BaseSingleModuleScmProjectTestCase)
+                    .block(ScmAssertion(testCase))
+            }
+
+        // Task output asserts
 
         fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
             apply {

@@ -24,8 +24,7 @@ class SetReleaseVersionAction<T : Any>(
     override fun execute() {
         LOGGER.info("Setting release version...")
 
-        // When 'releaseBranch' has commits
-        var releaseVersion = getReleaseVersion()
+        val releaseVersion = getReleaseVersion()
 
         projectContext.all.forEach { (_, projectFile) ->
             if (scmActions.getCurrentBranch(projectFile) != scmConfig.releaseBranch) {
@@ -37,10 +36,6 @@ class SetReleaseVersionAction<T : Any>(
             }
         }
 
-        // When 'featureBranch' has commits
-        releaseVersion = (releaseVersion ?: getReleaseVersion())
-            ?: throw IllegalArgumentException("There are no acceptable commits.")
-
         projectContext.all.forEach { (projectActions, _) ->
             projectActions.setVersion(releaseVersion)
         }
@@ -48,7 +43,7 @@ class SetReleaseVersionAction<T : Any>(
         LOGGER.info("Release version set to: $releaseVersion")
     }
 
-    private fun getReleaseVersion(): Version? =
+    private fun getReleaseVersion(): Version =
         projectContext.all.asSequence().mapNotNull { (projectActions, projectFile) ->
             getVersionIncrement(projectFile)?.let {
                 val currentVersion = projectActions.getVersion()
@@ -56,6 +51,7 @@ class SetReleaseVersionAction<T : Any>(
                 releaseVersionProvider.provide(currentVersion, it)
             }
         }.maxWithOrNull(VersionComparator())
+            ?: throw IllegalArgumentException("There are no acceptable commits.")
 
     private fun getVersionIncrement(projectFile: ProjectFile<T>): VersionIncrement? =
         getVersionIncrementFromScm(projectFile).let {
@@ -74,7 +70,7 @@ class SetReleaseVersionAction<T : Any>(
         val lastTag = runCatching {
             scmActions.getLastTag(projectFile)
         }.onFailure {
-            LOGGER.warn("Ignoring missing Git tag from release version calculation.")
+            LOGGER.warn("Ignoring missing tag from release version calculation.")
         }.getOrNull()
 
         return scmActions.getCommits(projectFile, lastTag)

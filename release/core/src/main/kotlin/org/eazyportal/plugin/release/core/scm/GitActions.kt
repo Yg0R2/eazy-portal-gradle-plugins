@@ -16,6 +16,10 @@ open class GitActions<T: Any>(
 
     override fun checkout(projectFile: ProjectFile<T>, toRef: String) {
         execute(projectFile, "checkout", toRef)
+
+        getSubmodules(projectFile).forEach {
+            execute(projectFile.resolve(it), "checkout", toRef)
+        }
     }
 
     override fun clean(projectFile: ProjectFile<T>) {
