@@ -69,6 +69,11 @@ class SetReleaseVersionTaskIntegrationTest {
             }
     }
 
+    // TODO: test 'run' should fail from release branch when feature branch has acceptable commits
+    // TODO: test 'run' should succeed from release branch when release branch has acceptable commits
+    // TODO: test 'run' should succeed from feature branch when feature branch has acceptable commits
+    // TODO: test 'run' should succeed from feature branch when release branch has acceptable commits
+
     @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'run' should set release version`(

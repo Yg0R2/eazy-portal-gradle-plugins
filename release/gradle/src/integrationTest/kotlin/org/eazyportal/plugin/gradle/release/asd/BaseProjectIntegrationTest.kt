@@ -250,7 +250,11 @@ class SingleModuleCustomizedProjectTestCase(
                         org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
                             listOf("dummy"),
                              org.eazyportal.plugin.release.core.version.model.VersionIncrement.MAJOR,
-                         )
+                        ),
+                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
+                            listOf("fix"),
+                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.PATCH,
+                        ),
                     )
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
                         featureBranch = "${scmConfig.featureBranch}",
@@ -428,7 +432,11 @@ class MultiModuleCustomizedProjectTestCase(
                         org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
                             listOf("dummy"),
                              org.eazyportal.plugin.release.core.version.model.VersionIncrement.MAJOR,
-                         )
+                        ),
+                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
+                            listOf("fix"),
+                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.PATCH,
+                        ),
                     )
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
                         featureBranch = "${scmConfig.featureBranch}",

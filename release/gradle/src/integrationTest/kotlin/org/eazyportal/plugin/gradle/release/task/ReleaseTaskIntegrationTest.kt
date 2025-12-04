@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.common.GradleTestFixtures
 import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.ScmTestFixtures.FEATURE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.common.cli.CommandLineUtils.git
@@ -11,7 +12,10 @@ import org.eazyportal.plugin.common.scm.GitUtils
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.MultiModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.asd.SingleModuleCustomizedProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
@@ -98,7 +102,6 @@ class ReleaseTaskIntegrationTest {
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
 
-                scmActions.fetch(remoteProjectFile.resolve(SUBMODULE_NAME), scmConfig.remote, scmConfig.releaseBranch, scmConfig.featureBranch)
                 scmActions.add(remoteProjectFile, ".")
                 scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
             }
@@ -124,26 +127,46 @@ class ReleaseTaskIntegrationTest {
                     )
                 }
 
-                val expectedCommits = listOf(
-                    "New SNAPSHOT version: $SNAPSHOT_002",
-                    "Release version: $RELEASE_001",
-                    FIX_COMMIT_MESSAGE,
-                )
+                if (this is SingleModuleTrunkFlowScmProjectTestCase) {
+                    listOf(
+                        "New SNAPSHOT version: $SNAPSHOT_002",
+                        "Release version: $RELEASE_001",
+                        FIX_COMMIT_MESSAGE,
+                    ).run {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                            releaseBranchCommits = this,
+                            featureBranchCommits = this,
+                        )
+                    }
+                } else if (this is MultiModuleTrunkFlowScmProjectTestCase) {
+                    listOf(
+                        "New SNAPSHOT version: $SNAPSHOT_002",
+                        "Release version: $RELEASE_001",
+                        "chore: include $SUBMODULE_NAME changes",
+                        FIX_COMMIT_MESSAGE,
+                    ).run {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                            releaseBranchCommits = this,
+                            featureBranchCommits = this,
+                        )
+                    }
 
-                assertSucceededRelease(
-                    projectFile = projectFile,
-                    remoteProjectFile = remoteProjectFile,
-                    releaseBranchCommits = expectedCommits,
-                    featureBranchCommits = expectedCommits,
-                )
-
-                if (this is MultiModuleTrunkFlowScmProjectTestCase) {
-                    assertSucceededRelease(
-                        projectFile = submoduleProjectFile,
-                        remoteProjectFile = remoteSubmoduleProjectFile,
-                        releaseBranchCommits = expectedCommits,
-                        featureBranchCommits = expectedCommits,
-                    )
+                    listOf(
+                        "New SNAPSHOT version: $SNAPSHOT_002",
+                        "Release version: $RELEASE_001",
+                        FIX_COMMIT_MESSAGE,
+                    ).run {
+                        assertSucceededRelease(
+                            projectFile = submoduleProjectFile,
+                            remoteProjectFile = remoteSubmoduleProjectFile,
+                            releaseBranchCommits = this,
+                            featureBranchCommits = this,
+                        )
+                    }
                 }
             } else {
                 it.taskOutput {
@@ -153,13 +176,22 @@ class ReleaseTaskIntegrationTest {
                     )
                 }
 
-                assertFailedRelease(
-                    projectFile = projectFile,
-                    remoteProjectFile = remoteProjectFile,
-                    featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
-                )
+                if (this is BaseSingleModuleScmProjectTestCase) {
+                    assertFailedRelease(
+                        projectFile = projectFile,
+                        remoteProjectFile = remoteProjectFile,
+                        featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
+                    )
+                } else if (this is BaseMultiModuleScmProjectTestCase) {
+                    assertFailedRelease(
+                        projectFile = projectFile,
+                        remoteProjectFile = remoteProjectFile,
+                        featureBranchCommits = listOf(
+                            "chore: include $SUBMODULE_NAME changes",
+                            FIX_COMMIT_MESSAGE,
+                        )
+                    )
 
-                if (this is BaseMultiModuleScmProjectTestCase) {
                     assertFailedRelease(
                         projectFile = submoduleProjectFile,
                         remoteProjectFile = remoteSubmoduleProjectFile,
@@ -189,6 +221,9 @@ class ReleaseTaskIntegrationTest {
 
                 scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
                 createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+                scmActions.add(remoteProjectFile, ".")
+                scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
             }
 
             scmActions.checkout(projectFile, scmConfig.releaseBranch)
@@ -206,25 +241,324 @@ class ReleaseTaskIntegrationTest {
                     )
                 }
 
-                if ((this is SingleModuleTrunkFlowScmProjectTestCase) || (this is MultiModuleTrunkFlowScmProjectTestCase)) {
-                    val expectedCommits = listOf(
-                        "New SNAPSHOT version: $SNAPSHOT_002",
-                        "Release version: $RELEASE_001",
-                        "fix: dummy commit"
-                    )
+                when (this) {
+                    is SingleModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
 
-//                    assertSucceededRelease(
-//                        releaseBranchCommits = expectedCommits,
-//                        featureBranchCommits = expectedCommits,
-//                    )
-                } else {
-//                    assertSucceededRelease()
+                    is MultiModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            "chore: include $SUBMODULE_NAME changes",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = submoduleProjectFile,
+                                remoteProjectFile = remoteSubmoduleProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
+
+                    is BaseSingleModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                        )
+                    }
+
+                    is BaseMultiModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                            releaseBranchCommits = listOf(
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                            featureBranchCommits = listOf(
+                                "New SNAPSHOT version: $SNAPSHOT_002",
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                        )
+
+                        assertSucceededRelease(
+                            projectFile = submoduleProjectFile,
+                            remoteProjectFile = remoteSubmoduleProjectFile,
+                        )
+                    }
+                }
+            }
+    }
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'release' should succeed from feature branch when there are acceptable commits on feature branch`(
+        testCaseClass: KClass<BaseScmProjectTestCase>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            val initialVersion = Version.of(INITIAL_TAG)
+
+            scmActions.tag(remoteProjectFile, initialVersion)
+
+            scmActions.checkout(remoteProjectFile, scmConfig.featureBranch)
+            createAndCommitDummyFile(remoteProjectFile, FIX_COMMIT_MESSAGE)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.tag(remoteSubmoduleProjectFile, initialVersion)
+
+                scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.featureBranch)
+                createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+                scmActions.add(remoteProjectFile, ".")
+                scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
+            }
+
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        }.whenGradleTaskSucceeds(RELEASE_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+                        "> Task :build",
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$UPDATE_SCM_TASK_NAME",
+                        "> Task :$RELEASE_TASK_NAME",
+                    )
+                }
+
+                when (this) {
+                    is SingleModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
+
+                    is MultiModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            "chore: include $SUBMODULE_NAME changes",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = submoduleProjectFile,
+                                remoteProjectFile = remoteSubmoduleProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
+
+                    is BaseSingleModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                        )
+                    }
+
+                    is BaseMultiModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                            releaseBranchCommits = listOf(
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                            featureBranchCommits = listOf(
+                                "New SNAPSHOT version: $SNAPSHOT_002",
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                        )
+
+                        assertSucceededRelease(
+                            projectFile = submoduleProjectFile,
+                            remoteProjectFile = remoteSubmoduleProjectFile,
+                        )
+                    }
+                }
+            }
+    }
+
+    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+    @ParameterizedTest
+    fun `test 'release' should succeed from feature branch when there are acceptable commits on release branch`(
+        testCaseClass: KClass<BaseScmProjectTestCase>,
+        @TempDir workingDir: File,
+    ) {
+        givenTestCase(testCaseClass, workingDir) {
+            val initialVersion = Version.of(INITIAL_TAG)
+
+            scmActions.tag(remoteProjectFile, initialVersion)
+
+            scmActions.checkout(remoteProjectFile, scmConfig.releaseBranch)
+            createAndCommitDummyFile(remoteProjectFile, FIX_COMMIT_MESSAGE)
+
+            if (this is BaseMultiModuleScmProjectTestCase) {
+                scmActions.tag(remoteSubmoduleProjectFile, initialVersion)
+
+                scmActions.checkout(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
+                createAndCommitDummyFile(remoteSubmoduleProjectFile, FIX_COMMIT_MESSAGE)
+
+                scmActions.add(remoteProjectFile, ".")
+                scmActions.commit(remoteProjectFile, "chore: include $SUBMODULE_NAME changes")
+            }
+
+            scmActions.checkout(projectFile, scmConfig.featureBranch)
+        }.whenGradleTaskSucceeds(RELEASE_TASK_NAME)
+            .thenAssert {
+                it.taskOutput {
+                    contains(
+                        "> Task :$SET_RELEASE_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME",
+                        "> Task :build",
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$FINALIZE_SNAPSHOT_VERSION_TASK_NAME",
+                        "> Task :$UPDATE_SCM_TASK_NAME",
+                        "> Task :$RELEASE_TASK_NAME",
+                    )
+                }
+
+                when (this) {
+                    is SingleModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
+
+                    is MultiModuleTrunkFlowScmProjectTestCase -> {
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            "chore: include $SUBMODULE_NAME changes",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = projectFile,
+                                remoteProjectFile = remoteProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+
+                        listOf(
+                            "New SNAPSHOT version: $SNAPSHOT_002",
+                            "Release version: $RELEASE_001",
+                            FIX_COMMIT_MESSAGE,
+                        ).run {
+                            assertSucceededRelease(
+                                projectFile = submoduleProjectFile,
+                                remoteProjectFile = remoteSubmoduleProjectFile,
+                                releaseBranchCommits = this,
+                                featureBranchCommits = this,
+                            )
+                        }
+                    }
+
+                    is BaseSingleModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                        )
+                    }
+
+                    is BaseMultiModuleScmProjectTestCase -> {
+                        assertSucceededRelease(
+                            projectFile = projectFile,
+                            remoteProjectFile = remoteProjectFile,
+                            releaseBranchCommits = listOf(
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                            featureBranchCommits = listOf(
+                                "New SNAPSHOT version: $SNAPSHOT_002",
+                                "Release version: $RELEASE_001",
+                                "chore: include $SUBMODULE_NAME changes",
+                                FIX_COMMIT_MESSAGE,
+                            ),
+                        )
+
+                        assertSucceededRelease(
+                            projectFile = submoduleProjectFile,
+                            remoteProjectFile = remoteSubmoduleProjectFile,
+                        )
+                    }
                 }
             }
     }
 
 
-    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
+
+
+
+
+    /*@MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
     @ParameterizedTest
     fun `test 'release' should fail from release branch when there are acceptable commits on submodule release branch but not committed to project`(
         testCaseClass: KClass<BaseScmProjectTestCase>,
@@ -290,8 +624,7 @@ class ReleaseTaskIntegrationTest {
 //                    featureBranchCommits = listOf(FIX_COMMIT_MESSAGE)
 //                )
             }
-    }
-
+    }*/
 
 
     private fun BaseScmProjectTestCase.assertFailedRelease(
@@ -341,11 +674,12 @@ class ReleaseTaskIntegrationTest {
         assertThat(getProjectVersion(remoteProjectFile))
             .isEqualTo(SNAPSHOT_002)
 
-        val newVersion = if ((this is SingleModuleTrunkFlowScmProjectTestCase) || (this is MultiModuleTrunkFlowScmProjectTestCase)) {
-            SNAPSHOT_002
-        } else {
-            RELEASE_001
-        }
+        val newVersion =
+            if ((this is SingleModuleTrunkFlowScmProjectTestCase) || (this is MultiModuleTrunkFlowScmProjectTestCase)) {
+                SNAPSHOT_002
+            } else {
+                RELEASE_001
+            }
         scmActions.checkout(projectFile, scmConfig.releaseBranch)
         assertThat(getProjectVersion(projectFile))
             .isEqualTo(newVersion)
@@ -365,8 +699,8 @@ class ReleaseTaskIntegrationTest {
     fun BaseScmProjectTestCase.assertRepositories(
         projectFile: ProjectFile<File>,
         remoteProjectFile: ProjectFile<File>,
-        releaseBranchCommits: List<String> = emptyList(),
-        featureBranchCommits: List<String> = emptyList(),
+        releaseBranchCommits: List<String>,
+        featureBranchCommits: List<String>,
         lastTag: String = INITIAL_TAG,
     ) {
         // assert commits
