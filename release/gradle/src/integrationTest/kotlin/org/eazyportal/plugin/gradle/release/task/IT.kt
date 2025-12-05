@@ -1,16 +1,17 @@
 package org.eazyportal.plugin.gradle.release.task
 
+import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.io.TempDir
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ConfigurationBuilder
-import org.reflections.util.FilterBuilder
 import java.io.File
 
 
@@ -48,7 +49,7 @@ interface SetReleaseVersionTaskTestCase {
 class SetReleaseVersionTaskIT {
 
     @Nested
-    inner class SetReleaseVersionSingleModuleTestCase: BaseSingleModuleIT(), SetReleaseVersionTaskTestCase {
+    inner class SetReleaseVersionSingleModuleTestCase : BaseSingleModuleIT(), SetReleaseVersionTaskTestCase {
 
         @Test
         override fun `test 'run' set release`() {
@@ -58,7 +59,7 @@ class SetReleaseVersionTaskIT {
     }
 
     @Nested
-    inner class SetReleaseVersionMultiModuleTestCase: BaseMultiModuleIT(), SetReleaseVersionTaskTestCase {
+    inner class SetReleaseVersionMultiModuleTestCase : BaseMultiModuleIT(), SetReleaseVersionTaskTestCase {
 
         @Test
         override fun `test 'run' set release`() {
@@ -79,7 +80,7 @@ interface FinalizeReleaseVersionTaskTestCase {
 class FinalizeReleaseVersionTaskIT {
 
     @Nested
-    inner class FinalizeReleaseVersionSingleModuleTestCase: BaseSingleModuleIT(), FinalizeReleaseVersionTaskTestCase {
+    inner class FinalizeReleaseVersionSingleModuleTestCase : BaseSingleModuleIT(), FinalizeReleaseVersionTaskTestCase {
 
         @Test
         override fun `test 'run' finalize release`() {
@@ -89,7 +90,7 @@ class FinalizeReleaseVersionTaskIT {
     }
 
     @Nested
-    inner class FinalizeReleaseVersionMultiModuleTestCase: BaseMultiModuleIT(), FinalizeReleaseVersionTaskTestCase {
+    inner class FinalizeReleaseVersionMultiModuleTestCase : BaseMultiModuleIT(), FinalizeReleaseVersionTaskTestCase {
 
         @Test
         override fun `test 'run' finalize release`() {
@@ -110,10 +111,10 @@ class IntegrationTestCompletenessCheck {
         val classes = Reflections(
             ConfigurationBuilder()
                 .forPackage(this::class.java.packageName)
-                .setScanners(Scanners.SubTypes.filterResultsBy { true } )
+                .setScanners(Scanners.SubTypes.filterResultsBy { true })
         ).getSubTypesOf(Any::class.java)
 
-        val baseModuleIT = classes.filter {
+        val baseModuleITClasses = classes.filter {
             it.simpleName.matches("^Base.*ModuleIT$".toRegex())
         }
 
@@ -121,17 +122,21 @@ class IntegrationTestCompletenessCheck {
             it.simpleName.matches(".*TaskIT$".toRegex())
         }
 
-        for (itClass in itClasses) {
-            val nested = itClass.kotlin.nestedClasses.toSet()
+        val errors= itClasses.flatMap { itClass ->
+            val nested = itClass.declaredClasses.toSet()
 
-            for (fixture in baseModuleIT) {
-                val implemented = nested.any { fixture.isAssignableFrom(it.java) }
+            baseModuleITClasses.filter { baseModuleITClass ->
+                nested.none { baseModuleITClass.isAssignableFrom(it) }
+            }.map { "${itClass.simpleName} is missing nested test case extending ${it.simpleName}." }
+        }.filter { it.isNotEmpty() }
 
-                assertTrue(
-                    implemented,
-                    "Missing nested test case for ${fixture.simpleName} in ${itClass.simpleName}"
-                )
-            }
-        }
+        assertThat(errors.isEmpty())
+            .withFailMessage {
+                errors.joinToString(
+                    System.lineSeparator(),
+                    "${System.lineSeparator()}========== Missing Task Integration Tests ==========${System.lineSeparator()}",
+                    "${System.lineSeparator()}====================================================",
+                ) { "  - $it" }
+            }.isTrue
     }
 }
