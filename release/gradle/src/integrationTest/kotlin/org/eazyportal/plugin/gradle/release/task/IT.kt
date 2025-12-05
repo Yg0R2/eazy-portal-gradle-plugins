@@ -7,6 +7,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.reflections.Reflections
+import org.reflections.scanners.Scanners
+import org.reflections.util.ConfigurationBuilder
+import org.reflections.util.FilterBuilder
 import java.io.File
 
 
@@ -99,28 +103,29 @@ class FinalizeReleaseVersionTaskIT {
 
 // ------- ENFORCE ----
 
-object ModuleFixtureRegistry {
-    val requiredFixtures = setOf(
-        BaseSingleModuleIT::class,
-        BaseMultiModuleIT::class,
-    )
-}
-
 class IntegrationTestCompletenessCheck {
 
     @Test
     fun `all IT classes must implement all required base fixtures`() {
-        val itClasses = listOf(
-            SetReleaseVersionTaskIT::class,
-            FinalizeReleaseVersionTaskIT::class
-            // add more IT classes here OR scan the package
-        )
+        val classes = Reflections(
+            ConfigurationBuilder()
+                .forPackage(this::class.java.packageName)
+                .setScanners(Scanners.SubTypes.filterResultsBy { true } )
+        ).getSubTypesOf(Any::class.java)
+
+        val baseModuleIT = classes.filter {
+            it.simpleName.matches("^Base.*ModuleIT$".toRegex())
+        }
+
+        val itClasses = classes.filter {
+            it.simpleName.matches(".*TaskIT$".toRegex())
+        }
 
         for (itClass in itClasses) {
-            val nested = itClass.nestedClasses.toSet()
+            val nested = itClass.kotlin.nestedClasses.toSet()
 
-            for (fixture in ModuleFixtureRegistry.requiredFixtures) {
-                val implemented = nested.any { fixture.java.isAssignableFrom(it.java) }
+            for (fixture in baseModuleIT) {
+                val implemented = nested.any { fixture.isAssignableFrom(it.java) }
 
                 assertTrue(
                     implemented,

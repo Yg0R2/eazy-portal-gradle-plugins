@@ -15,6 +15,8 @@ gradlePlugin {
     }
 }
 
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 dependencies {
     // dependencies
     implementation(gradleApi())
@@ -22,4 +24,7 @@ dependencies {
 
     // TestFixtures dependencies
     testFixturesApi(testFixtures(project(":release-core")))
+
+    // IntegrationTest dependencies
+    integrationTestImplementation("org.reflections:reflections:0.10.2")
 }
