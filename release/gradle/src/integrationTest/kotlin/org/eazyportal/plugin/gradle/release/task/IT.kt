@@ -2,6 +2,7 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -10,17 +11,6 @@ import java.io.File
 
 
 abstract class BaseSingleModuleIT {
-
-    lateinit var projectFile: ProjectFile<File>
-
-    @BeforeEach
-    fun setup(@TempDir tempDir: File) {
-        projectFile = FileSystemProjectFile(tempDir)
-    }
-
-}
-
-abstract class BaseSingleModule2IT {
 
     lateinit var projectFile: ProjectFile<File>
 
@@ -43,7 +33,6 @@ abstract class BaseMultiModuleIT {
     }
 
 }
-
 
 interface SetReleaseVersionTaskTestCase {
 
@@ -106,4 +95,38 @@ class FinalizeReleaseVersionTaskIT {
 
     }
 
+}
+
+// ------- ENFORCE ----
+
+object ModuleFixtureRegistry {
+    val requiredFixtures = setOf(
+        BaseSingleModuleIT::class,
+        BaseMultiModuleIT::class,
+    )
+}
+
+class IntegrationTestCompletenessCheck {
+
+    @Test
+    fun `all IT classes must implement all required base fixtures`() {
+        val itClasses = listOf(
+            SetReleaseVersionTaskIT::class,
+            FinalizeReleaseVersionTaskIT::class
+            // add more IT classes here OR scan the package
+        )
+
+        for (itClass in itClasses) {
+            val nested = itClass.nestedClasses.toSet()
+
+            for (fixture in ModuleFixtureRegistry.requiredFixtures) {
+                val implemented = nested.any { fixture.java.isAssignableFrom(it.java) }
+
+                assertTrue(
+                    implemented,
+                    "Missing nested test case for ${fixture.simpleName} in ${itClass.simpleName}"
+                )
+            }
+        }
+    }
 }
