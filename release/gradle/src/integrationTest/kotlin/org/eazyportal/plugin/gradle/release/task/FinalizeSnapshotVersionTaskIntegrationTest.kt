@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase

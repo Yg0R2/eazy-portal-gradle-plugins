@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.release.core
 
-import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.release.core.executor.CommandExecutor
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions

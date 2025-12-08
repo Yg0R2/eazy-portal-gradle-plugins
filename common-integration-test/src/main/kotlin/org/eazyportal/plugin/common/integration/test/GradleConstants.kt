@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.common
+package org.eazyportal.plugin.common.integration.test
 
 object GradleTestFixtures {
 
@@ -8,7 +8,7 @@ object GradleTestFixtures {
 
     const val PROJECT_NAME = "dummy-project"
     const val SUBMODULE_NAME = "dummy-ui" // TODO: have more then one submodule
-    val SUBPROJECT_NAMES = setOf(
+    val SUBPROJECT_NAMES = arrayOf(
         "dummy-api",
         "dummy-application",
         "dummy-behemoth",

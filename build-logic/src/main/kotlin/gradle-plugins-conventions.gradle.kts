@@ -13,6 +13,7 @@ dependencies {
 
     testFixturesImplementation("org.assertj:assertj-core")
     testFixturesImplementation("org.junit.jupiter:junit-jupiter")
+    testFixturesImplementation(libs.findLibrary("kotest-jvm").get())
 
     // Test dependencies
     testImplementation(platform(libs.findLibrary("assertj-bom").get()))
@@ -21,4 +22,5 @@ dependencies {
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.findLibrary("kotest-jvm").get())
 }

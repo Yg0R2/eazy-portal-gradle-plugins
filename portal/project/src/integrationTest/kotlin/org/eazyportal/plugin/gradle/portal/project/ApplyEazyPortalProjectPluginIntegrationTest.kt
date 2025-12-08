@@ -1,32 +1,22 @@
 package org.eazyportal.plugin.gradle.portal.project
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
-import org.eazyportal.plugin.common.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.gradle.portal.common.BaseIntegrationTest
-import org.junit.jupiter.api.BeforeAll
+import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
-class ApplyEazyPortalProjectPluginIntegrationTest : BaseIntegrationTest() {
-
-    @BeforeAll
-    fun initialize() {
-        GradleProjectBuilder(
-            projectDir = projectDir,
-            projectPluginIds = setOf("org.eazyportal.plugin.gradle.portal-project")
-        ).withListPluginsTask()
-            .build()
-    }
+class ApplyEazyPortalProjectPluginIntegrationTest {
 
     @Test
-    fun test_applyPlugin() {
-        // GIVEN
-        // WHEN
-        val actual = createGradleRunner(projectDir, "listPlugins")
-            .build()
-
-        // THEN
-        assertThat(actual.output.lines()).contains("org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin")
+    fun test_applyPlugin(@TempDir workingDir: File) {
+        givenTestCase<BaseGradleProjectTestCase>(workingDir) {
+            withEazyPortalProjectPlugin()
+            withListPluginsTask()
+        }.whenGradleTaskSucceeds("listPlugins")
+            .thenAssertTaskOutput {
+                contains(EazyPortalProjectPlugin::class.java.name)
+            }
     }
 
 }

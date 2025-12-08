@@ -3,7 +3,7 @@ package org.eazyportal.plugin.gradle.release
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.assertj.core.api.ObjectAssert
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase

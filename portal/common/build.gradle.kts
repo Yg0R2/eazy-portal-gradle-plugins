@@ -7,7 +7,7 @@ dependencies {
     implementation(gradleApi())
 
     // TestFixtures dependencies
-    testFixturesApi(testFixtures(project(":common")))
+    testFixturesApi(testFixtures(project(":common-integration-test")))
 
     testFixturesImplementation(gradleTestKit())
 }

@@ -2,8 +2,8 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder

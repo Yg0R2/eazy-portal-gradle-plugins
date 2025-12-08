@@ -1,43 +1,46 @@
-package org.eazyportal.plugin.common.gradle
+package org.eazyportal.plugin.common.integration.test.gradle
 
-import org.eazyportal.plugin.common.GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME
-import org.eazyportal.plugin.common.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME
-import org.eazyportal.plugin.common.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures
 import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.writeLines
-import kotlin.io.resolve
 
 class GradleProjectBuilder(
     private val projectDir: File,
-    private val projectName: String = PROJECT_NAME,
+    private val projectName: String = GradleTestFixtures.PROJECT_NAME,
     private val projectVersion: String = "0.0.1-SNAPSHOT",
+    @Deprecated("")
     private val settingsPluginIds: Set<String> = emptySet(),
+    @Deprecated("")
     private val subProjectNames: Set<String> = emptySet(),
+    @Deprecated("")
     private val projectPluginIds: Set<String> = emptySet(), // TODO: add withRelease, withEazyPortal
 ) {
 
+    private val _projectPluginIds = mutableSetOf<String>()
     private val extraProjectContent = mutableListOf<String>()
+
+    private val _settingsPluginIds = mutableSetOf<String>()
     private val extraSettingsContent = mutableListOf<String>()
 
+    private val _subprojectName = mutableSetOf<String>()
+
     fun build() {
-        createGradleRunner(projectDir, "init", "--dsl", "kotlin")
+        GradleUtils.createGradleRunner(projectDir, "init", "--dsl", "kotlin")
             .build()
 
-        subProjectNames.forEach {
+        (subProjectNames + _subprojectName).forEach {
             Files.createDirectories(projectDir.resolve(it).toPath())
         }
 
-        projectDir.resolve(BUILD_GRADLE_KTS_FILE_NAME).toPath()
-            .writeLines(createBuildFileContent(projectPluginIds))
+        projectDir.resolve(GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME).toPath()
+            .writeLines(createBuildFileContent(projectPluginIds + _projectPluginIds).also { println(it.joinToString(System.lineSeparator())) })
 
-        projectDir.resolve(GRADLE_PROPERTIES_FILE_NAME).toPath()
+        projectDir.resolve(GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME).toPath()
             .writeLines(createPropertiesFileContent(projectVersion))
 
-        projectDir.resolve(SETTINGS_GRADLE_KTS_FILE_NAME).toPath()
-            .writeLines(createSettingsFileContent(projectName, settingsPluginIds, subProjectNames))
+        projectDir.resolve(GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME).toPath()
+            .writeLines(createSettingsFileContent(projectName, settingsPluginIds + _settingsPluginIds, subProjectNames + _subprojectName).also { println(it.joinToString(System.lineSeparator())) })
     }
 
     fun withExtraProjectConfig(config: String): GradleProjectBuilder =
@@ -62,6 +65,21 @@ class GradleProjectBuilder(
                 """.trimIndent()
             )
         }
+
+    fun withProjectPlugins(vararg pluginIds: String): GradleProjectBuilder =
+        apply { _projectPluginIds.addAll(pluginIds) }
+
+    fun withEazyPortalProjectPlugin(): GradleProjectBuilder =
+        apply { withProjectPlugins("org.eazyportal.plugin.gradle.portal-project") }
+
+    fun withSettingPlugins(vararg pluginIds: String): GradleProjectBuilder =
+        apply { _settingsPluginIds.addAll(pluginIds) }
+
+    fun withEazyPortalSettingsPlugin(): GradleProjectBuilder =
+        apply { withSettingPlugins("org.eazyportal.plugin.gradle.portal-settings") }
+
+    fun withSubprojectNames(vararg subprojectNames: String): GradleProjectBuilder =
+        apply { _subprojectName.addAll(subprojectNames) }
 
     private fun createPropertiesFileContent(projectVersion: String): List<String> =
         listOf("version = $projectVersion")

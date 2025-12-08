@@ -5,7 +5,7 @@ pluginManagement {
     includeBuild("conventions")
 }
 
-include("common")
+include("common-integration-test")
 
 listOf(
     "common",

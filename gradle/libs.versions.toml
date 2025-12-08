@@ -1,7 +1,9 @@
 [versions]
 assertj = "3.27.6"
 junit = "6.0.0"
+kotest = "6.0.7"
 
 [libraries]
 assertj-bom = { group = "org.assertj", name = "assertj-bom", version.ref = "assertj" }
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+kotest-jvm = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }

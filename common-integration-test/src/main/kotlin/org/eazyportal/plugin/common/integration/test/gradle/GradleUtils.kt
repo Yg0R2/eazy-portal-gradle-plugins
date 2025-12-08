@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.common
+package org.eazyportal.plugin.common.integration.test.gradle
 
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File

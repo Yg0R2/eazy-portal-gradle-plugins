@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.release.core
 
-import org.eazyportal.plugin.common.GradleTestFixtures
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.junit.jupiter.api.BeforeEach

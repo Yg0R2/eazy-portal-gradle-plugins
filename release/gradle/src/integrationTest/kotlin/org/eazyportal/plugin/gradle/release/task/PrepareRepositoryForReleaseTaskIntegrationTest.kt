@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase

@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
