@@ -22,8 +22,9 @@ fun Project.getType(): ProjectTypes =
     if (this == rootProject) {
         ProjectTypes.ROOT
     } else {
-        entries.filter { it != ProjectTypes.ROOT }
-            .first { name.endsWith(it.suffix) } // TODO: fix unknown type
+        entries.filter { (it != ProjectTypes.ROOT) && (it != ProjectTypes.UNKNOWN) }
+            .firstOrNull { name.endsWith(it.suffix) }
+            ?: ProjectTypes.UNKNOWN
     }.also { logger.info("[ProjectExtensions.getType] - project $name type is $it") }
 
 fun Project.isTypeOf(projectType: ProjectTypes): Boolean =

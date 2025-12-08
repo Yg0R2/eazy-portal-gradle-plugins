@@ -12,6 +12,7 @@ enum class ProjectTypes(
     DAO("-dao"),
     ROOT(""),
     SERVICE("-service"),
-    WEB("-web");
+    WEB("-web"),
+    UNKNOWN("*");
 
 }

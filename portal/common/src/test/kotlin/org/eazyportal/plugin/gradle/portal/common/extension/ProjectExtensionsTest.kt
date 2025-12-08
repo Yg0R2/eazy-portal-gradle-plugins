@@ -43,23 +43,17 @@ class ProjectExtensionsTest {
                 .map { (projectName, expected) ->
                     dynamicTest("project $projectName is $projectType type should be $expected") {
                         // GIVEN
-                        val project = if ((projectType == ProjectTypes.ROOT) && (projectName == "dummy")) {
+                        val project = if (projectName == "dummy") {
                             rootProject
                         } else {
                             mockProject(projectName, rootProject)
                         }
 
-                        if ((projectName == "dummy") && (projectType != ProjectTypes.ROOT)) {
-                            // WHEN & THEN
-                            assertThatThrownBy { project.isTypeOf(projectType) }
-                                .isInstanceOf(NoSuchElementException::class.java)
-                        } else {
-                            // WHEN
-                            val actual = project.isTypeOf(projectType)
+                        // WHEN
+                        val actual = project.isTypeOf(projectType)
 
-                            // THEN
-                            assertThat(actual).isEqualTo(expected)
-                        }
+                        // THEN
+                        assertThat(actual).isEqualTo(expected)
                     }
                 }
         }
