@@ -2,30 +2,43 @@ package org.eazyportal.plugin.release.core.scm
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.eazyportal.plugin.release.core.BaseReleaseCoreIntegrationTest
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures
 import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.executor.exception.CliExecutionException
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_002
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_003
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
+import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions.Companion.GIT_EXECUTABLE
 import org.eazyportal.plugin.release.core.scm.ScmConstants.FEATURE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.RELEASE_BRANCH
 import org.eazyportal.plugin.release.core.scm.ScmConstants.REMOTE
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import java.io.File
 
-class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
+class GitActionsIntegrationTest {
+
+    private lateinit var projectFile: ProjectFile<File>
+    private lateinit var workingDir: File
 
     private val commandExecutor = CommandLineExecutor()
 
     private val underTest = GitActions(commandExecutor)
 
     @BeforeEach
-    fun setUpRepository() {
+    fun setUpRepository(@TempDir tempDir: File) {
+        workingDir = tempDir
+
+        projectFile = workingDir
+            .resolve(GradleTestFixtures.PROJECT_NAME)
+            .also { it.mkdir() }
+            .let(::FileSystemProjectFile)
+
         assertThat(git("init", "--initial-branch=$RELEASE_BRANCH"))
             .contains("Initialized empty Git repository in ${projectFile.getFile().absolutePath}/.git/")
 
@@ -502,9 +515,5 @@ class GitActionsIntegrationTest : BaseReleaseCoreIntegrationTest() {
 
     private fun git(vararg args: String): List<String> =
         commandExecutor.execute(projectFile, GIT_EXECUTABLE, *args)
-
-    companion object {
-        private val LINE_BREAK_REGEX = "\r?\n".toRegex()
-    }
 
 }

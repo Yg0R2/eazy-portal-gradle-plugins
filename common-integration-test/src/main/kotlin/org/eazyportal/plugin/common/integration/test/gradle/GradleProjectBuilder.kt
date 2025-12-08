@@ -26,7 +26,7 @@ class GradleProjectBuilder(
     private val _subprojectName = mutableSetOf<String>()
 
     fun build() {
-        GradleUtils.createGradleRunner(projectDir, "init", "--dsl", "kotlin")
+        GradleUtils.createGradleRunner(projectDir, "--no-configuration-cache", "init", "--dsl", "kotlin")
             .build()
 
         (subProjectNames + _subprojectName).forEach {
