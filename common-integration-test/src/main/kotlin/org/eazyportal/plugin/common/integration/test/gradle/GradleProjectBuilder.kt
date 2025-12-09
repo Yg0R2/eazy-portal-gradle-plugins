@@ -2,7 +2,6 @@ package org.eazyportal.plugin.common.integration.test.gradle
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures
 import java.io.File
-import java.nio.file.Files
 import kotlin.io.path.writeLines
 
 class GradleProjectBuilder(
@@ -10,37 +9,41 @@ class GradleProjectBuilder(
     private val projectName: String = GradleTestFixtures.PROJECT_NAME,
     private val projectVersion: String = "0.0.1-SNAPSHOT",
     @Deprecated("")
-    private val settingsPluginIds: Set<String> = emptySet(),
-    @Deprecated("")
-    private val subProjectNames: Set<String> = emptySet(),
-    @Deprecated("")
     private val projectPluginIds: Set<String> = emptySet(), // TODO: add withRelease, withEazyPortal
 ) {
 
     private val _projectPluginIds = mutableSetOf<String>()
     private val extraProjectContent = mutableListOf<String>()
 
-    private val _settingsPluginIds = mutableSetOf<String>()
+    private val settingsPluginIds = mutableSetOf<String>()
     private val extraSettingsContent = mutableListOf<String>()
 
-    private val _subprojectName = mutableSetOf<String>()
+    private val subprojects = mutableMapOf<String, GradleProjectBuilder>()
 
     fun build() {
         GradleUtils.createGradleRunner(projectDir, "--no-configuration-cache", "init", "--dsl", "kotlin")
             .build()
 
-        (subProjectNames + _subprojectName).forEach {
-            Files.createDirectories(projectDir.resolve(it).toPath())
-        }
-
         projectDir.resolve(GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME).toPath()
-            .writeLines(createBuildFileContent(projectPluginIds + _projectPluginIds).also { println(it.joinToString(System.lineSeparator())) })
+            .writeLines(createBuildFileContent(projectPluginIds + _projectPluginIds, extraProjectContent))
+
+        subprojects.forEach { (subprojectName, subprojectBuilder) ->
+            projectDir.resolve(subprojectName)
+                .also { it.mkdirs() }
+                .resolve(GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME).toPath()
+                .writeLines(
+                    createBuildFileContent(
+                        subprojectBuilder.projectPluginIds + subprojectBuilder._projectPluginIds,
+                        subprojectBuilder.extraProjectContent,
+                    )
+                )
+        }
 
         projectDir.resolve(GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME).toPath()
             .writeLines(createPropertiesFileContent(projectVersion))
 
         projectDir.resolve(GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME).toPath()
-            .writeLines(createSettingsFileContent(projectName, settingsPluginIds + _settingsPluginIds, subProjectNames + _subprojectName).also { println(it.joinToString(System.lineSeparator())) })
+            .writeLines(createSettingsFileContent(projectName, settingsPluginIds, subprojects.keys))
     }
 
     fun withExtraProjectConfig(config: String): GradleProjectBuilder =
@@ -72,20 +75,39 @@ class GradleProjectBuilder(
     fun withEazyPortalProjectPlugin(): GradleProjectBuilder =
         apply { withProjectPlugins("org.eazyportal.plugin.gradle.portal-project") }
 
+    fun withEazyPortalReleasePlugin(): GradleProjectBuilder =
+        apply { withProjectPlugins("org.eazyportal.plugin.gradle.release-gradle") }
+
     fun withSettingPlugins(vararg pluginIds: String): GradleProjectBuilder =
-        apply { _settingsPluginIds.addAll(pluginIds) }
+        apply { settingsPluginIds.addAll(pluginIds) }
 
     fun withEazyPortalSettingsPlugin(): GradleProjectBuilder =
         apply { withSettingPlugins("org.eazyportal.plugin.gradle.portal-settings") }
 
+    fun withSubproject(
+        subprojectName: String,
+        subprojectInitBlock: GradleProjectBuilder.() -> Unit,
+    ): GradleProjectBuilder =
+        apply {
+            subprojects[subprojectName] = GradleProjectBuilder(
+                projectDir.resolve(subprojectName),
+                subprojectName,
+            ).apply { subprojectInitBlock(this) }
+        }
+
     fun withSubprojectNames(vararg subprojectNames: String): GradleProjectBuilder =
-        apply { _subprojectName.addAll(subprojectNames) }
+        apply {
+            subprojectNames.forEach {
+                subprojects[it] = GradleProjectBuilder(projectDir.resolve(it), it)
+            }
+        }
 
     private fun createPropertiesFileContent(projectVersion: String): List<String> =
         listOf("version = $projectVersion")
 
     private fun createBuildFileContent(
         plugins: Set<String>,
+        extraProjectContent: List<String>,
     ): List<String> =
         with(mutableListOf<String>()) {
             generatePluginsBlock(plugins)
@@ -93,7 +115,7 @@ class GradleProjectBuilder(
             addAll(extraProjectContent)
 
             this
-        }
+        }.also { println(it.joinToString(System.lineSeparator())) }
 
     private fun createSettingsFileContent(
         projectName: String,
@@ -112,7 +134,7 @@ class GradleProjectBuilder(
             addAll(extraSettingsContent)
 
             this
-        }
+        }.also { println(it.joinToString(System.lineSeparator())) }
 
     private fun MutableList<String>.generatePluginsBlock(plugins: Set<String>) {
         if (plugins.isNotEmpty()) {

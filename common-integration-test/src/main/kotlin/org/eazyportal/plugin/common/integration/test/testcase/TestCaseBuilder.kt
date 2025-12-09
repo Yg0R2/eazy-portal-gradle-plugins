@@ -50,7 +50,6 @@ object TestCaseBuilder {
 
     }
 
-
     class When<T : BaseGradleProjectTestCase>(
         private val testCase: T,
         private val result: BuildResult,

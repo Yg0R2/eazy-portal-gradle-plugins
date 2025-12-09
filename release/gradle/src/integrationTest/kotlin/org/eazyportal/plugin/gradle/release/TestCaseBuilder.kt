@@ -14,8 +14,10 @@ import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.reflect.KClass
 
+@Deprecated("")
 object TestCaseBuilder {
 
+    @Deprecated("")
     class Given<T : BaseScmProjectTestCase>(
         private val testCase: T,
         configureProjectBlock: T.() -> Unit,
@@ -27,6 +29,7 @@ object TestCaseBuilder {
             configureProjectBlock(testCase)
         }
 
+        @Deprecated("")
         fun whenGradleTask(
             taskName: String,
             vararg arguments: String,
@@ -37,6 +40,7 @@ object TestCaseBuilder {
                 testCase.gradleTaskBlock(createGradleRunner(testCase.projectFile.getFile(), taskName, *arguments))
             )
 
+        @Deprecated("")
         fun whenGradleTaskFails(
             taskName: String,
             vararg arguments: String,
@@ -45,6 +49,7 @@ object TestCaseBuilder {
                 .buildAndFail()
                 .let { When(testCase, it) }
 
+        @Deprecated("")
         fun whenGradleTaskSucceeds(
             taskName: String,
             vararg arguments: String,
@@ -55,6 +60,7 @@ object TestCaseBuilder {
 
     }
 
+    @Deprecated("")
     class When<T : BaseScmProjectTestCase>(
         private val testCase: T,
         private val result: BuildResult,
@@ -65,17 +71,20 @@ object TestCaseBuilder {
             testCase.assertBlock(Then(testCase, result))
         }
 
+        @Deprecated("")
         fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
             Then(testCase, result)
                 .also { it.thenAssertTaskOutput(block) }
 
     }
 
+    @Deprecated("")
     class Then<T : BaseScmProjectTestCase>(
         private val testCase: T,
         private val buildResult: BuildResult,
     ) {
 
+        @Deprecated("")
         fun projectVersion(
             versionBlock: ObjectAssert<Version>.() -> Unit,
         ) {
@@ -169,6 +178,7 @@ object TestCaseBuilder {
 
         // Project asserts
 
+        @Deprecated("")
         fun thenAssertProjectVersion(
             expectedVersion: Version,
         ): Then<T> =
@@ -184,17 +194,20 @@ object TestCaseBuilder {
 
         // SCM asserts
 
+        @Deprecated("")
         fun thenAssertScm(block: T.(ScmAssertion<T>) -> Unit): Then<T> =
             apply {
                 testCase.block(ScmAssertion(testCase))
             }
 
+        @Deprecated("")
         fun thenAssertScmIfMultiModule(block: BaseMultiModuleScmProjectTestCase.(ScmAssertion<T>) -> Unit): Then<T> =
             apply {
                 (testCase as BaseMultiModuleScmProjectTestCase)
                     .block(ScmAssertion(testCase))
             }
 
+        @Deprecated("")
         fun thenAssertScmIfSingleModule(block: BaseSingleModuleScmProjectTestCase.(ScmAssertion<T>) -> Unit): Then<T> =
             apply {
                 (testCase as BaseSingleModuleScmProjectTestCase)
@@ -203,6 +216,7 @@ object TestCaseBuilder {
 
         // Task output asserts
 
+        @Deprecated("")
         fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
             apply {
                 block(assertThat(buildResult.output.lines()))
@@ -210,10 +224,12 @@ object TestCaseBuilder {
 
     }
 
+    @Deprecated("")
     class ScmAssertion<T : BaseScmProjectTestCase>(
         private val testCase: T,
     ) {
 
+        @Deprecated("")
         fun commitsIn(
             projectFile: ProjectFile<File>,
             block: ListAssert<String>.() -> Unit,
@@ -221,6 +237,7 @@ object TestCaseBuilder {
             block(assertThat(testCase.scmActions.getCommits(projectFile)))
         }
 
+        @Deprecated("")
         fun compareCommitsIn(
             projectFile: ProjectFile<File>,
             remoteProjectFile: ProjectFile<File>,
@@ -231,6 +248,7 @@ object TestCaseBuilder {
                 .block()
         }
 
+        @Deprecated("")
         fun statusCleanIn(
             projectFile: ProjectFile<File>,
             branch: String,
@@ -244,6 +262,7 @@ object TestCaseBuilder {
             }
         }
 
+        @Deprecated("")
         fun statusIn(
             projectFile: ProjectFile<File>,
             block: ListAssert<String>.() -> Unit,
@@ -253,6 +272,7 @@ object TestCaseBuilder {
 
     }
 
+    @Deprecated("")
     fun <T : BaseScmProjectTestCase> givenTestCase(
         clazz: KClass<out T>,
         workingDir: File,
