@@ -10,7 +10,7 @@ import java.io.File
 
 object TestCaseBuilder {
 
-    class Given<T: BaseGradleProjectTestCase>(
+    class Given<T: BaseProjectTestCase>(
         private val testCase: T,
         initProjectBlock: GradleProjectBuilder.() -> Unit,
     ) {
@@ -50,7 +50,7 @@ object TestCaseBuilder {
 
     }
 
-    class When<T : BaseGradleProjectTestCase>(
+    class When<T : BaseProjectTestCase>(
         private val testCase: T,
         private val result: BuildResult,
     ) {
@@ -61,7 +61,7 @@ object TestCaseBuilder {
 
     }
 
-    class Then<T : BaseGradleProjectTestCase>(
+    class Then<T : BaseProjectTestCase>(
         private val testCase: T,
         private val buildResult: BuildResult,
     ) {
@@ -71,7 +71,7 @@ object TestCaseBuilder {
 
     }
 
-    inline fun <reified T : BaseGradleProjectTestCase> givenTestCase(
+    inline fun <reified T : BaseProjectTestCase> givenTestCase(
         workingDir: File,
         noinline initProjectBlock: GradleProjectBuilder.() -> Unit = {},
     ): Given<out T> =

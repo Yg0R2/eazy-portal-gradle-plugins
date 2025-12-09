@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
 import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
@@ -17,8 +17,7 @@ class ApplyEazyReleasePluginIntegrationTest {
 
     @Test
     fun `apply plugin`(@TempDir workingDir: File) {
-        givenTestCase<BaseGradleProjectTestCase>(workingDir) {
-            withProjectPlugins("java")
+        givenTestCase<BaseProjectTestCase>(workingDir) {
             withEazyPortalReleasePlugin()
         }.whenGradleTaskSucceeds("tasks")
             .thenAssertTaskOutput {
@@ -37,9 +36,8 @@ class ApplyEazyReleasePluginIntegrationTest {
 
     @Test
     fun `apply plugin on subproject should fail`(@TempDir workingDir: File) {
-        givenTestCase<BaseGradleProjectTestCase>(workingDir) {
+        givenTestCase<BaseProjectTestCase>(workingDir) {
             withSubproject("subproject") {
-                withProjectPlugins("java")
                 withEazyPortalReleasePlugin()
             }
         }.whenGradleTaskFails("tasks")

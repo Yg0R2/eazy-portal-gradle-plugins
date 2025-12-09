@@ -7,7 +7,9 @@ object GradleTestFixtures {
     const val SETTINGS_GRADLE_KTS_FILE_NAME = "settings.gradle.kts"
 
     const val PROJECT_NAME = "dummy-project"
+    @Deprecated("")
     const val SUBMODULE_NAME = "dummy-ui" // TODO: have more then one submodule
+    val SUBMODULE_NAMES = arrayOf("dummy-ui")
     val SUBPROJECT_NAMES = arrayOf(
         "dummy-api",
         "dummy-application",
@@ -16,8 +18,8 @@ object GradleTestFixtures {
         "dummy-common",
         "dummy-dao",
         "dummy-service",
-        SUBMODULE_NAME,
         "dummy-web",
+        *SUBMODULE_NAMES,
     )
 
 }

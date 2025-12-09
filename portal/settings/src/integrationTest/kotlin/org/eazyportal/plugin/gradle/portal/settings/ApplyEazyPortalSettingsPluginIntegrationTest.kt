@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.portal.settings
 
-import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
 import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.portal.project.EazyPortalProjectPlugin
 import org.junit.jupiter.api.Test
@@ -11,7 +11,7 @@ class ApplyEazyPortalSettingsPluginIntegrationTest {
 
     @Test
     fun test_applyPlugin(@TempDir workingDir: File) {
-        givenTestCase<BaseGradleProjectTestCase>(workingDir) {
+        givenTestCase<BaseProjectTestCase>(workingDir) {
             withEazyPortalSettingsPlugin()
             withListPluginsTask()
         }.whenGradleTaskSucceeds("listPlugins")

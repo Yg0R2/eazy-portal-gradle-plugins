@@ -76,7 +76,7 @@ class GradleProjectBuilder(
         apply { withProjectPlugins("org.eazyportal.plugin.gradle.portal-project") }
 
     fun withEazyPortalReleasePlugin(): GradleProjectBuilder =
-        apply { withProjectPlugins("org.eazyportal.plugin.gradle.release-gradle") }
+        apply { withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle") }
 
     fun withSettingPlugins(vararg pluginIds: String): GradleProjectBuilder =
         apply { settingsPluginIds.addAll(pluginIds) }

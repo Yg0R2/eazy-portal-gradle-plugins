@@ -5,7 +5,7 @@ object ScmTestFixtures {
     const val DUMMY_FILE_NAME = "dummy.txt"
 
     const val INITIAL_COMMIT_MESSAGE = "initial commit"
-    const val CHORE_ADD_SUBMODULES_COMMIT_MESSAGE = "chore: add dummy-ui submodule"// TODO: change it to "chore: add submodules"
+    const val CHORE_ADD_SUBMODULES_COMMIT_MESSAGE = "chore: add submodules"
     const val CHORE_COMMIT_MESSAGE = "chore: update $DUMMY_FILE_NAME"
     const val FEATURE_COMMIT_MESSAGE = "feature: dummy commit"
     const val FIX_COMMIT_MESSAGE = "fix: dummy commit"
