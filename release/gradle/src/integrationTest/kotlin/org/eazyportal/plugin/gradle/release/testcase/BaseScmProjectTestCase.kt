@@ -13,6 +13,8 @@ import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.*
 import kotlin.io.path.absolutePathString
@@ -36,16 +38,15 @@ abstract class BaseScmProjectTestCase(
             .also { it.mkdirs() }
             .let { FileSystemProjectFile(it) }
 
+    @BeforeEach
+    fun setUpWorkingDir(@TempDir tempDir: File) {
+        workingDir = tempDir
+    }
+
     override fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit,
     ): ScmProjectTestCaseBuilder.ScmProjectGiven<BaseScmProjectTestCase> =
         ScmProjectTestCaseBuilder.ScmProjectGiven(this, initProjectBlock)
-
-    final override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
-        GradleProjectBuilder(projectFile.getFile())
-            .apply { gradleProjectBuilderBlock() }
-            .build()
-    }
 
     fun createAndCommitDummyFile(
         projectFile: ProjectFile<File>,

@@ -34,20 +34,23 @@ class SetReleaseVersionTaskIntegrationTest {
                 .givenConfiguration {
                     scmActions.checkout(projectFile, testBranch)
                 }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
+//                .whenGradleTask(SET_RELEASE_VERSION_TASK_NAME) {
+//                    buildAndFail()
+//                }
                 .thenAssertTaskOutput {
                     contains(
                         "Ignoring missing tag from release version calculation.",
                         "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
                         "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
                     )
-                }
-//                .thenScmAssert {
+                }.thenScmAssert {
 //                    statusCleanIn(projectFile, testBranch)
 //
 //                    commitsIn(projectFile) {
 //                        containsExactly(INITIAL_COMMIT_MESSAGE)
 //                    }
-//                }.thenAssertProjectVersion(SNAPSHOT_001)
+                }
+//                .thenAssertProjectVersion(SNAPSHOT_001)
 //            thenAssertScm {
 //                }.thenAssertScmIfMultiModule {
 //                    it.statusCleanIn(projectFile, testBranch)

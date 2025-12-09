@@ -21,7 +21,6 @@ object TestCaseBuilder {
         fun givenConfiguration(projectConfigurationBlock: P.() -> Unit): SELF {
             projectConfigurationBlock(testCase)
 
-            @Suppress("UNCHECKED_CAST")
             return this as SELF
         }
 

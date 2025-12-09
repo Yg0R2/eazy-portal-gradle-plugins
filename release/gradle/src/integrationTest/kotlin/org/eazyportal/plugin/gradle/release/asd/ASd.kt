@@ -77,11 +77,12 @@ class Xyz {
     }
 
     abstract class When<out P : Any, SELF : When<P, SELF>> {
-        abstract fun thenDoSomething(): Then<P>
+        abstract fun thenDoSomething(): Then<P, *>
     }
 
-    abstract class Then<out P: Any> {
-        abstract fun thenValidate(): Then<P>
+    abstract class Then<out P: Any, SELF : Then<P, SELF>> {
+        fun thenValidate(): SELF =
+            (this as SELF).also { println("[HERE] ${it::class.simpleName}") }
     }
 
 
@@ -95,9 +96,7 @@ class Xyz {
             BaseThen()
     }
 
-    open class BaseThen<P: BaseTestCase<P>> : Then<P>() {
-        override fun thenValidate(): BaseThen<P> =
-            also { println("[HERE] ${it::class.simpleName}") }
+    open class BaseThen<P: BaseTestCase<P>> : Then<P, BaseThen<P>>() {
     }
 
 
@@ -120,7 +119,11 @@ class Xyz {
             ScmBaseThen()
     }
 
-    class ScmBaseThen<P: ScmBaseTestCase<P>> : BaseThen<P>()
+    class ScmBaseThen<P: ScmBaseTestCase<P>> : BaseThen<P>() {
+        fun asd() {
+            println("[HERE] asd")
+        }
+    }
 
 }
 
@@ -146,7 +149,10 @@ fun main() {
     val scmBaseGiven= Xyz.ScmProjectTestCase().giveTestCase()
     val scmBaseWhen = scmBaseGiven.givenSomething()
     val scmBaseThen = scmBaseWhen.thenDoSomething()
-    scmBaseThen.thenValidate()
+//    scmBaseThen.thenValidate().asd()
+    scmBaseThen.asd()
+    println("[HERE]")
+    Xyz.ScmProjectTestCase().giveTestCase().givenSomething().thenDoSomething().asd()
     println("[HERE]")
 }
 

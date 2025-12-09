@@ -6,7 +6,7 @@ import org.eazyportal.plugin.common.integration.test.testcase.builder.TestCaseBu
 interface TestCase<P : TestCase<P>> {
 
     fun givenTestCase(
-        initProjectBlock: GradleProjectBuilder.() -> Unit,
+        initProjectBlock: GradleProjectBuilder.() -> Unit = {},
     ): TestCaseBuilder.Given<P, *>
 
     fun initializeProject(
