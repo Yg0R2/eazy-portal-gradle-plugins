@@ -7,8 +7,8 @@ import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGr
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
-class Given<T : BaseProjectTestCase>(
-    private val testCase: T,
+open class BaseProjectGiven<P : BaseProjectTestCase, out W: BaseProjectWhen<P>>(
+    private val testCase: P,
     initProjectBlock: GradleProjectBuilder.() -> Unit,
 ) {
 
@@ -16,22 +16,22 @@ class Given<T : BaseProjectTestCase>(
         testCase.initializeProject(initProjectBlock)
     }
 
-    fun givenConfiguration(projectConfigurationBlock: T.() -> Unit): Given<T> =
+    fun givenConfiguration(projectConfigurationBlock: P.() -> Unit): BaseProjectGiven<P, W> =
         also { projectConfigurationBlock(testCase) }
 
-    fun whenGradleTask(
+    open fun whenGradleTask(
         taskName: String,
         vararg arguments: String,
         gradleTaskBlock: GradleRunner.() -> BuildResult,
-    ): When<T> =
+    ): BaseProjectWhen<P> =
         createGradleRunner(testCase.projectDir, taskName, *arguments)
             .let(gradleTaskBlock)
-            .let { When(testCase, it) }
+            .let { BaseProjectWhen(testCase, it) }
 
     fun whenGradleTaskFails(
         taskName: String,
         vararg arguments: String,
-    ): When<T> =
+    ): BaseProjectWhen<P> =
         whenGradleTask(taskName, *arguments) {
             buildAndFail()
         }
@@ -39,42 +39,30 @@ class Given<T : BaseProjectTestCase>(
     fun whenGradleTaskSucceeds(
         taskName: String,
         vararg arguments: String,
-    ): When<T> =
+    ): BaseProjectWhen<P> =
         whenGradleTask(taskName, *arguments) {
             build()
         }
 
 }
 
-class When<T : BaseProjectTestCase>(
-    private val testCase: T,
+open class BaseProjectWhen<P : BaseProjectTestCase>(
+    private val testCase: P,
     private val result: BuildResult,
 ) {
 
-    fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
-        Then(testCase, result)
+    open fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): BaseProjectThen<P> =
+        BaseProjectThen(testCase, result)
             .also { it.thenAssertTaskOutput(block) }
 
 }
 
-class Then<T : BaseProjectTestCase>(
+open class BaseProjectThen<T : BaseProjectTestCase>(
     private val testCase: T,
     private val buildResult: BuildResult,
 ) {
 
-    fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
+    fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): BaseProjectThen<T> =
         also { block(assertThat(buildResult.output.lines())) }
 
-    @Suppress("UNCHECKED_CAST")
-    fun <A: Assert<in T>> thenAssert(block: A.() -> Unit) {
-        block(Assert(testCase) as A)
-    }
-
-    open class Assert<T: BaseProjectTestCase>(
-        private val testCase: T
-    ) {
-
-    }
-
 }
-

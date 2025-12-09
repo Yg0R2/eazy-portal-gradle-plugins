@@ -25,9 +25,9 @@ open class BaseProjectTestCase {
             .build()
     }
 
-    protected fun givenTestCase(
+    protected open fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit = {},
-    ): Given<out BaseProjectTestCase> =
-        Given(this, initProjectBlock)
+    ): BaseProjectGiven<BaseProjectTestCase, BaseProjectWhen<BaseProjectTestCase>> =
+        BaseProjectGiven(this, initProjectBlock)
 
 }

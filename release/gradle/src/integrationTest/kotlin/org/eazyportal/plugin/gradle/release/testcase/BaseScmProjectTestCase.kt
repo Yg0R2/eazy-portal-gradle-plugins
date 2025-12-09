@@ -4,6 +4,8 @@ import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectGiven
 import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.release.core.TestScmActions
@@ -55,5 +57,9 @@ abstract class BaseScmProjectTestCase(
 
     abstract fun setProjectVersion(version: Version)
 
-}
+//    override fun givenTestCase(
+//        initProjectBlock: GradleProjectBuilder.() -> Unit,
+//    ): ScmProjectGiven<out BaseScmProjectTestCase> =
+//        ScmProjectGiven(this, initProjectBlock)
 
+}
