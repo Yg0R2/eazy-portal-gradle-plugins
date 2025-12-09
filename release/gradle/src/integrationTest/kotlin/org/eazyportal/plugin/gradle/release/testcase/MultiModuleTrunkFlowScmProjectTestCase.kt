@@ -6,7 +6,7 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-class MultiModuleTrunkFlowScmProjectTestCase(
+open class MultiModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
 ) : BaseMultiModuleScmProjectTestCase(
     scmActions,

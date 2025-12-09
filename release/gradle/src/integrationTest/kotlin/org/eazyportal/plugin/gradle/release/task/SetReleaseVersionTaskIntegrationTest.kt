@@ -1,28 +1,123 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
-import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
-import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.Then
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
-import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
-import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
-import org.junit.jupiter.api.fail
-import org.junit.jupiter.api.io.TempDir
+import org.eazyportal.plugin.gradle.release.testcase.*
+import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
+import org.eazyportal.plugin.release.core.scm.ScmConstants
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.TestTemplate
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
-import kotlin.reflect.KClass
+import org.junit.jupiter.params.provider.CsvSource
+import java.util.stream.Stream
 
 
-//class SetReleaseVersionTaskIntegrationTest {
+class SetReleaseVersionTaskIntegrationTest {
+
+    interface SetReleaseVersionTaskTestCase {
+
+        fun `test 'run' should fail when there are no acceptable commits`(testBranch: String)
+    }
+
+    @Nested
+    inner class SetReleaseVersionTaskSingleModuleGitFlowTestCase :
+        SetReleaseVersionTaskTestCase,
+        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+
+        @CsvSource(
+            value = [
+                ScmConstants.RELEASE_BRANCH,
+                ScmConstants.FEATURE_BRANCH,
+            ]
+        )
+        @ParameterizedTest
+        override fun `test 'run' should fail when there are no acceptable commits`(testBranch: String) {
+            givenTestCase {
+                scmActions.checkout(projectFile, testBranch)
+            }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
+                .thenAssertTaskOutput {
+                    contains(
+                        "Ignoring missing tag from release version calculation.",
+                        "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                    )
+                }.thenAssert<ScmAssert> {
+                    statusCleanIn(projectFile, testBranch)
+//
+//                    it.commitsIn(projectFile) {
+//                        containsExactly(INITIAL_COMMIT_MESSAGE)
+//                    }
+                }
+//                .thenAssertProjectVersion(SNAPSHOT_001)
+//            thenAssertScm {
+//                }.thenAssertScmIfMultiModule {
+//                    it.statusCleanIn(projectFile, testBranch)
+//                    it.statusCleanIn(submoduleProjectFile, testBranch)
+//
+//                    it.commitsIn(projectFile) {
+//                        containsExactly(
+//                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+//                            INITIAL_COMMIT_MESSAGE,
+//                        )
+//                    }
+//
+//                    it.commitsIn(submoduleProjectFile) {
+//                        containsExactly(INITIAL_COMMIT_MESSAGE)
+//                    }
+//                }.thenAssertProjectVersion(SNAPSHOT_001)
+        }
+
+    }
+
+//    @Nested
+//    inner class SetReleaseVersionTaskSingleModuleTrunkFlowTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//
+//    }
+//
+//    @Nested
+//    inner class SetReleaseVersionTaskSingleModuleCustomizedTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//
+//    }
+//
+//    @Nested
+//    inner class SetReleaseVersionTaskMultiModuleGitFlowTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//
+//    }
+//
+//    @Nested
+//    inner class SetReleaseVersionTaskMultiModuleTrunkFlowTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        MultiModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//
+//    }
+//
+//    @Nested
+//    inner class SetReleaseVersionTaskMultiModuleCustomizedTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        MultiModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//
+//    }
+
+
+}
+
 //
 //    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
 //    @ParameterizedTest

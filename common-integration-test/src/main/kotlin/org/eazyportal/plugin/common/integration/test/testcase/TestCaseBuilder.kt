@@ -22,28 +22,27 @@ class Given<T : BaseProjectTestCase>(
     fun whenGradleTask(
         taskName: String,
         vararg arguments: String,
-        gradleTaskBlock: T.(GradleRunner) -> BuildResult,
+        gradleTaskBlock: GradleRunner.() -> BuildResult,
     ): When<T> =
-        When(
-            testCase,
-            testCase.gradleTaskBlock(createGradleRunner(testCase.projectDir, taskName, *arguments))
-        )
+        createGradleRunner(testCase.projectDir, taskName, *arguments)
+            .let(gradleTaskBlock)
+            .let { When(testCase, it) }
 
     fun whenGradleTaskFails(
         taskName: String,
         vararg arguments: String,
     ): When<T> =
-        createGradleRunner(testCase.projectDir, taskName, *arguments)
-            .buildAndFail()
-            .let { When(testCase, it) }
+        whenGradleTask(taskName, *arguments) {
+            buildAndFail()
+        }
 
     fun whenGradleTaskSucceeds(
         taskName: String,
         vararg arguments: String,
     ): When<T> =
-        createGradleRunner(testCase.projectDir, taskName, *arguments)
-            .build()
-            .let { When(testCase, it) }
+        whenGradleTask(taskName, *arguments) {
+            build()
+        }
 
 }
 
@@ -64,6 +63,18 @@ class Then<T : BaseProjectTestCase>(
 ) {
 
     fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<T> =
-        apply { block(assertThat(buildResult.output.lines())) }
+        also { block(assertThat(buildResult.output.lines())) }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <A: Assert<in T>> thenAssert(block: A.() -> Unit) {
+        block(Assert(testCase) as A)
+    }
+
+    open class Assert<T: BaseProjectTestCase>(
+        private val testCase: T
+    ) {
+
+    }
 
 }
+

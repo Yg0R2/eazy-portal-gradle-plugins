@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
+import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
@@ -12,7 +13,7 @@ import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
-import java.util.UUID
+import java.util.*
 import kotlin.io.path.absolutePathString
 
 abstract class BaseScmProjectTestCase(

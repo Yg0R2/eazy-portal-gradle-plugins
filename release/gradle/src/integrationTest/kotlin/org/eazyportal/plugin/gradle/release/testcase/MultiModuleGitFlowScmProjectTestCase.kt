@@ -6,7 +6,7 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-class MultiModuleGitFlowScmProjectTestCase(
+open class MultiModuleGitFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
 ) : BaseMultiModuleScmProjectTestCase(
     scmActions,

@@ -2,6 +2,7 @@ package org.eazyportal.plugin.release.core
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.release.core.executor.CommandExecutor
+import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.GitActions
 
@@ -63,5 +64,9 @@ class TestGitActions<T : Any>(
 
     override fun status(projectFile: ProjectFile<T>): List<String> =
         execute(projectFile, "status")
+
+    companion object {
+        val TEST_GIT_ACTIONS = TestGitActions(CommandLineExecutor())
+    }
 
 }
