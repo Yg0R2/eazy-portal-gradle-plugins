@@ -18,8 +18,7 @@ import kotlin.io.path.absolutePathString
 abstract class BaseScmProjectTestCase(
     open val scmActions: TestScmActions<File>,
     open val scmConfig: ScmConfig,
-    override val workingDir: File,
-) : BaseProjectTestCase(workingDir) {
+) : BaseProjectTestCase() {
 
     protected val projectActionsMap: MutableMap<String, ProjectActions<File>> = mutableMapOf()
 

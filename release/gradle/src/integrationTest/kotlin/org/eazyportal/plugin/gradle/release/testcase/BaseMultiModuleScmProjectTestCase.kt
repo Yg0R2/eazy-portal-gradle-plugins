@@ -12,8 +12,7 @@ import kotlin.io.path.absolutePathString
 abstract class BaseMultiModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-    override val workingDir: File,
-) : BaseScmProjectTestCase(scmActions, scmConfig, workingDir) {
+) : BaseScmProjectTestCase(scmActions, scmConfig) {
 
     val submoduleProjectFiles: List<ProjectFile<File>>
         get() = SUBMODULE_NAMES.asSequence()

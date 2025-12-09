@@ -8,8 +8,8 @@ dependencies {
     api(gradleTestKit())
 
     implementation(platform(libs.findLibrary("assertj-bom").get()))
-//    implementation(platform(libs.findLibrary("junit-bom").get()))
+    implementation(platform(libs.findLibrary("junit-bom").get()))
 
-    implementation("org.assertj:assertj-core")
-//    implementation("org.junit.jupiter:junit-jupiter")
+    compileOnly("org.assertj:assertj-core")
+    compileOnly("org.junit.jupiter:junit-jupiter")
 }

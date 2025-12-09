@@ -8,7 +8,6 @@ import java.io.File
 
 class MultiModuleCustomizedScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-    override val workingDir: File,
 ) : BaseMultiModuleScmProjectTestCase(
     scmActions,
     ScmConfig(
@@ -16,7 +15,6 @@ class MultiModuleCustomizedScmProjectTestCase(
         releaseBranch = "dummy-release-branch",
         remote = "upstream"
     ),
-    workingDir,
 ) {
 
     override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {

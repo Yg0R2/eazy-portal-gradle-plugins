@@ -1,7 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
 import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
-import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -10,14 +9,12 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
 
-class ApplyEazyReleasePluginIntegrationTest {
+class ApplyEazyReleasePluginIntegrationTest : BaseProjectTestCase() {
 
     @Test
-    fun `apply plugin`(@TempDir workingDir: File) {
-        givenTestCase<BaseProjectTestCase>(workingDir) {
+    fun `apply plugin`() {
+        givenTestCase {
             withEazyPortalReleasePlugin()
         }.whenGradleTaskSucceeds("tasks")
             .thenAssertTaskOutput {
@@ -35,8 +32,8 @@ class ApplyEazyReleasePluginIntegrationTest {
     }
 
     @Test
-    fun `apply plugin on subproject should fail`(@TempDir workingDir: File) {
-        givenTestCase<BaseProjectTestCase>(workingDir) {
+    fun `apply plugin on subproject should fail`() {
+        givenTestCase {
             withSubproject("subproject") {
                 withEazyPortalReleasePlugin()
             }

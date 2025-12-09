@@ -3,16 +3,13 @@ package org.eazyportal.plugin.gradle.portal.settings
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBPROJECT_NAMES
 import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
-import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
 
-class ProjectStructureIntegrationTest {
+class ProjectStructureIntegrationTest : BaseProjectTestCase() {
 
     @Test
-    fun test_applyPlugin(@TempDir workingDir: File) {
-        givenTestCase<BaseProjectTestCase>(workingDir) {
+    fun test_applyPlugin() {
+        givenTestCase {
             withEazyPortalSettingsPlugin()
             withSubprojectNames(*SUBPROJECT_NAMES)
             withExtraSettingsConfig(

@@ -7,11 +7,9 @@ import java.io.File
 
 open class SingleModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-    override val workingDir: File,
 ) : BaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig.TRUNK_BASED_FLOW,
-    workingDir,
 ) {
 
     override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {

@@ -3,16 +3,15 @@ package org.eazyportal.plugin.gradle.portal.settings
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBPROJECT_NAMES
 import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
-import org.eazyportal.plugin.common.integration.test.testcase.TestCaseBuilder.givenTestCase
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
 
-class EazyPortalProjectStructureIntegrationTest {
+class EazyPortalProjectStructureIntegrationTest : BaseProjectTestCase() {
 
+    // TODO: Configuration with name 'testImplementation' not found.
     @Test
-    fun test_validateProjectStructure(@TempDir workingDir: File) {
-        givenTestCase<BaseProjectTestCase>(workingDir) {
+    fun test_validateProjectStructure() {
+        givenTestCase {
+//            withProjectPlugins("java")
             withEazyPortalSettingsPlugin()
             withSubprojectNames(*SUBPROJECT_NAMES)
             withExtraSettingsConfig(

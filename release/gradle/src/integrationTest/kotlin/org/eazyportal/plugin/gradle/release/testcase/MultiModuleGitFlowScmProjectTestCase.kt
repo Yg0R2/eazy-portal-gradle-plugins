@@ -8,11 +8,9 @@ import java.io.File
 
 class MultiModuleGitFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-    override val workingDir: File,
 ) : BaseMultiModuleScmProjectTestCase(
     scmActions,
     ScmConfig.GIT_FLOW,
-    workingDir,
 ) {
 
     override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
