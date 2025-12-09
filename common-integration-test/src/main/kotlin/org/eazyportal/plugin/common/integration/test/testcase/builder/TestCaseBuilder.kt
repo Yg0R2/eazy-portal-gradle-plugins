@@ -9,7 +9,7 @@ import org.gradle.testkit.runner.GradleRunner
 
 object TestCaseBuilder {
 
-    abstract class Given<out P : TestCase<*>, SELF : Given<P, SELF>>(
+    abstract class Given<out P : TestCase<*>, out W: When<P, Then<P, *>, *>, SELF : Given<P, W, SELF>>(
         private val testCase: P,
         private val initProjectBlock: GradleProjectBuilder.() -> Unit,
     ) {
@@ -28,12 +28,12 @@ object TestCaseBuilder {
             taskName: String,
             vararg arguments: String,
             gradleTaskBlock: GradleRunner.() -> BuildResult,
-        ): When<P, *>
+        ): W
 
         fun whenGradleTaskFails(
             taskName: String,
             vararg arguments: String,
-        ): When<P, *> =
+        ): W =
             whenGradleTask(taskName, *arguments) {
                 buildAndFail()
             }
@@ -41,19 +41,19 @@ object TestCaseBuilder {
         fun whenGradleTaskSucceeds(
             taskName: String,
             vararg arguments: String,
-        ): When<P, *> =
+        ): W =
             whenGradleTask(taskName, *arguments) {
                 build()
             }
 
     }
 
-    abstract class When<out P : Any, SELF : When<P, SELF>>(
+    abstract class When<out P : Any, out T : Then<P, *>, SELF : When<P, T, SELF>>(
         private val testCase: P,
         private val buildResult: BuildResult,
     ) {
 
-        abstract fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): Then<P, *>
+        abstract fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): T
 
     }
 

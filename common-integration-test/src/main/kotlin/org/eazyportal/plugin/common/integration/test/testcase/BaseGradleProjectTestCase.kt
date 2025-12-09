@@ -28,7 +28,7 @@ abstract class BaseGradleProjectTestCase : TestCase<BaseGradleProjectTestCase> {
 
     override fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit,
-    ): GradleProjectTestCaseBuilder.BaseProjectGiven<BaseGradleProjectTestCase> =
+    ): GradleProjectTestCaseBuilder.BaseProjectGiven<BaseGradleProjectTestCase, *> =
         GradleProjectTestCaseBuilder.BaseProjectGiven(this, initProjectBlock)
 
 }

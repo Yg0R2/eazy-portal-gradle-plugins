@@ -18,10 +18,10 @@ import java.io.File
 
 object ScmProjectTestCaseBuilder {
 
-    class ScmProjectGiven<P : BaseScmProjectTestCase>(
+    class ScmProjectGiven<P : BaseScmProjectTestCase, W : ScmProjectWhen<P, *>>(
         private val testCase: P,
         private val initProjectBlock: GradleProjectBuilder.() -> Unit,
-    ) : TestCaseBuilder.Given<P, ScmProjectGiven<P>>(
+    ) : TestCaseBuilder.Given<P, W, ScmProjectGiven<P, W>>(
         testCase,
         initProjectBlock,
     ) {
@@ -30,24 +30,24 @@ object ScmProjectTestCaseBuilder {
             taskName: String,
             vararg arguments: String,
             gradleTaskBlock: GradleRunner.() -> BuildResult
-        ): ScmProjectWhen<P> =
+        ): W =
             createGradleRunner(testCase.projectFile.getFile(), taskName, *arguments)
                 .let(gradleTaskBlock)
-                .let { ScmProjectWhen(testCase, it) }
+                .let { ScmProjectWhen(testCase, it) as W }
 
     }
 
-    class ScmProjectWhen<P : BaseScmProjectTestCase>(
+    class ScmProjectWhen<P : BaseScmProjectTestCase, T : ScmProjectThen<P>>(
         private val testCase: P,
         private val buildResult: BuildResult,
-    ) : TestCaseBuilder.When<P, ScmProjectWhen<P>>(
+    ) : TestCaseBuilder.When<P, T, ScmProjectWhen<P, T>>(
         testCase,
         buildResult,
     ) {
 
-        override fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): ScmProjectThen<P> =
+        override fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): T =
             ScmProjectThen(testCase, buildResult)
-                .thenAssertTaskOutput(block)
+                .thenAssertTaskOutput(block) as T
 
     }
 
@@ -59,7 +59,7 @@ object ScmProjectTestCaseBuilder {
         buildResult,
     ) {
 
-        fun thenScmAssert(block: (ScmAssertion) -> Unit): ScmProjectThen<P> =
+        fun thenScmAssert(block: ScmAssertion.() -> Unit): ScmProjectThen<P> =
             apply {
                 block(ScmAssertion(testCase.scmActions, testCase.scmConfig))
             }

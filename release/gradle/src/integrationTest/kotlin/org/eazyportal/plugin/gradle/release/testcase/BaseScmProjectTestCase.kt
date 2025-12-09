@@ -45,7 +45,7 @@ abstract class BaseScmProjectTestCase(
 
     override fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit,
-    ): ScmProjectTestCaseBuilder.ScmProjectGiven<BaseScmProjectTestCase> =
+    ): ScmProjectTestCaseBuilder.ScmProjectGiven<BaseScmProjectTestCase, *> =
         ScmProjectTestCaseBuilder.ScmProjectGiven(this, initProjectBlock)
 
     fun createAndCommitDummyFile(

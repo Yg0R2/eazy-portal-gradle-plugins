@@ -7,7 +7,7 @@ interface TestCase<P : TestCase<P>> {
 
     fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit = {},
-    ): TestCaseBuilder.Given<P, *>
+    ): TestCaseBuilder.Given<P, *, *>
 
     fun initializeProject(
         gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit,

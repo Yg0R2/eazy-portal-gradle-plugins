@@ -9,10 +9,10 @@ import org.gradle.testkit.runner.GradleRunner
 
 object GradleProjectTestCaseBuilder {
 
-    open class BaseProjectGiven<P : BaseGradleProjectTestCase>(
+    open class BaseProjectGiven<P : BaseGradleProjectTestCase, W : BaseProjectWhen<P, *>>(
         private val testCase: P,
         private val initProjectBlock: GradleProjectBuilder.() -> Unit,
-    ) : TestCaseBuilder.Given<P, BaseProjectGiven<P>>(
+    ) : TestCaseBuilder.Given<P, W, BaseProjectGiven<P, W>>(
         testCase,
         initProjectBlock,
     ) {
@@ -21,24 +21,24 @@ object GradleProjectTestCaseBuilder {
             taskName: String,
             vararg arguments: String,
             gradleTaskBlock: GradleRunner.() -> BuildResult,
-        ): BaseProjectWhen<P> =
+        ): W =
             createGradleRunner(testCase.projectDir, taskName, *arguments)
                 .let(gradleTaskBlock)
-                .let { BaseProjectWhen(testCase, it) }
+                .let { BaseProjectWhen(testCase, it) as W }
 
     }
 
-    open class BaseProjectWhen<P : BaseGradleProjectTestCase>(
+    open class BaseProjectWhen<P : BaseGradleProjectTestCase, T: BaseProjectThen<P>>(
         private val testCase: P,
         private val buildResult: BuildResult,
-    ) : TestCaseBuilder.When<P, BaseProjectWhen<P>>(
+    ) : TestCaseBuilder.When<P, T, BaseProjectWhen<P, T>>(
         testCase,
         buildResult,
     ) {
 
-        override fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): BaseProjectThen<P> =
+        override fun thenAssertTaskOutput(block: ListAssert<String>.() -> Unit): T =
             BaseProjectThen(testCase, buildResult)
-                .thenAssertTaskOutput(block)
+                .thenAssertTaskOutput(block) as T
 
     }
 
