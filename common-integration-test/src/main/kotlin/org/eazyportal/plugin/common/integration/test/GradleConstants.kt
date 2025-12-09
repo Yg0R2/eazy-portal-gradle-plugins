@@ -10,7 +10,7 @@ object GradleTestFixtures {
     @Deprecated("")
     const val SUBMODULE_NAME = "dummy-ui" // TODO: have more then one submodule
     val SUBMODULE_NAMES = arrayOf("dummy-ui")
-    val SUBPROJECT_NAMES = arrayOf(
+    val SUBPROJECT_NAMES = sortedSetOf(
         "dummy-api",
         "dummy-application",
         "dummy-behemoth",
@@ -20,6 +20,6 @@ object GradleTestFixtures {
         "dummy-service",
         "dummy-web",
         *SUBMODULE_NAMES,
-    )
+    ).toTypedArray()
 
 }

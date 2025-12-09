@@ -1,9 +1,9 @@
 package org.eazyportal.plugin.gradle.portal.project
 
-import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
 import org.junit.jupiter.api.Test
 
-class ApplyEazyPortalProjectPluginIntegrationTest : BaseProjectTestCase() {
+class ApplyEazyPortalProjectPluginIntegrationTest : BaseGradleProjectTestCase() {
 
     @Test
     fun test_applyPlugin() {

@@ -2,10 +2,10 @@ package org.eazyportal.plugin.gradle.portal.settings
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBPROJECT_NAMES
-import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
 import org.junit.jupiter.api.Test
 
-class ProjectStructureIntegrationTest : BaseProjectTestCase() {
+class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
 
     @Test
     fun test_applyPlugin() {

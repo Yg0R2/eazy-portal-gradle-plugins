@@ -2,10 +2,10 @@ package org.eazyportal.plugin.gradle.portal.settings
 
 import org.eazyportal.plugin.common.ResourceUtils.copyIntoFromResources
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBPROJECT_NAMES
-import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
 import org.junit.jupiter.api.Test
 
-class EazyPortalProjectStructureIntegrationTest : BaseProjectTestCase() {
+class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
 
     // TODO: Configuration with name 'testImplementation' not found.
     @Test

@@ -2,11 +2,12 @@ package org.eazyportal.plugin.common.integration.test.testcase
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.integration.test.testcase.builder.GradleProjectTestCaseBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-open class BaseProjectTestCase {
+abstract class BaseGradleProjectTestCase : TestCase<BaseGradleProjectTestCase> {
 
     protected lateinit var workingDir: File
 
@@ -19,15 +20,15 @@ open class BaseProjectTestCase {
         workingDir = tempDir
     }
 
-    open fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
+    final override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
         GradleProjectBuilder(projectDir)
             .apply { gradleProjectBuilderBlock() }
             .build()
     }
 
-    protected open fun givenTestCase(
-        initProjectBlock: GradleProjectBuilder.() -> Unit = {},
-    ): BaseProjectGiven<BaseProjectTestCase, BaseProjectWhen<BaseProjectTestCase>> =
-        BaseProjectGiven(this, initProjectBlock)
+    override fun givenTestCase(
+        initProjectBlock: GradleProjectBuilder.() -> Unit,
+    ): GradleProjectTestCaseBuilder.BaseProjectGiven<BaseGradleProjectTestCase> =
+        GradleProjectTestCaseBuilder.BaseProjectGiven(this, initProjectBlock)
 
 }

@@ -61,7 +61,16 @@ class Qwe {
 }
 
 class Xyz {
-    interface BaseTestCase
+    interface BaseTestCase<out P : BaseTestCase<P>> {
+        fun giveTestCase(): Given<P, *>
+    }
+
+    class BaseProjectTestCase : BaseTestCase<BaseProjectTestCase> {
+
+        override fun giveTestCase(): BaseGiven<BaseProjectTestCase> =
+            BaseGiven()
+
+    }
 
     abstract class Given<out P : Any, SELF : Given<P, SELF>> {
         abstract fun givenSomething(): When<P, *>
@@ -76,37 +85,42 @@ class Xyz {
     }
 
 
-    open class BaseGiven<P : BaseTestCase> : Given<P, BaseGiven<P>>() {
+    open class BaseGiven<P : BaseTestCase<P>> : Given<P, BaseGiven<P>>() {
         override fun givenSomething(): BaseWhen<P> =
             BaseWhen()
     }
 
-    open class BaseWhen<P : BaseTestCase> : When<P, BaseWhen<P>>() {
+    open class BaseWhen<P : BaseTestCase<P>> : When<P, BaseWhen<P>>() {
         override fun thenDoSomething(): BaseThen<P> =
             BaseThen()
     }
 
-    open class BaseThen<P: BaseTestCase> : Then<P>() {
+    open class BaseThen<P: BaseTestCase<P>> : Then<P>() {
         override fun thenValidate(): BaseThen<P> =
             also { println("[HERE] ${it::class.simpleName}") }
     }
 
 
-    interface ScmBaseTestCase : BaseTestCase
+    interface ScmBaseTestCase<P : ScmBaseTestCase<P>> : BaseTestCase<P> {
+        override fun giveTestCase(): ScmBaseGiven<P>
+    }
 
-    class ScmBaseGiven<P : ScmBaseTestCase> : BaseGiven<P>() {
-        @Suppress("UNCHECKED_CAST")
+    class ScmProjectTestCase : ScmBaseTestCase<ScmProjectTestCase> {
+        override fun giveTestCase(): ScmBaseGiven<ScmProjectTestCase> =
+            ScmBaseGiven()
+    }
+
+    class ScmBaseGiven<P : ScmBaseTestCase<P>> : BaseGiven<P>() {
         override fun givenSomething(): ScmBaseWhen<P> =
             ScmBaseWhen()
     }
 
-    class ScmBaseWhen<P: ScmBaseTestCase> : BaseWhen<P>() {
-        @Suppress("UNCHECKED_CAST")
+    class ScmBaseWhen<P: ScmBaseTestCase<P>> : BaseWhen<P>() {
         override fun thenDoSomething(): ScmBaseThen<P> =
             ScmBaseThen()
     }
 
-    class ScmBaseThen<P: ScmBaseTestCase> : BaseThen<P>()
+    class ScmBaseThen<P: ScmBaseTestCase<P>> : BaseThen<P>()
 
 }
 
@@ -123,13 +137,13 @@ fun main() {
 
     println("[HERE]")
 //    val baseGiven: Xyz.BaseGiven<Xyz.BaseTestCase, *> = Xyz.BaseGiven()
-    val baseGiven = Xyz.BaseGiven<Xyz.BaseTestCase>()
+    val baseGiven = Xyz.BaseProjectTestCase().giveTestCase()
     val baseWhen = baseGiven.givenSomething()
     val baseThen = baseWhen.thenDoSomething()
     baseThen.thenValidate()
 
     println("[HERE]")
-    val scmBaseGiven= Xyz.ScmBaseGiven<Xyz.ScmBaseTestCase>()
+    val scmBaseGiven= Xyz.ScmProjectTestCase().giveTestCase()
     val scmBaseWhen = scmBaseGiven.givenSomething()
     val scmBaseThen = scmBaseWhen.thenDoSomething()
     scmBaseThen.thenValidate()

@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release
 
-import org.eazyportal.plugin.common.integration.test.testcase.BaseProjectTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
@@ -10,7 +10,7 @@ import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SN
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.UPDATE_SCM_TASK_NAME
 import org.junit.jupiter.api.Test
 
-class ApplyEazyReleasePluginIntegrationTest : BaseProjectTestCase() {
+class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
 
     @Test
     fun `apply plugin`() {
