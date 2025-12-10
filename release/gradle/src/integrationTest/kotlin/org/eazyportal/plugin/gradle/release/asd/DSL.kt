@@ -1,107 +1,113 @@
 package org.eazyportal.plugin.gradle.release.asd
 
-object DSL {
+import org.junit.jupiter.api.Nested
 
-    // -------------------------------------------------------------
-    // Base Test Case (shared by all test-case types)
-    // -------------------------------------------------------------
-    interface BaseTestCase {
-        fun runTest(block: TestScenarioDSL.() -> Unit)
+
+// -------------------------------------------------------------
+// Base classes
+// -------------------------------------------------------------
+open class GivenDSL {
+    fun given() {
+        println("Given: given")
     }
+}
 
-    // -------------------------------------------------------------
-    // Main DSL containers
-    // -------------------------------------------------------------
-    class TestScenarioDSL(
-        private val thenFactory: () -> BaseThenDSL
-    ) {
-
-        fun given(block: GivenDSL.() -> Unit) {
-            GivenDSL().block()
-        }
-
-        fun whenDoing(block: WhenDSL.() -> Unit) {
-            val whenDsl = WhenDSL(thenFactory)
-            whenDsl.block()
-        }
-
-        fun then(block: BaseThenDSL.() -> Unit) {
-            thenFactory().block()
-        }
+open class WhenDSL {
+    fun doSomething() {
+        println("When: doSomething")
     }
+}
 
-    // -------------------------------------------------------------
-    // G I V E N
-    // -------------------------------------------------------------
-    class GivenDSL {
-        fun something() = println("Given: something")
+open class ThenDSL {
+    fun validate() {
+        println("Then: validate")
     }
+}
 
-    // -------------------------------------------------------------
-    // W H E N
-    // -------------------------------------------------------------
-    class WhenDSL(
-        private val thenFactory: () -> BaseThenDSL
-    ) {
-        fun doSomething() {
-            println("When: doing something")
-        }
+class BaseTestCase : TestCase<GivenDSL, WhenDSL, ThenDSL> {
 
-        fun doSomethingElse(block: () -> Unit) {
-            block()
-            println("When: did something else")
-        }
-
-        fun then(block: BaseThenDSL.() -> Unit) {
-            thenFactory().block()
-        }
-    }
-
-    // -------------------------------------------------------------
-    // T H E N  (base)
-    // -------------------------------------------------------------
-    open class BaseThenDSL {
-        open fun validate() {
-            println("Then: validate")
-        }
-    }
-
-    // -------------------------------------------------------------
-    // SCM-Specific extensions
-    // -------------------------------------------------------------
-    class ScmThenDSL : BaseThenDSL() {
-
-        override fun validate() {
-            println("SCM validation")
-        }
-
-        fun asd() {
-            println("[SCM] asd")
-        }
-    }
-
-    class ScmTestCase : BaseTestCase {
-        override fun runTest(block: TestScenarioDSL.() -> Unit) {
-            TestScenarioDSL(
-                thenFactory = { ScmThenDSL() }).block()
-        }
+    override fun runTest(block: TestScenarioDSL<GivenDSL, WhenDSL, ThenDSL>.() -> Unit) {
+        TestScenarioDSL(
+            { GivenDSL() },
+            { WhenDSL() },
+            { ThenDSL() },
+        ).block()
     }
 
 }
 
+// -------------------------------------------------------------
+// SCM classes
+// -------------------------------------------------------------
+open class ScmGivenDSL : GivenDSL()
+
+open class ScmWhenDSL : WhenDSL() {
+    fun doSomethingAnd(block: () -> Unit) {
+        block()
+        println("When: doSomethingAnd")
+    }
+}
+
+open class ScmThenDSL : ThenDSL() {
+    fun validateAnd(block: () -> Unit) {
+        block()
+        println("Then: validateAnd")
+    }
+}
+
+class ScmTestCase : TestCase<ScmGivenDSL, ScmWhenDSL, ScmThenDSL> {
+    override fun runTest(block: TestScenarioDSL<ScmGivenDSL, ScmWhenDSL, ScmThenDSL>.() -> Unit) {
+        TestScenarioDSL(
+            { ScmGivenDSL() },
+            { ScmWhenDSL() },
+            { ScmThenDSL() }
+        ).block()
+    }
+}
+
+// -------------------------------------------------------------
+// Test case and scenario
+// -------------------------------------------------------------
+interface TestCase<G : GivenDSL, W : WhenDSL, T : ThenDSL> {
+    fun runTest(block: TestScenarioDSL<G, W, T>.() -> Unit)
+}
+
+class TestScenarioDSL<G : GivenDSL, W : WhenDSL, T : ThenDSL>(
+    private val givenFactory: () -> G = { GivenDSL() as G },
+    private val whenFactory: () -> W = { WhenDSL() as W },
+    private val thenFactory: () -> T = { ThenDSL() as T },
+) {
+
+    fun given(block: G.() -> Unit) {
+        givenFactory().block()
+    }
+
+    fun whenDoing(block: W.() -> Unit) {
+        whenFactory().block()
+    }
+
+    fun then(block: T.() -> Unit) {
+        thenFactory().block()
+    }
+
+}
 
 fun main() {
-    DSL.ScmTestCase().runTest {
+    ScmTestCase().runTest {
         given {
-            println("setup SCM")
+            given()
         }
         whenDoing {
             doSomething()
-            doSomethingElse { println("additional SCM behavior") }
+            doSomethingAnd {
+                println("When: doSomethingAnd #2")
+            }
         }
         then {
             validate()
-            asd()
+            validateAnd {
+                println("Then: validateAnd #2")
+            }
         }
     }
 }
