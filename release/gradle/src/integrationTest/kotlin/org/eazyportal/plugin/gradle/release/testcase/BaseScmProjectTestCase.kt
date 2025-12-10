@@ -4,7 +4,7 @@ import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.common.integration.test.testcase.TestCase
+import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.release.core.TestScmActions
@@ -22,7 +22,7 @@ import kotlin.io.path.absolutePathString
 abstract class BaseScmProjectTestCase(
     open val scmActions: TestScmActions<File>,
     open val scmConfig: ScmConfig,
-) : TestCase<BaseScmProjectTestCase> {
+) : OldTestCase<BaseScmProjectTestCase> {
 
     protected val projectActionsMap: MutableMap<String, ProjectActions<File>> = mutableMapOf()
 

@@ -3,13 +3,13 @@ package org.eazyportal.plugin.common.integration.test.testcase.builder
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.common.integration.test.testcase.TestCase
+import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
 object TestCaseBuilder {
 
-    abstract class Given<out P : TestCase<*>, out W: When<P, Then<P, *>, *>, SELF : Given<P, W, SELF>>(
+    abstract class Given<out P : OldTestCase<*>, out W: When<P, Then<P, *>, *>, SELF : Given<P, W, SELF>>(
         private val testCase: P,
         private val initProjectBlock: GradleProjectBuilder.() -> Unit,
     ) {

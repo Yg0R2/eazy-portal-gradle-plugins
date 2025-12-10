@@ -13,11 +13,15 @@ import org.junit.jupiter.api.Test
 class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
 
     @Test
-    fun `apply plugin`() {
+    fun `apply plugin`() = runTestCase {
         givenTestCase {
             withEazyPortalReleasePlugin()
-        }.whenGradleTaskSucceeds("tasks")
-            .thenAssertTaskOutput {
+        }
+        whenExecute {
+            taskSucceeds("tasks")
+        }
+        thenValidate {
+            taskOutput {
                 contains(
                     "Eazy-release tasks",
                     FINALIZE_RELEASE_VERSION_TASK_NAME,
@@ -29,22 +33,28 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
                     UPDATE_SCM_TASK_NAME,
                 )
             }
+        }
     }
 
     @Test
-    fun `apply plugin on subproject should fail`() {
+    fun `apply plugin on subproject should fail`() = runTestCase {
         givenTestCase {
             withSubproject("subproject") {
                 withEazyPortalReleasePlugin()
             }
-        }.whenGradleTaskFails("tasks")
-            .thenAssertTaskOutput {
+        }
+        whenExecute {
+            taskFails("tasks")
+        }
+        thenValidate {
+            taskOutput {
                 contains(
                     "An exception occurred applying plugin request [id: 'org.eazyportal.plugin.gradle.release-gradle']",
                     "> Failed to apply plugin 'org.eazyportal.plugin.gradle.release-gradle'.",
                     "   > Plugin can be applied only to the root project.",
                 )
             }
+        }
     }
 
 }

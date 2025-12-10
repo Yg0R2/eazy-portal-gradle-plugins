@@ -9,11 +9,27 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
 
     // TODO: Configuration with name 'testImplementation' not found.
     @Test
-    fun test_validateProjectStructure() {
+    fun test_validateProjectStructure() = runTestCase {
         givenTestCase {
-//            withProjectPlugins("java")
             withEazyPortalSettingsPlugin()
-            withSubprojectNames(*SUBPROJECT_NAMES)
+
+            SUBPROJECT_NAMES.forEach {
+                withSubproject(it) {
+                    // TODO: java plugin should be applied to all Gradle subproject
+                    withProjectPlugins("java")
+                    withExtraProjectConfig(
+                        """
+                        dependencies {
+                            testImplementation(platform("org.junit:junit-bom:+"))
+                    
+                            testImplementation("org.junit.jupiter:junit-jupiter")
+                            testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+                        }
+                        """.trimIndent()
+                    )
+                }
+            }
+
             withExtraSettingsConfig(
                 """
                 eazyPortal {
@@ -21,34 +37,30 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
                 }
                 """.trimIndent()
             )
-
-            withExtraProjectConfig(
-                """
-                allprojects {
-                    dependencies {
-                        testImplementation(platform("org.junit:junit-bom:+"))
-                
-                        testImplementation("org.junit.jupiter:junit-jupiter")
-                        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-                    }
-                }
-                """.trimIndent()
-            )
-        }.givenConfiguration {
+        }
+        andGivenSetUp {
             SUBPROJECT_NAMES.forEach {
                 projectDir.copyIntoFromResources(
                     this@EazyPortalProjectStructureIntegrationTest::class.java.simpleName,
                     "$it/",
                 )
             }
-        }.whenGradleTaskSucceeds("build")
-            .thenAssertTaskOutput {
-                contains(
-                    *listOf("", *SUBPROJECT_NAMES.map { ":$it" }.toTypedArray())
+        }
+        whenExecute {
+            taskSucceeds("build")
+        }
+        thenValidate {
+            taskOutput {
+                containsAll(
+                    // TODO: fix project setup:
+                    //  - "> Task :test SKIPPED"
+                    //  - "> Task :dummy-common:test NO-SOURCE"
+                    //  - "> Task :dummy-ui:test NO-SOURCE"
+                    listOf("", *SUBPROJECT_NAMES.map { ":$it" }.toTypedArray())
                         .map { "> Task $it:test" }
-                        .toTypedArray()
                 )
             }
+        }
     }
 
 }

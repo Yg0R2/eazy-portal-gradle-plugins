@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test
 class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
 
     @Test
-    fun test_applyPlugin() {
+    fun test_applyPlugin() = runTestCase {
         givenTestCase {
             withEazyPortalSettingsPlugin()
-            withSubprojectNames(*SUBPROJECT_NAMES)
+            withSubprojects(*SUBPROJECT_NAMES)
             withExtraSettingsConfig(
                 """
                 eazyPortal {
@@ -19,8 +19,12 @@ class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
                 }
                 """.trimIndent()
             )
-        }.whenGradleTaskSucceeds("projects")
-            .thenAssertTaskOutput {
+        }
+        whenExecute {
+            taskSucceeds("projects")
+        }
+        thenValidate {
+            taskOutput {
                 val expectedSubprojects = SUBPROJECT_NAMES.withIndex()
                     .map { (index, subprojectName) ->
                         if (index < SUBPROJECT_NAMES.size - 1) {
@@ -35,6 +39,7 @@ class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
                     *expectedSubprojects,
                 )
             }
+        }
     }
 
 }
