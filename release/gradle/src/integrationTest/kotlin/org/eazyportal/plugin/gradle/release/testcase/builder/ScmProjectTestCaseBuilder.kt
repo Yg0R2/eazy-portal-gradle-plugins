@@ -5,13 +5,13 @@ import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.integration.test.testcase.builder.TestCaseBuilder
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder.ScmAssertion
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.Then
+import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.BaseScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
-import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.version.model.Version
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
@@ -59,7 +59,21 @@ object ScmProjectTestCaseBuilder {
         buildResult,
     ) {
 
-        fun thenScmAssert(block: ScmAssertion.() -> Unit): ScmProjectThen<P> =
+        fun thenAssertProjectVersion(
+            expectedVersion: Version,
+        ): ScmProjectThen<P> =
+            apply {
+                assertThat(testCase.getProjectVersion(testCase.projectFile))
+                    .isEqualTo(expectedVersion)
+
+                // TODO: WTF?
+                if (testCase is BaseMultiModuleScmProjectTestCase) {
+                    assertThat(testCase.getProjectVersion(testCase.submoduleProjectFile))
+                        .isEqualTo(expectedVersion)
+                }
+            }
+
+        fun thenAssertScm(block: ScmAssertion.() -> Unit): ScmProjectThen<P> =
             apply {
                 block(ScmAssertion(testCase.scmActions, testCase.scmConfig))
             }

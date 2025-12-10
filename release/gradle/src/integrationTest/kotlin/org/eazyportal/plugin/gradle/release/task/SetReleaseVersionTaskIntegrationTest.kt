@@ -1,9 +1,11 @@
 package org.eazyportal.plugin.gradle.release.task
 
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.testcase.*
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
+import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.scm.ScmConstants
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
@@ -40,14 +42,13 @@ class SetReleaseVersionTaskIntegrationTest {
                         "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
                         "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
                     )
-                }.thenScmAssert {
+                }.thenAssertScm {
                     statusCleanIn(projectFile, testBranch)
 
                     commitsIn(projectFile) {
                         containsExactly(INITIAL_COMMIT_MESSAGE)
                     }
-                }
-//                .thenAssertProjectVersion(SNAPSHOT_001)
+                }.thenAssertProjectVersion(SNAPSHOT_001)
 //            thenAssertScm {
 //                }.thenAssertScmIfMultiModule {
 //                    it.statusCleanIn(projectFile, testBranch)
@@ -83,15 +84,42 @@ class SetReleaseVersionTaskIntegrationTest {
 //
 //
 //    }
-//
-//    @Nested
-//    inner class SetReleaseVersionTaskMultiModuleGitFlowTestCase :
-//        SetReleaseVersionTaskTestCase,
-//        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
-//
-//
-//    }
-//
+
+    @Nested
+    inner class SetReleaseVersionTaskMultiModuleGitFlowTestCase :
+        SetReleaseVersionTaskTestCase,
+        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+
+        override fun `test 'run' should fail when there are no acceptable commits`(testBranch: String) {
+            givenTestCase()
+                .givenConfiguration {
+                    scmActions.checkout(projectFile, testBranch)
+                }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
+                .thenAssertTaskOutput {
+                    contains(
+                        "Ignoring missing tag from release version calculation.",
+                        "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                    )
+                }.thenAssertScm {
+                    statusCleanIn(projectFile, testBranch)
+                    statusCleanIn(submoduleProjectFile, testBranch)
+
+                    commitsIn(projectFile) {
+                        containsExactly(
+                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        )
+                    }
+
+                    commitsIn(submoduleProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                    }
+                }.thenAssertProjectVersion(SNAPSHOT_001)
+        }
+
+    }
+
 //    @Nested
 //    inner class SetReleaseVersionTaskMultiModuleTrunkFlowTestCase :
 //        SetReleaseVersionTaskTestCase,

@@ -43,6 +43,7 @@ abstract class BaseScmProjectTestCase(
         workingDir = tempDir
     }
 
+    // TODO: move this to each impl
     override fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit,
     ): ScmProjectTestCaseBuilder.ScmProjectGiven<BaseScmProjectTestCase, *> =
