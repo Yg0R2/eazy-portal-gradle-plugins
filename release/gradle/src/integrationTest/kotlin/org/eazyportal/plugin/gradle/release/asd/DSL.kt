@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.asd
 
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 
 
 // -------------------------------------------------------------
@@ -24,7 +25,7 @@ open class ThenDSL {
     }
 }
 
-class BaseTestCase : TestCase<GivenDSL, WhenDSL, ThenDSL> {
+abstract class BaseTestCase : TestCase<GivenDSL, WhenDSL, ThenDSL> {
 
     override fun runTest(block: TestScenarioDSL<GivenDSL, WhenDSL, ThenDSL>.() -> Unit) {
         TestScenarioDSL(
@@ -55,7 +56,7 @@ open class ScmThenDSL : ThenDSL() {
     }
 }
 
-class ScmTestCase : TestCase<ScmGivenDSL, ScmWhenDSL, ScmThenDSL> {
+abstract class ScmTestCase : TestCase<ScmGivenDSL, ScmWhenDSL, ScmThenDSL> {
     override fun runTest(block: TestScenarioDSL<ScmGivenDSL, ScmWhenDSL, ScmThenDSL>.() -> Unit) {
         TestScenarioDSL(
             { ScmGivenDSL() },
@@ -93,7 +94,7 @@ class TestScenarioDSL<G : GivenDSL, W : WhenDSL, T : ThenDSL>(
 }
 
 fun main() {
-    ScmTestCase().runTest {
+    object : ScmTestCase() {}.runTest {
         given {
             given()
         }
@@ -110,4 +111,47 @@ fun main() {
             }
         }
     }
+}
+
+
+class MyTest {
+
+    @Nested
+    inner class BaseTests : BaseTestCase() {
+        @Test
+        fun test() = runTest {
+            given {
+                given()
+            }
+            whenDoing {
+                doSomething()
+            }
+            then {
+                validate()
+            }
+        }
+    }
+
+    @Nested
+    inner class ScmTests : ScmTestCase() {
+        @Test
+        fun test() = runTest {
+            given {
+                given()
+            }
+            whenDoing {
+                doSomething()
+                doSomethingAnd {
+                    println("When: doSomethingAnd #2")
+                }
+            }
+            then {
+                validate()
+                validateAnd {
+                    println("Then: validateAnd #2")
+                }
+            }
+        }
+    }
+
 }
