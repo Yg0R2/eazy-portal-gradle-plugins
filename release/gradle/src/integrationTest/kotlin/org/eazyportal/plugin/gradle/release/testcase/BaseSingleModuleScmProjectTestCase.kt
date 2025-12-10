@@ -10,7 +10,7 @@ import kotlin.io.path.absolutePathString
 abstract class BaseSingleModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-) : BaseScmProjectTestCase(scmActions, scmConfig) {
+) : OldBaseScmProjectTestCase(scmActions, scmConfig) {
 
     override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {

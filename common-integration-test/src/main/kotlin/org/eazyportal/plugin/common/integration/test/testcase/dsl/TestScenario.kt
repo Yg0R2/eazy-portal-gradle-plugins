@@ -1,10 +1,7 @@
 package org.eazyportal.plugin.common.integration.test.testcase.dsl
 
-import org.eazyportal.plugin.common.integration.test.testcase.TestCase
-
 @Suppress("UNCHECKED_CAST")
-class TestScenario<G : Given, W : When, T : Then, C: TestCase<G, W, T, *>>(
-    private val testCase: C,
+class TestScenario<G : Given, W : When, T : Then>(
     private val givenFactory: () -> G,
     private val whenFactory: () -> W,
     private val thenFactory: (ScenarioContext) -> T,
@@ -18,8 +15,8 @@ class TestScenario<G : Given, W : When, T : Then, C: TestCase<G, W, T, *>>(
             .build()
     }
 
-    fun andGivenSetUp(block: C.() -> Unit) {
-        block(testCase)
+    fun andGivenSetUp(block: () -> Unit) {
+        block()
     }
 
     fun <T> whenExecute(block: W.(ScenarioContext) -> T) {

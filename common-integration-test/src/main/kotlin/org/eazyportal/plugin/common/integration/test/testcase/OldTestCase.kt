@@ -7,9 +7,9 @@ import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.Then
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.When
 
-interface TestCase<G : Given, W : When, T : Then, SELF: TestCase<G, W, T, SELF>> {
+interface TestCase<G : Given, W : When, T : Then> {
 
-    fun runTestCase(block: TestScenario<G, W, T, SELF>.() -> Unit)
+    fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
 
 }
 

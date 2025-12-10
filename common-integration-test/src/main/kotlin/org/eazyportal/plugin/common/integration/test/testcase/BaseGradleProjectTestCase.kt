@@ -10,7 +10,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 abstract class BaseGradleProjectTestCase :
-    TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen, BaseGradleProjectTestCase> {
+    TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
 
     protected lateinit var projectDir: File
 
@@ -24,10 +24,9 @@ abstract class BaseGradleProjectTestCase :
     }
 
     override fun runTestCase(
-        block: TestScenario<GradleProjectGiven, GradleProjectWhen, GradleProjectThen, BaseGradleProjectTestCase>.() -> Unit,
+        block: TestScenario<GradleProjectGiven, GradleProjectWhen, GradleProjectThen>.() -> Unit,
     ) {
         TestScenario(
-            this,
             { GradleProjectGiven(projectDir) },
             { GradleProjectWhen(projectDir) },
             { GradleProjectThen(it) },

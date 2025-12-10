@@ -5,6 +5,13 @@ import java.io.File
 
 class ScmProjectGiven(
     private val projectDir: File,
+    private val submoduleDirs: List<File>,
 ) : GradleProjectGiven(projectDir) {
+
+
+    override fun build() {
+        // TODO: initialize project and submodule
+        super.build()
+    }
 
 }

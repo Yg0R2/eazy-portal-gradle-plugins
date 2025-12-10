@@ -5,9 +5,8 @@ import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.integration.test.testcase.builder.TestCaseBuilder
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder.Then
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.OldBaseScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
@@ -18,7 +17,7 @@ import java.io.File
 
 object ScmProjectTestCaseBuilder {
 
-    class ScmProjectGiven<P : BaseScmProjectTestCase, W : ScmProjectWhen<P, *>>(
+    class ScmProjectGiven<P : OldBaseScmProjectTestCase, W : ScmProjectWhen<P, *>>(
         private val testCase: P,
         private val initProjectBlock: GradleProjectBuilder.() -> Unit,
     ) : TestCaseBuilder.Given<P, W, ScmProjectGiven<P, W>>(
@@ -37,7 +36,7 @@ object ScmProjectTestCaseBuilder {
 
     }
 
-    class ScmProjectWhen<P : BaseScmProjectTestCase, T : ScmProjectThen<P>>(
+    class ScmProjectWhen<P : OldBaseScmProjectTestCase, T : ScmProjectThen<P>>(
         private val testCase: P,
         private val buildResult: BuildResult,
     ) : TestCaseBuilder.When<P, T, ScmProjectWhen<P, T>>(
@@ -51,7 +50,7 @@ object ScmProjectTestCaseBuilder {
 
     }
 
-    class ScmProjectThen<P : BaseScmProjectTestCase>(
+    class ScmProjectThen<P : OldBaseScmProjectTestCase>(
         private val testCase: P,
         private val buildResult: BuildResult,
     ) : TestCaseBuilder.Then<P, ScmProjectThen<P>>(
