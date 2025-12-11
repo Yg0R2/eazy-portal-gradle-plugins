@@ -48,9 +48,10 @@ object DSL2 {
         private val testCase: SimpleProjectTestCase,
     ) : Given {
         fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit) {
-            GradleProjectBuilder(testCase.workingDir)
+            testCase.initializeGradleProjectBuilder()
                 .apply { initProjectBlock() }
                 .build()
+
             println("[HERE] [withGradleProject] init gradle")
         }
     }
@@ -59,7 +60,7 @@ object DSL2 {
 
     open class SimpleProjectTestCase : TestCase<SimpleProjectGiven, SimpleProjectWhen, SimpleProjectThen> {
 
-        lateinit var workingDir: File
+        protected lateinit var workingDir: File
 
         @BeforeEach
         override fun initializeProject(@TempDir tempDir: File) {
@@ -67,6 +68,9 @@ object DSL2 {
     
             workingDir = tempDir
         }
+
+        fun initializeGradleProjectBuilder(): GradleProjectBuilder =
+            GradleProjectBuilder(workingDir)
 
         override fun runTestCase(
             block: TestScenario<SimpleProjectGiven, SimpleProjectWhen, SimpleProjectThen>.() -> Unit
@@ -84,24 +88,46 @@ object DSL2 {
     // -------------------------------------------------------------
     // SCM implementation
     // -------------------------------------------------------------
-    class ScmProjectGiven : Given {
+    class ScmProjectGiven<P : BaseScmProjectTestCase>(
+        private val testCase: P,
+    ) : Given {
+        fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit) {
+            testCase.initializeGradleProjectBuilder()
+                .apply { initProjectBlock() }
+                .build()
+            println("[HERE] [withGradleProject] init gradle")
+        }
     }
     class ScmProjectWhen : When
     class ScmProjectThen : Then
 
-    abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
-        override fun runTestCase(block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit) {
+    data class ProjectDir(
+        val local: File,
+        val remote : File,
+    )
+
+    abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven<BaseScmProjectTestCase>, ScmProjectWhen, ScmProjectThen> {
+
+        protected lateinit var workingDir: File
+        protected lateinit var projectDir: ProjectDir
+
+        abstract fun initializeGradleProjectBuilder(): GradleProjectBuilder
+
+        override fun runTestCase(block: TestScenario<ScmProjectGiven<BaseScmProjectTestCase>, ScmProjectWhen, ScmProjectThen>.() -> Unit) {
             println("[HERE] [runTestCase] ${this::class.java.simpleName}")
 
             TestScenario(
-                givenFactory = { ScmProjectGiven() },
+                givenFactory = { ScmProjectGiven(this) },
                 whenFactory = { ScmProjectWhen() },
                 thenFactory = { ScmProjectThen() },
             ).block()
         }
     }
 
-    abstract class BaseSingleModuleScmProjectTestCase : BaseScmProjectTestCase()
+    abstract class BaseSingleModuleScmProjectTestCase : BaseScmProjectTestCase() {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder =
+            GradleProjectBuilder(projectDir.remote)
+    }
 
     open class BaseSingleModuleGitFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
         @BeforeEach
@@ -124,7 +150,14 @@ object DSL2 {
         }
     }
 
-    abstract class BaseMultiModuleScmProjectTestCase : BaseScmProjectTestCase()
+    abstract class BaseMultiModuleScmProjectTestCase : BaseScmProjectTestCase() {
+
+        protected lateinit var submoduleProjectDirs: List<ProjectDir>
+
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
+        }
+    }
 
     open class BaseMultiModuleGitFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
         @BeforeEach
@@ -188,7 +221,14 @@ class DSL2Test {
         @Test
         override fun `test execution`() = runTestCase {
             givenScenario {
+                withGradleProject {
+
+                }
                 println("[HERE] [test - given] ${this::class.java.simpleName}")
+
+                withScenarioConfiguration {
+                    println("[HERE] [test - withConfiguration] ${this::class.java.simpleName}")
+                }
             }
             whenExecute {
                 println("[HERE] [test - when] ${this::class.java.simpleName}")
