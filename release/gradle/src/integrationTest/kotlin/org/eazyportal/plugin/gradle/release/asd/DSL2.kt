@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release.asd
 
+import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -8,7 +9,11 @@ import java.io.File
 
 object DSL2 {
 
-    interface Given
+    interface Given {
+        fun withScenarioConfiguration(block: () -> Unit) {
+            block()
+        }
+    }
     interface When
     interface Then
 
@@ -31,7 +36,7 @@ object DSL2 {
     }
 
     interface TestCase<G : Given, W : When, T : Then> {
-        fun initializeProject(workingDir: File)
+        fun initializeProject(tempDir: File)
 
         fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
     }
@@ -39,14 +44,28 @@ object DSL2 {
     // -------------------------------------------------------------
     // Basic implementation
     // -------------------------------------------------------------
-    class SimpleProjectGiven : Given
+    class SimpleProjectGiven(
+        private val testCase: SimpleProjectTestCase,
+    ) : Given {
+        fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit) {
+            GradleProjectBuilder(testCase.workingDir)
+                .apply { initProjectBlock() }
+                .build()
+            println("[HERE] [withGradleProject] init gradle")
+        }
+    }
     class SimpleProjectWhen : When
     class SimpleProjectThen : Then
 
     open class SimpleProjectTestCase : TestCase<SimpleProjectGiven, SimpleProjectWhen, SimpleProjectThen> {
+
+        lateinit var workingDir: File
+
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
+    
+            workingDir = tempDir
         }
 
         override fun runTestCase(
@@ -55,7 +74,7 @@ object DSL2 {
             println("[HERE] [runTestCase] ${this::class.java.simpleName}")
 
             TestScenario(
-                givenFactory = { SimpleProjectGiven() },
+                givenFactory = { SimpleProjectGiven(this) },
                 whenFactory = { SimpleProjectWhen() },
                 thenFactory = { SimpleProjectThen() },
             ).block()
@@ -65,7 +84,8 @@ object DSL2 {
     // -------------------------------------------------------------
     // SCM implementation
     // -------------------------------------------------------------
-    class ScmProjectGiven : Given
+    class ScmProjectGiven : Given {
+    }
     class ScmProjectWhen : When
     class ScmProjectThen : Then
 
@@ -85,21 +105,21 @@ object DSL2 {
 
     open class BaseSingleModuleGitFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
     open class BaseSingleModuleTrunkFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
     open class BaseSingleModuleCustomizedScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
@@ -108,21 +128,21 @@ object DSL2 {
 
     open class BaseMultiModuleGitFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
     open class BaseMultiModuleTrunkFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
     open class BaseMultiModuleCustomizedScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir workingDir: File) {
+        override fun initializeProject(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
@@ -143,7 +163,14 @@ class DSL2Test {
         @Test
         override fun `test execution`() = runTestCase {
             givenScenario {
+                withGradleProject {
+
+                }
                 println("[HERE] [test - given] ${this::class.java.simpleName}")
+
+                withScenarioConfiguration {
+                    println("[HERE] [test - withConfiguration] ${this::class.java.simpleName}")
+                }
             }
             whenExecute {
                 println("[HERE] [test - when] ${this::class.java.simpleName}")
