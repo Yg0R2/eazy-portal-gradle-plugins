@@ -50,12 +50,7 @@ abstract class BaseScmProjectTestCase(
         block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
         TestScenario(
-            {
-                ScmProjectGiven(
-                    { initializeGradleProjectBuilder() },
-                    { initializeScm() },
-                )
-            },
+            { ScmProjectGiven { initializeProject() } },
             { ScmProjectWhen(projectDir) },
             {
                 ScmProjectThen(
@@ -68,10 +63,9 @@ abstract class BaseScmProjectTestCase(
         ).block()
     }
 
-    protected abstract fun initializeGradleProjectBuilder(): GradleProjectBuilder
+    protected abstract fun initializeProject()
 
-    protected abstract fun initializeScm()
-
+    // TODO: remove projectFile?
     protected abstract fun getProjectVersion(projectFile: ProjectFile<File>): Version
 
     protected abstract fun setProjectVersion(version: Version)

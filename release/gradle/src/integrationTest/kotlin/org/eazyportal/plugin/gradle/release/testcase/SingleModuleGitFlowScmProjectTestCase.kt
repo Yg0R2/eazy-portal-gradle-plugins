@@ -16,7 +16,7 @@ open class SingleModuleGitFlowScmProjectTestCase(
     ScmConfig.GIT_FLOW,
 ) {
 
-    override fun initializeGradleProjectBuilder(): GradleProjectBuilder =
+    override fun initializeProject() {
         GradleProjectBuilder(projectDir.remoteDir)
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(
@@ -27,7 +27,6 @@ open class SingleModuleGitFlowScmProjectTestCase(
                 """.trimIndent()
             )
 
-    override fun initializeScm() {
         scmActions.initializeRepository(projectDir.remoteProjectFile)
 
         // Create remote feature branch

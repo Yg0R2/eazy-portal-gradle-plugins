@@ -33,8 +33,7 @@ class SetReleaseVersionTaskIntegrationTest {
         @ParameterizedTest
         override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) = runTestCase {
             givenTestCase {
-                withGradleProject()
-                withScmSetUp {
+                withScmProject {
                     scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
             }
