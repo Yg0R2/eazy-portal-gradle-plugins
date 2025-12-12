@@ -85,6 +85,7 @@ abstract class BaseMultiModuleScmProjectTestCase(
         }.getVersion()
 
 
+    // TODO: set version for all submodule
     final override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectDir.localDir.absolutePath) {
             GradleProjectActions(FileSystemProjectFile(projectDir.localDir))
