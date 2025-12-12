@@ -8,8 +8,6 @@ import java.io.File
 
 interface ScmProjectTestCase : TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
 
-    var projectDir: ProjectDir
-
     val scmActions: TestScmActions<File>
     val scmConfig: ScmConfig
 

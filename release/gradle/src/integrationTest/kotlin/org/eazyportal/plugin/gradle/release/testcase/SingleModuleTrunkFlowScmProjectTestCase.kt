@@ -12,8 +12,8 @@ open class SingleModuleTrunkFlowScmProjectTestCase(
     ScmConfig.TRUNK_BASED_FLOW,
 ) {
 
-    override fun initializeProject() {
-        GradleProjectBuilder(projectDir.remoteProjectFile.getFile())
+    override fun initializeGradleProject(projectDir: File, projectName: String) {
+        GradleProjectBuilder(projectDir)
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(
                 """
@@ -22,10 +22,6 @@ open class SingleModuleTrunkFlowScmProjectTestCase(
                 }
                 """.trimIndent()
             ).build()
-
-        scmActions.initializeRepository(projectDir.remoteProjectFile)
-
-        scmActions.clone(projectDir.remoteProjectFile, projectDir.localProjectFile)
     }
 
 }

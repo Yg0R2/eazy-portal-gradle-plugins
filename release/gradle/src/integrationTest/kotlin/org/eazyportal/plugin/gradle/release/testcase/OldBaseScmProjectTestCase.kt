@@ -5,12 +5,11 @@ import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
-import org.eazyportal.plugin.common.integration.test.testcase.TestCase
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
-import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
@@ -27,7 +26,7 @@ import java.nio.file.Files
 import java.util.*
 import kotlin.io.path.absolutePathString
 
-abstract class BaseScmProjectTestCase : ScmProjectTestCase {
+abstract class BaseScmProjectTestCase : SingleModuleScmProjectTestCase {
 
     override lateinit var projectDir: ProjectDir
     protected lateinit var projectActionsMap: MutableMap<String, ProjectActions<out Any>>
@@ -36,20 +35,19 @@ abstract class BaseScmProjectTestCase : ScmProjectTestCase {
     override fun runTestCase(
         block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
-        val tempDir = Files.createTempDirectory("ep-").toFile()
+        val workingDir = Files.createTempDirectory("ep-").toFile()
 
         try {
             projectDir = ProjectDir(
-                localDir = tempDir.resolve(PROJECT_NAME)
-                    .also { it.mkdirs() },
-                remoteDir = tempDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
-                    .also { it.mkdirs() },
+                localDir = workingDir.resolve(PROJECT_NAME),
+                remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
+                    .also(File::mkdirs),
             )
 
             projectActionsMap = mutableMapOf()
 
             TestScenario(
-                { ScmProjectGiven { initializeProject() } },
+                { ScmProjectGiven { initializeScmProject(workingDir) } },
                 { ScmProjectWhen(projectDir) },
                 {
                     ScmProjectThen(
@@ -61,11 +59,13 @@ abstract class BaseScmProjectTestCase : ScmProjectTestCase {
                 },
             ).block()
         } finally {
-            tempDir.deleteRecursively()
+            workingDir.deleteRecursively()
         }
     }
 
-    protected abstract fun initializeProject()
+    protected abstract fun initializeScmProject(workingDir: File)
+
+    protected abstract fun initializeGradleProject(projectDir: File, projectName: String)
 
     // TODO: remove projectFile?
     protected abstract fun getProjectVersion(projectFile: ProjectFile<File>): Version

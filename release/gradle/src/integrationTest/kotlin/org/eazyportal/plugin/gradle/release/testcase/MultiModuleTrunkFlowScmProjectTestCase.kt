@@ -5,11 +5,11 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class SingleModuleGitFlowScmProjectTestCase(
+open class MultiModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectTestCase(
+) : BaseMultiModuleScmProjectTestCase(
     scmActions,
-    ScmConfig.GIT_FLOW,
+    ScmConfig.TRUNK_BASED_FLOW,
 ) {
 
     override fun initializeGradleProject(projectDir: File, projectName: String) {
@@ -19,7 +19,7 @@ open class SingleModuleGitFlowScmProjectTestCase(
             .withExtraProjectConfig(
                 """
                 eazyRelease {
-                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
                 }
                 """.trimIndent()
             ).build()

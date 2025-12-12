@@ -11,8 +11,8 @@ class GradleProjectBuilder(
     private val projectDir: File,
 ) {
 
-    var projectName: String = PROJECT_NAME
-    var projectVersion: String = "0.0.1-SNAPSHOT"
+    private var projectName: String = PROJECT_NAME
+    private var projectVersion: String = "0.0.1-SNAPSHOT"
 
     private val projectPluginIds = mutableSetOf<String>()
     private val extraProjectContent = mutableListOf<String>()
@@ -96,6 +96,11 @@ class GradleProjectBuilder(
     // settings.gradle.kts Configuration
     //------------------------------------------------------
 
+    fun withProjectName(projectName: String): GradleProjectBuilder =
+        apply {
+            this.projectName = projectName
+        }
+
     fun withExtraSettingsConfig(config: String): GradleProjectBuilder =
         apply {
             extraSettingsContent.add(config)
@@ -119,8 +124,6 @@ class GradleProjectBuilder(
             subprojects[subprojectName] = GradleProjectBuilder(
                 projectDir.resolve(subprojectName),
             ).apply {
-                projectName = subprojectName
-
                 subprojectInitBlock(this)
             }
         }
@@ -131,6 +134,16 @@ class GradleProjectBuilder(
                 withSubproject(it)
             }
         }
+
+    //------------------------------------------------------
+    // gradle.properties
+    //------------------------------------------------------
+
+    fun withProjectVersion(projectVersion: String): GradleProjectBuilder =
+        apply {
+            this.projectVersion = projectVersion
+        }
+
 
     //------------------------------------------------------
     // Helpers
