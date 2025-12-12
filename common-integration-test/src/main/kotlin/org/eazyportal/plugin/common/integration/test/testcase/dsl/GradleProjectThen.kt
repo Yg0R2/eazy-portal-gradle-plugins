@@ -5,13 +5,13 @@ import org.assertj.core.api.ListAssert
 import org.gradle.testkit.runner.BuildResult
 
 open class GradleProjectThen(
-    private val scenarioContext: ScenarioContext,
-) : Then(scenarioContext) {
+    private val executionResult: ExecutionResult,
+) : Then(executionResult) {
 
     fun taskOutput(block: ListAssert<String>.() -> Unit) {
         block(
             assertThat(
-                scenarioContext.actual<BuildResult>()
+                executionResult.actual<BuildResult>()
                     .output
                     .lines()
             )

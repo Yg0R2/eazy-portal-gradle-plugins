@@ -15,12 +15,16 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
     @Test
     fun `apply plugin`() = runTestCase {
         givenTestCase {
-            withEazyPortalReleasePlugin()
+            withGradleProject {
+                withEazyPortalReleasePlugin()
+            }
         }
+
         whenExecute {
             taskSucceeds("tasks")
         }
-        thenValidate {
+
+        thenVerify {
             taskOutput {
                 contains(
                     "Eazy-release tasks",
@@ -39,14 +43,18 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
     @Test
     fun `apply plugin on subproject should fail`() = runTestCase {
         givenTestCase {
-            withSubproject("subproject") {
-                withEazyPortalReleasePlugin()
+            withGradleProject {
+                withSubproject("subproject") {
+                    withEazyPortalReleasePlugin()
+                }
             }
         }
+
         whenExecute {
             taskFails("tasks")
         }
-        thenValidate {
+
+        thenVerify {
             taskOutput {
                 contains(
                     "An exception occurred applying plugin request [id: 'org.eazyportal.plugin.gradle.release-gradle']",

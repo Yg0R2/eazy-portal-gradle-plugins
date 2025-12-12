@@ -1,17 +1,23 @@
 package org.eazyportal.plugin.gradle.release.testcase.dsl
 
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.GradleProjectGiven
-import java.io.File
+import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.Given
+import org.eazyportal.plugin.gradle.release.testcase.BaseScmProjectTestCase
 
 class ScmProjectGiven(
-    private val projectDir: File,
-    private val submoduleDirs: List<File>,
-) : GradleProjectGiven(projectDir) {
+    private val testCase: BaseScmProjectTestCase,
+) : Given() {
 
+    fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit = {}) {
+        testCase.initializeGradleProjectBuilder()
+            .apply { initProjectBlock() }
+            .build()
+    }
 
-    override fun build() {
-        // TODO: initialize project and submodule
-        super.build()
+    fun withScmSetup(finalizeScmInitBlock: () -> Unit = {}) {
+        testCase.initializeScm()
+
+        finalizeScmInitBlock()
     }
 
 }

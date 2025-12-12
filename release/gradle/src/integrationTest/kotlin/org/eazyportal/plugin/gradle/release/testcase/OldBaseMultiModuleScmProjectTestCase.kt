@@ -9,7 +9,7 @@ import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
 import kotlin.io.path.absolutePathString
 
-abstract class BaseMultiModuleScmProjectTestCase(
+abstract class OldBaseMultiModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
 ) : OldBaseScmProjectTestCase(scmActions, scmConfig) {

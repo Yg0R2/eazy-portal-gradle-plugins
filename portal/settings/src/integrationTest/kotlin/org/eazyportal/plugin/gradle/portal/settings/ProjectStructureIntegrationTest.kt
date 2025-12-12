@@ -10,20 +10,24 @@ class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
     @Test
     fun test_applyPlugin() = runTestCase {
         givenTestCase {
-            withEazyPortalSettingsPlugin()
-            withSubprojects(*SUBPROJECT_NAMES)
-            withExtraSettingsConfig(
-                """
-                eazyPortal {
-                    applicationType = org.eazyportal.plugin.gradle.portal.common.model.ApplicationTypes.SPRING_BOOT
-                }
-                """.trimIndent()
-            )
+            withGradleProject {
+                withEazyPortalSettingsPlugin()
+                withSubprojects(*SUBPROJECT_NAMES)
+                withExtraSettingsConfig(
+                    """
+                    eazyPortal {
+                        applicationType = org.eazyportal.plugin.gradle.portal.common.model.ApplicationTypes.SPRING_BOOT
+                    }
+                    """.trimIndent()
+                )
+            }
         }
+
         whenExecute {
             taskSucceeds("projects")
         }
-        thenValidate {
+
+        thenVerify {
             taskOutput {
                 val expectedSubprojects = SUBPROJECT_NAMES.withIndex()
                     .map { (index, subprojectName) ->

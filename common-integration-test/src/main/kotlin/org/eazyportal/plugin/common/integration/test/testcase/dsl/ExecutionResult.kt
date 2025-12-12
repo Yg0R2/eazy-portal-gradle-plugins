@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.common.integration.test.testcase.dsl
 
-class ScenarioContext {
+class ExecutionResult {
 
     private var value: Any? = null
 

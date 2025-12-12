@@ -5,9 +5,9 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class SingleModuleTrunkFlowScmProjectTestCase(
+open class OldSingleModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectTestCase(
+) : OldBaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig.TRUNK_BASED_FLOW,
 ) {

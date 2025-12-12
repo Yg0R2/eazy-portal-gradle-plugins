@@ -16,7 +16,7 @@ class SetReleaseVersionTaskIntegrationTest {
 
     interface SetReleaseVersionTaskTestCase {
 
-        fun `test 'run' should fail when there are no acceptable commits`(testBranch: String)
+        fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String)
     }
 
     @Nested
@@ -31,24 +31,35 @@ class SetReleaseVersionTaskIntegrationTest {
             ]
         )
         @ParameterizedTest
-        override fun `test 'run' should fail when there are no acceptable commits`(testBranch: String) {
-            givenTestCase()
-                .givenConfiguration {
-                    scmActions.checkout(projectFile, testBranch)
-                }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
-                .thenAssertTaskOutput {
+        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) = runTestCase {
+            givenTestCase {
+                withGradleProject()
+                withScmSetup {
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+                }
+            }
+
+            whenExecute {
+                taskFails(SET_RELEASE_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                taskOutput {
                     contains(
                         "Ignoring missing tag from release version calculation.",
                         "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
                         "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
                     )
-                }.thenAssertScm {
-                    statusCleanIn(projectFile, testBranch)
+                }
 
-                    commitsIn(projectFile) {
-                        containsExactly(INITIAL_COMMIT_MESSAGE)
-                    }
-                }.thenAssertProjectVersion(SNAPSHOT_001)
+                scmClenStatusIn(projectDir.localProjectFile, testBranch)
+
+                scmCommitsIn(projectDir.localProjectFile) {
+                    containsExactly(INITIAL_COMMIT_MESSAGE)
+                }
+
+                projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
+            }
 //            thenAssertScm {
 //                }.thenAssertScmIfMultiModule {
 //                    it.statusCleanIn(projectFile, testBranch)
@@ -86,11 +97,11 @@ class SetReleaseVersionTaskIntegrationTest {
 //    }
 
     @Nested
-    inner class SetReleaseVersionTaskMultiModuleGitFlowTestCase :
+    inner class OldSetReleaseVersionTaskMultiModuleGitFlowTestCase :
         SetReleaseVersionTaskTestCase,
-        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+        OldMultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
 
-        override fun `test 'run' should fail when there are no acceptable commits`(testBranch: String) {
+        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) {
             givenTestCase()
                 .givenConfiguration {
                     scmActions.checkout(projectFile, testBranch)

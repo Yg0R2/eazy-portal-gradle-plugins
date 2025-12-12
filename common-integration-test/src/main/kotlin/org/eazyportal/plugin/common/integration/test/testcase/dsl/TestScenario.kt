@@ -4,29 +4,23 @@ package org.eazyportal.plugin.common.integration.test.testcase.dsl
 class TestScenario<G : Given, W : When, T : Then>(
     private val givenFactory: () -> G,
     private val whenFactory: () -> W,
-    private val thenFactory: (ScenarioContext) -> T,
+    private val thenFactory: (ExecutionResult) -> T,
 ) {
 
-    private val scenarioContext = ScenarioContext()
+    private val executionResult = ExecutionResult()
 
     fun givenTestCase(block: G.() -> Unit) {
-        givenFactory()
-            .apply { block() }
-            .build()
+        givenFactory().block()
     }
 
-    fun andGivenSetUp(block: () -> Unit) {
-        block()
-    }
-
-    fun <T> whenExecute(block: W.(ScenarioContext) -> T) {
+    fun whenExecute(block: W.() -> Any) {
         whenFactory()
-            .block(scenarioContext)
-            .also(scenarioContext::set)
+            .block()
+            .also(executionResult::set)
     }
 
-    fun thenValidate(block: T.() -> Unit) {
-        thenFactory(scenarioContext).block()
+    fun thenVerify(block: T.() -> Unit) {
+        thenFactory(executionResult).block()
     }
 
 }

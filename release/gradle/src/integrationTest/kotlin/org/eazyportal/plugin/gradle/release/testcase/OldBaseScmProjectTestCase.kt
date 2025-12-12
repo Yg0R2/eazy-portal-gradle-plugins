@@ -3,7 +3,6 @@ package org.eazyportal.plugin.gradle.release.testcase
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
 import org.eazyportal.plugin.common.integration.test.testcase.TestCase
@@ -13,10 +12,12 @@ import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseB
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
+import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
+import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.junit.jupiter.api.BeforeEach
@@ -25,10 +26,13 @@ import java.io.File
 import java.util.*
 import kotlin.io.path.absolutePathString
 
-abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
+abstract class BaseScmProjectTestCase(
+    private val scmActions: TestScmActions<File>,
+    private val scmConfig: ScmConfig,
+) : TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
 
-    protected lateinit var projectDir: File
-    protected lateinit var submoduleDirs: List<File>
+    protected lateinit var projectDir: ProjectDir
+    protected val projectActionsMap: MutableMap<String, ProjectActions<out Any>> = mutableMapOf()
 
     private lateinit var workingDir: File
 
@@ -36,9 +40,10 @@ abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven, ScmProjectWhen
     fun setUpWorkingDir(@TempDir tempDir: File) {
         workingDir = tempDir
 
-        projectDir = workingDir.resolve(PROJECT_NAME)
-
-        submoduleDirs = SUBMODULE_NAMES.map { projectDir.resolve(it) }
+        projectDir = ProjectDir(
+            localDir = workingDir.resolve(PROJECT_NAME),
+            remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -46,11 +51,17 @@ abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven, ScmProjectWhen
         block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
         TestScenario(
-            { ScmProjectGiven(projectDir, submoduleDirs) },
-            { ScmProjectWhen(projectDir, submoduleDirs) },
-            { ScmProjectThen(it) },
+            { ScmProjectGiven(this) },
+            { ScmProjectWhen(projectDir) },
+            { ScmProjectThen(it, scmActions, scmConfig) },
         ).block()
     }
+
+    abstract fun initializeGradleProjectBuilder(): GradleProjectBuilder
+
+    abstract fun initializeScm()
+
+    protected abstract fun setProjectVersion(version: Version)
 
 }
 

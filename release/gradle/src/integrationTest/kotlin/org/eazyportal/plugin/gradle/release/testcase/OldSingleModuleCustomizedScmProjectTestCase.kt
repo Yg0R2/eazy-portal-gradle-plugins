@@ -5,9 +5,9 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class SingleModuleCustomizedScmProjectTestCase(
+open class OldSingleModuleCustomizedScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectTestCase(
+) : OldBaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig(
         featureBranch = "dummy-feature-branch",

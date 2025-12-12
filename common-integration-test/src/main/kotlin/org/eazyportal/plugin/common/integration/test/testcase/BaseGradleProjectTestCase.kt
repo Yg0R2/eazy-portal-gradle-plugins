@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.common.integration.test.testcase
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.GradleProjectGiven
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.GradleProjectThen
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.GradleProjectWhen
@@ -12,23 +12,22 @@ import java.io.File
 abstract class BaseGradleProjectTestCase :
     TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
 
-    protected lateinit var projectDir: File
-
-    private lateinit var workingDir: File
+    protected lateinit var workingDir: File
 
     @BeforeEach
     fun setUpWorkingDir(@TempDir tempDir: File) {
         workingDir = tempDir
-
-        projectDir = workingDir.resolve(PROJECT_NAME)
     }
+
+    fun initializeGradleProjectBuilder(): GradleProjectBuilder =
+        GradleProjectBuilder(workingDir)
 
     override fun runTestCase(
         block: TestScenario<GradleProjectGiven, GradleProjectWhen, GradleProjectThen>.() -> Unit,
     ) {
         TestScenario(
-            { GradleProjectGiven(projectDir) },
-            { GradleProjectWhen(projectDir) },
+            { GradleProjectGiven(this) },
+            { GradleProjectWhen(workingDir) },
             { GradleProjectThen(it) },
         ).block()
     }

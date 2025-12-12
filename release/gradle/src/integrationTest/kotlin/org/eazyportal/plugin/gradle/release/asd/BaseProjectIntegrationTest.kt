@@ -76,6 +76,7 @@ abstract class BaseProjectTestCase(
                     "dummy-feature-branch",
                 ),
             )
+
         @JvmStatic
         private fun multiModuleTestCasesWithBranch(): List<Arguments> =
             listOf(
@@ -102,6 +103,7 @@ abstract class BaseProjectTestCase(
                     "dummy-feature-branch",
                 ),
             )
+
         @JvmStatic
         private fun testCasesWithBranch(): List<Arguments> =
             singleModuleTestCasesWithBranch() + multiModuleTestCasesWithBranch()
@@ -176,14 +178,14 @@ class SingleModuleGitFlowScmProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile)
 
@@ -210,14 +212,14 @@ class SingleModuleTrunkFlowScmProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile)
 
@@ -242,9 +244,9 @@ class SingleModuleCustomizedProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     conventionalCommitTypes = listOf(
                         org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
@@ -263,7 +265,7 @@ class SingleModuleCustomizedProjectTestCase(
                     )
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile, scmConfig.releaseBranch)
 
@@ -272,7 +274,7 @@ class SingleModuleCustomizedProjectTestCase(
 
         scmActions.clone(remoteProjectFile, projectFile)
 
-        scmActions.execute(projectFile,"remote", "rename", "origin", scmConfig.remote)
+        scmActions.execute(projectFile, "remote", "rename", "origin", scmConfig.remote)
 
         // Create local feature branch
         scmActions.checkout(projectFile, scmConfig.featureBranch)
@@ -318,27 +320,27 @@ class MultiModuleGitFlowScmProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile)
 
         GradleProjectBuilder(
             projectDir = remoteSubmoduleProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteSubmoduleProjectFile)
 
@@ -371,27 +373,27 @@ class MultiModuleTrunkFlowScmProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile)
 
         GradleProjectBuilder(
             projectDir = remoteSubmoduleProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteSubmoduleProjectFile)
 
@@ -421,9 +423,9 @@ class MultiModuleCustomizedProjectTestCase(
     override fun initializeProject() {
         GradleProjectBuilder(
             projectDir = remoteProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     conventionalCommitTypes = listOf(
                         org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
@@ -442,15 +444,15 @@ class MultiModuleCustomizedProjectTestCase(
                     )
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteProjectFile, scmConfig.releaseBranch)
 
         GradleProjectBuilder(
             projectDir = remoteSubmoduleProjectFile.getFile(),
-            projectPluginIds = setOf("java", "org.eazyportal.plugin.gradle.release-gradle")
-        ).withExtraProjectConfig(
-            """
+        ).withProjectPlugins("java", "org.eazyportal.plugin.gradle.release-gradle")
+            .withExtraProjectConfig(
+                """
                 eazyRelease {
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
                         featureBranch = "${scmConfig.featureBranch}",
@@ -459,7 +461,7 @@ class MultiModuleCustomizedProjectTestCase(
                     )
                 }
                 """.trimIndent()
-        ).build()
+            ).build()
 
         scmActions.initializeRepository(remoteSubmoduleProjectFile, scmConfig.releaseBranch)
 
@@ -472,8 +474,8 @@ class MultiModuleCustomizedProjectTestCase(
 
         scmActions.clone(remoteProjectFile, projectFile)
 
-        scmActions.execute(projectFile,"remote", "rename", "origin", scmConfig.remote)
-        scmActions.execute(submoduleProjectFile,"remote", "rename", "origin", scmConfig.remote)
+        scmActions.execute(projectFile, "remote", "rename", "origin", scmConfig.remote)
+        scmActions.execute(submoduleProjectFile, "remote", "rename", "origin", scmConfig.remote)
 
         // Create local feature branch
         scmActions.checkout(projectFile, scmConfig.featureBranch)

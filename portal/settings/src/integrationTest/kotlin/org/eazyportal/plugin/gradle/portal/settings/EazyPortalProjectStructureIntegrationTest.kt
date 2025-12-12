@@ -11,45 +11,50 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
     @Test
     fun test_validateProjectStructure() = runTestCase {
         givenTestCase {
-            withEazyPortalSettingsPlugin()
+            withGradleProject {
+                withEazyPortalSettingsPlugin()
 
-            SUBPROJECT_NAMES.forEach {
-                withSubproject(it) {
-                    // TODO: java plugin should be applied to all Gradle subproject
-                    withProjectPlugins("java")
-                    withExtraProjectConfig(
-                        """
-                        dependencies {
-                            testImplementation(platform("org.junit:junit-bom:+"))
-                    
-                            testImplementation("org.junit.jupiter:junit-jupiter")
-                            testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-                        }
-                        """.trimIndent()
-                    )
+                SUBPROJECT_NAMES.forEach {
+                    withSubproject(it) {
+                        // TODO: java plugin should be applied to all Gradle subproject by the EazyPortalProjectPlugin
+                        withProjectPlugins("java")
+                        withExtraProjectConfig(
+                            """
+                            dependencies {
+                                testImplementation(platform("org.junit:junit-bom:+"))
+                        
+                                testImplementation("org.junit.jupiter:junit-jupiter")
+                                testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+                            }
+                            """.trimIndent()
+                        )
+                    }
                 }
-            }
 
-            withExtraSettingsConfig(
-                """
+                withExtraSettingsConfig(
+                    """
                 eazyPortal {
                     applyCoreDependencies = false
                 }
                 """.trimIndent()
-            )
-        }
-        andGivenSetUp {
-            SUBPROJECT_NAMES.forEach {
-                projectDir.copyIntoFromResources(
-                    this@EazyPortalProjectStructureIntegrationTest::class.java.simpleName,
-                    "$it/",
                 )
             }
+
+            withScenarioConfiguration {
+                SUBPROJECT_NAMES.forEach {
+                    workingDir.copyIntoFromResources(
+                        this@EazyPortalProjectStructureIntegrationTest::class.java.simpleName,
+                        "$it/",
+                    )
+                }
+            }
         }
+
         whenExecute {
             taskSucceeds("build")
         }
-        thenValidate {
+
+        thenVerify {
             taskOutput {
                 containsAll(
                     // TODO: fix project setup:

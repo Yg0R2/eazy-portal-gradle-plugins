@@ -9,13 +9,17 @@ class ApplyEazyPortalSettingsPluginIntegrationTest : BaseGradleProjectTestCase()
     @Test
     fun test_applyPlugin() = runTestCase {
         givenTestCase {
-            withEazyPortalSettingsPlugin()
-            withListPluginsTask()
+            withGradleProject {
+                withEazyPortalSettingsPlugin()
+                withListPluginsTask()
+            }
         }
+
         whenExecute {
             taskSucceeds("listPlugins")
         }
-        thenValidate {
+
+        thenVerify {
             taskOutput {
                 contains(EazyPortalProjectPlugin::class.java.name)
             }

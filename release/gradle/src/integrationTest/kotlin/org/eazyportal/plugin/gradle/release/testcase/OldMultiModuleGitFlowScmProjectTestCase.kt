@@ -6,15 +6,11 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class MultiModuleCustomizedScmProjectTestCase(
+open class OldMultiModuleGitFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectTestCase(
+) : OldBaseMultiModuleScmProjectTestCase(
     scmActions,
-    ScmConfig(
-        featureBranch = "dummy-feature-branch",
-        releaseBranch = "dummy-release-branch",
-        remote = "upstream"
-    ),
+    ScmConfig.GIT_FLOW,
 ) {
 
     override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
@@ -24,27 +20,13 @@ open class MultiModuleCustomizedScmProjectTestCase(
             .withExtraProjectConfig(
                 """
                 eazyRelease {
-                    conventionalCommitTypes = listOf(
-                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
-                            listOf("dummy"),
-                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.MAJOR,
-                        ),
-                        org.eazyportal.plugin.release.core.scm.model.ConventionalCommitType(
-                            listOf("fix"),
-                             org.eazyportal.plugin.release.core.version.model.VersionIncrement.PATCH,
-                        ),
-                    )
-                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
-                        featureBranch = "${scmConfig.featureBranch}",
-                        releaseBranch = "${scmConfig.releaseBranch}",
-                        remote = "upstream"
-                    )
+                    scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                 }
                 """.trimIndent()
             )//.apply { gradleProjectBuilderBlock() } // TODO: this would configure the submodules
             .build()
 
-        scmActions.initializeRepository(remoteProjectFile, scmConfig.releaseBranch)
+        scmActions.initializeRepository(remoteProjectFile)
 
         // Initialize submodules
         remoteSubmoduleProjectFiles.forEach {
@@ -53,17 +35,13 @@ open class MultiModuleCustomizedScmProjectTestCase(
                 .withExtraProjectConfig(
                     """
                     eazyRelease {
-                        scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig(
-                            featureBranch = "${scmConfig.featureBranch}",
-                            releaseBranch = "${scmConfig.releaseBranch}",
-                            remote = "upstream"
-                        )
+                        scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                     }
                     """.trimIndent()
                 )//.apply { gradleProjectBuilderBlock() } // TODO: need to configure submodules
                 .build()
 
-            scmActions.initializeRepository(it, scmConfig.releaseBranch)
+            scmActions.initializeRepository(it)
 
             scmActions.addSubmodule(remoteProjectFile, it)
 
@@ -77,12 +55,6 @@ open class MultiModuleCustomizedScmProjectTestCase(
         scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
 
         scmActions.clone(remoteProjectFile, projectFile)
-
-        // Rename remote origin
-        scmActions.execute(projectFile, "remote", "rename", "origin", scmConfig.remote)
-        submoduleProjectFiles.forEach {
-            scmActions.execute(it, "remote", "rename", "origin", scmConfig.remote)
-        }
 
         // Create local feature branch
         scmActions.checkout(projectFile, scmConfig.featureBranch)

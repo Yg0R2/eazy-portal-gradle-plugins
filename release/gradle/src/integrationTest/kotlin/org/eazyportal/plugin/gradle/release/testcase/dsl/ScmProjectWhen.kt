@@ -1,11 +1,20 @@
 package org.eazyportal.plugin.gradle.release.testcase.dsl
 
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.GradleProjectWhen
-import java.io.File
+import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.When
+import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.gradle.testkit.runner.BuildResult
 
 class ScmProjectWhen(
-    private val projectDir: File,
-    private val submoduleDirs: List<File>,
-) : GradleProjectWhen(projectDir) {
+    private val projectDir: ProjectDir,
+) : When() {
+
+    fun taskSucceeds(taskName: String, vararg args: String): BuildResult =
+        createGradleRunner(projectDir.localDir, taskName, *args)
+            .build()
+
+    fun taskFails(taskName: String, vararg args: String): BuildResult =
+        createGradleRunner(projectDir.localDir, taskName, *args)
+            .buildAndFail()
 
 }
