@@ -17,7 +17,7 @@ open class SingleModuleCustomizedScmProjectTestCase(
 ) {
 
     override fun initializeProject() {
-        GradleProjectBuilder(projectDir.remoteProjectFile.getFile())
+        GradleProjectBuilder(projectDir.remoteDir)
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(
                 """

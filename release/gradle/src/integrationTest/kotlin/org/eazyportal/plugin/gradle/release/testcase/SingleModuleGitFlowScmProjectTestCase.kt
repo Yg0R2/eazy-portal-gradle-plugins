@@ -21,7 +21,7 @@ open class SingleModuleGitFlowScmProjectTestCase(
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.GIT_FLOW
                 }
                 """.trimIndent()
-            )
+            ).build()
 
         scmActions.initializeRepository(projectDir.remoteProjectFile)
 

@@ -10,6 +10,7 @@ import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
@@ -22,45 +23,46 @@ import org.eazyportal.plugin.release.core.version.model.Version
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.nio.file.Files
 import java.util.*
 import kotlin.io.path.absolutePathString
 
-abstract class BaseScmProjectTestCase(
-    private val scmActions: TestScmActions<File>,
-    private val scmConfig: ScmConfig,
-) : TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
+abstract class BaseScmProjectTestCase : ScmProjectTestCase {
 
-    protected lateinit var projectDir: ProjectDir
-    protected val projectActionsMap: MutableMap<String, ProjectActions<out Any>> = mutableMapOf()
-
-    private lateinit var workingDir: File
-
-    @BeforeEach
-    fun setUpWorkingDir(@TempDir tempDir: File) {
-        workingDir = tempDir
-
-        projectDir = ProjectDir(
-            localDir = workingDir.resolve(PROJECT_NAME),
-            remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
-        )
-    }
+    override lateinit var projectDir: ProjectDir
+    protected lateinit var projectActionsMap: MutableMap<String, ProjectActions<out Any>>
 
     @Suppress("UNCHECKED_CAST")
     override fun runTestCase(
         block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
-        TestScenario(
-            { ScmProjectGiven { initializeProject() } },
-            { ScmProjectWhen(projectDir) },
-            {
-                ScmProjectThen(
-                    it,
-                    scmActions,
-                    scmConfig,
-                    { projectFile -> getProjectVersion(projectFile) }
-                )
-            },
-        ).block()
+        val tempDir = Files.createTempDirectory("ep-").toFile()
+
+        try {
+            projectDir = ProjectDir(
+                localDir = tempDir.resolve(PROJECT_NAME)
+                    .also { it.mkdirs() },
+                remoteDir = tempDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
+                    .also { it.mkdirs() },
+            )
+
+            projectActionsMap = mutableMapOf()
+
+            TestScenario(
+                { ScmProjectGiven { initializeProject() } },
+                { ScmProjectWhen(projectDir) },
+                {
+                    ScmProjectThen(
+                        it,
+                        scmActions,
+                        scmConfig,
+                        { projectFile -> getProjectVersion(projectFile) }
+                    )
+                },
+            ).block()
+        } finally {
+            tempDir.deleteRecursively()
+        }
     }
 
     protected abstract fun initializeProject()

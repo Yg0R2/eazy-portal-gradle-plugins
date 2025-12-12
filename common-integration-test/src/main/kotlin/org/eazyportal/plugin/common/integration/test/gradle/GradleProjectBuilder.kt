@@ -23,8 +23,6 @@ class GradleProjectBuilder(
     private val subprojects = mutableMapOf<String, GradleProjectBuilder>()
 
     fun build() {
-        projectDir.mkdirs()
-
         GradleUtils.createGradleRunner(projectDir, "--no-configuration-cache", "init", "--dsl", "kotlin")
             .build()
 

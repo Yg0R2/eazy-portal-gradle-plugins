@@ -2,21 +2,67 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.integration.test.testcase.TestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.testcase.*
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
+import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.scm.ScmConstants
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import java.io.File
 
 
 class SetReleaseVersionTaskIntegrationTest {
 
-    interface SetReleaseVersionTaskTestCase {
+    interface SetReleaseVersionTaskTestCase : ScmProjectTestCase {
 
-        fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String)
+        @TestFactory
+        fun `test 'run' should fail when there are no acceptable commits on`(): List<DynamicTest> =
+            listOf(scmConfig.releaseBranch, scmConfig.featureBranch).map { testBranch ->
+                dynamicTest(testBranch) {
+                    runTestCase {
+                        givenTestCase {
+                            withScmProject {
+                                scmActions.checkout(projectDir.localProjectFile, testBranch)
+                            }
+                        }
+
+                        whenExecute {
+                            taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                        }
+
+                        thenVerify {
+                            taskOutput {
+                                contains(
+                                    "Ignoring missing tag from release version calculation.",
+                                    "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+                                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                                )
+                            }
+
+                            scmClenStatusIn(projectDir.localProjectFile, testBranch)
+
+                            scmCommitsIn(projectDir.localProjectFile) {
+                                containsExactly(INITIAL_COMMIT_MESSAGE)
+                            }
+
+                            projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
+                        }
+                    }
+                }
+            }
 
     }
 
@@ -25,54 +71,54 @@ class SetReleaseVersionTaskIntegrationTest {
         SetReleaseVersionTaskTestCase,
         SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
 
-        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
-        @ParameterizedTest
-        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
-            runTestCase {
-                givenTestCase {
-                    withScmProject {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
-                    }
-                }
-
-                whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
-                }
-
-                thenVerify {
-                    taskOutput {
-                        contains(
-                            "Ignoring missing tag from release version calculation.",
-                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                        )
-                    }
-
-                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
-
-                    scmCommitsIn(projectDir.localProjectFile) {
-                        containsExactly(INITIAL_COMMIT_MESSAGE)
-                    }
-
-                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
-                }
-//            thenAssertScm {
-//                }.thenAssertScmIfMultiModule {
-//                    it.statusCleanIn(projectFile, testBranch)
-//                    it.statusCleanIn(submoduleProjectFile, testBranch)
+//        @CsvSource(ScmConstants.RELEASE_BRANCH, ScmConstants.FEATURE_BRANCH)
+//        @ParameterizedTest
+//        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
+//            runTestCase {
+//                givenTestCase {
+//                    withScmProject {
+//                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+//                    }
+//                }
 //
-//                    it.commitsIn(projectFile) {
-//                        containsExactly(
-//                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
-//                            INITIAL_COMMIT_MESSAGE,
+//                whenExecute {
+//                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+//                }
+//
+//                thenVerify {
+//                    taskOutput {
+//                        contains(
+//                            "Ignoring missing tag from release version calculation.",
+//                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+//                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
 //                        )
 //                    }
 //
-//                    it.commitsIn(submoduleProjectFile) {
+//                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
+//
+//                    scmCommitsIn(projectDir.localProjectFile) {
 //                        containsExactly(INITIAL_COMMIT_MESSAGE)
 //                    }
-//                }.thenAssertProjectVersion(SNAPSHOT_001)
-            }
+//
+//                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
+//                }
+////            thenAssertScm {
+////                }.thenAssertScmIfMultiModule {
+////                    it.statusCleanIn(projectFile, testBranch)
+////                    it.statusCleanIn(submoduleProjectFile, testBranch)
+////
+////                    it.commitsIn(projectFile) {
+////                        containsExactly(
+////                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+////                            INITIAL_COMMIT_MESSAGE,
+////                        )
+////                    }
+////
+////                    it.commitsIn(submoduleProjectFile) {
+////                        containsExactly(INITIAL_COMMIT_MESSAGE)
+////                    }
+////                }.thenAssertProjectVersion(SNAPSHOT_001)
+//            }
 
     }
 
@@ -81,37 +127,37 @@ class SetReleaseVersionTaskIntegrationTest {
         SetReleaseVersionTaskTestCase,
         SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
 
-        @CsvSource(ScmConstants.RELEASE_BRANCH)
-        @ParameterizedTest
-        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
-            runTestCase {
-                givenTestCase {
-                    withScmProject()
-                }
-
-                whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
-                }
-
-                thenVerify {
-                    taskOutput {
-                        contains(
-                            "Ignoring missing tag from release version calculation.",
-                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                        )
-                    }
-
-                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
-
-                    scmCommitsIn(projectDir.localProjectFile) {
-                        containsExactly(INITIAL_COMMIT_MESSAGE)
-                    }
-
-                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
-                }
-            }
-
+//        @CsvSource(ScmConstants.RELEASE_BRANCH)
+//        @ParameterizedTest
+//        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
+//            runTestCase {
+//                givenTestCase {
+//                    withScmProject()
+//                }
+//
+//                whenExecute {
+//                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+//                }
+//
+//                thenVerify {
+//                    taskOutput {
+//                        contains(
+//                            "Ignoring missing tag from release version calculation.",
+//                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+//                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+//                        )
+//                    }
+//
+//                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
+//
+//                    scmCommitsIn(projectDir.localProjectFile) {
+//                        containsExactly(INITIAL_COMMIT_MESSAGE)
+//                    }
+//
+//                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
+//                }
+//            }
+//
     }
 
     @Nested
@@ -119,73 +165,73 @@ class SetReleaseVersionTaskIntegrationTest {
         SetReleaseVersionTaskTestCase,
         SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS) {
 
-        @CsvSource("dummy-feature-branch", "dummy-release-branch")
-        @ParameterizedTest
-        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
-            runTestCase {
-                givenTestCase {
-                    withScmProject()
-                }
-
-                whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
-                }
-
-                thenVerify {
-                    taskOutput {
-                        contains(
-                            "Ignoring missing tag from release version calculation.",
-                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                        )
-                    }
-
-                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
-
-                    scmCommitsIn(projectDir.localProjectFile) {
-                        containsExactly(INITIAL_COMMIT_MESSAGE)
-                    }
-
-                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
-                }
-            }
-
-    }
-
-    @Nested
-    inner class OldSetReleaseVersionTaskMultiModuleGitFlowTestCase :
-        SetReleaseVersionTaskTestCase,
-        OldMultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
-
-        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) {
-            givenTestCase()
-                .givenConfiguration {
-                    scmActions.checkout(projectFile, testBranch)
-                }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
-                .thenAssertTaskOutput {
-                    contains(
-                        "Ignoring missing tag from release version calculation.",
-                        "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                    )
-                }.thenAssertScm {
-                    statusCleanIn(projectFile, testBranch)
-//                    statusCleanIn(submoduleProjectFile, testBranch)
-
-                    commitsIn(projectFile) {
-                        containsExactly(
-                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
-                            INITIAL_COMMIT_MESSAGE,
-                        )
-                    }
-
-//                    commitsIn(submoduleProjectFile) {
+//        @CsvSource("dummy-feature-branch", "dummy-release-branch")
+//        @ParameterizedTest
+//        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) =
+//            runTestCase {
+//                givenTestCase {
+//                    withScmProject()
+//                }
+//
+//                whenExecute {
+//                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+//                }
+//
+//                thenVerify {
+//                    taskOutput {
+//                        contains(
+//                            "Ignoring missing tag from release version calculation.",
+//                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+//                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+//                        )
+//                    }
+//
+//                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
+//
+//                    scmCommitsIn(projectDir.localProjectFile) {
 //                        containsExactly(INITIAL_COMMIT_MESSAGE)
 //                    }
-                }.thenAssertProjectVersion(SNAPSHOT_001)
-        }
+//
+//                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_001)
+//                }
+//            }
 
     }
+
+//    @Nested
+//    inner class OldSetReleaseVersionTaskMultiModuleGitFlowTestCase :
+//        SetReleaseVersionTaskTestCase,
+//        OldMultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+//
+//        override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) {
+//            givenTestCase()
+//                .givenConfiguration {
+//                    scmActions.checkout(projectFile, testBranch)
+//                }.whenGradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
+//                .thenAssertTaskOutput {
+//                    contains(
+//                        "Ignoring missing tag from release version calculation.",
+//                        "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+//                        "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+//                    )
+//                }.thenAssertScm {
+//                    statusCleanIn(projectFile, testBranch)
+////                    statusCleanIn(submoduleProjectFile, testBranch)
+//
+//                    commitsIn(projectFile) {
+//                        containsExactly(
+//                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+//                            INITIAL_COMMIT_MESSAGE,
+//                        )
+//                    }
+//
+////                    commitsIn(submoduleProjectFile) {
+////                        containsExactly(INITIAL_COMMIT_MESSAGE)
+////                    }
+//                }.thenAssertProjectVersion(SNAPSHOT_001)
+//        }
+//
+//    }
 
 //    @Nested
 //    inner class SetReleaseVersionTaskMultiModuleTrunkFlowTestCase :

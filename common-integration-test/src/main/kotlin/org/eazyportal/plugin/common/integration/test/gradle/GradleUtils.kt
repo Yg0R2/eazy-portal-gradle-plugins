@@ -12,8 +12,8 @@ object GradleUtils {
         GradleRunner.create()
             .forwardOutput()
             .withArguments(
-                "--stacktrace",
-                "--warning-mode=all",
+//                "--stacktrace",
+//                "--warning-mode=all",
                 "--no-configuration-cache",
                 *arguments,
             ).withPluginClasspath()
