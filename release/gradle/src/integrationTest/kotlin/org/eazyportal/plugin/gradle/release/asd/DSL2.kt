@@ -1,6 +1,12 @@
 package org.eazyportal.plugin.gradle.release.asd
 
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
+import org.eazyportal.plugin.release.core.TestGitActions
+import org.eazyportal.plugin.release.core.TestScmActions
+import org.eazyportal.plugin.release.core.executor.CommandLineExecutor
+import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -36,7 +42,7 @@ object DSL2 {
     }
 
     interface TestCase<G : Given, W : When, T : Then> {
-        fun initializeProject(tempDir: File)
+        fun initializeWorkingDir(tempDir: File)
 
         fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
     }
@@ -63,7 +69,7 @@ object DSL2 {
         protected lateinit var workingDir: File
 
         @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
+        override fun initializeWorkingDir(@TempDir tempDir: File) {
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
     
             workingDir = tempDir
@@ -106,7 +112,10 @@ object DSL2 {
         val remote : File,
     )
 
-    abstract class BaseScmProjectTestCase : TestCase<ScmProjectGiven<BaseScmProjectTestCase>, ScmProjectWhen, ScmProjectThen> {
+    abstract class BaseScmProjectTestCase(
+        protected open val scmActions: TestScmActions<File>,
+        protected open val scmConfig: ScmConfig,
+    ) : TestCase<ScmProjectGiven<BaseScmProjectTestCase>, ScmProjectWhen, ScmProjectThen> {
 
         protected lateinit var workingDir: File
         protected lateinit var projectDir: ProjectDir
@@ -124,59 +133,110 @@ object DSL2 {
         }
     }
 
-    abstract class BaseSingleModuleScmProjectTestCase : BaseScmProjectTestCase() {
-        override fun initializeGradleProjectBuilder(): GradleProjectBuilder =
-            GradleProjectBuilder(projectDir.remote)
-    }
+    abstract class BaseSingleModuleScmProjectTestCase(
+        override val scmActions: TestScmActions<File>,
+        override val scmConfig: ScmConfig,
+    ) : BaseScmProjectTestCase(scmActions, scmConfig) {
 
-    open class BaseSingleModuleGitFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
         @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
+        final override fun initializeWorkingDir(@TempDir tempDir: File) {
+            workingDir = tempDir
+
+            projectDir = ProjectDir(
+                local = workingDir.resolve(PROJECT_NAME),
+                remote = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
+            )
+
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
-    open class BaseSingleModuleTrunkFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
-        @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
-            println("[HERE] [initializeProject] ${this::class.java.simpleName}")
-        }
-    }
-
-    open class BaseSingleModuleCustomizedScmProjectTestCase : BaseSingleModuleScmProjectTestCase() {
-        @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
-            println("[HERE] [initializeProject] ${this::class.java.simpleName}")
-        }
-    }
-
-    abstract class BaseMultiModuleScmProjectTestCase : BaseScmProjectTestCase() {
-
-        protected lateinit var submoduleProjectDirs: List<ProjectDir>
-
+    open class BaseSingleModuleGitFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig.GIT_FLOW,
+    ) {
         override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
             TODO("Not yet implemented")
         }
     }
 
-    open class BaseMultiModuleGitFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
+    open class BaseSingleModuleTrunkFlowScmProjectTestCase : BaseSingleModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig.TRUNK_BASED_FLOW,
+    ) {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
+        }
+    }
+
+    open class BaseSingleModuleCustomizedScmProjectTestCase : BaseSingleModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig(
+            featureBranch = "dummy-feature-branch",
+            releaseBranch = "dummy-release-branch",
+            remote = "upstream"
+        ),
+    ) {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
+        }
+    }
+
+    abstract class BaseMultiModuleScmProjectTestCase(
+        override val scmActions: TestScmActions<File>,
+        override val scmConfig: ScmConfig,
+    ) : BaseScmProjectTestCase(scmActions, scmConfig) {
+
+        protected lateinit var submoduleProjectDirs: List<ProjectDir>
+
         @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
+        final override fun initializeWorkingDir(@TempDir tempDir: File) {
+            workingDir = tempDir
+
+            projectDir = ProjectDir(
+                local = workingDir.resolve(PROJECT_NAME),
+                remote = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
+            )
+
+            submoduleProjectDirs = SUBMODULE_NAMES.map {
+                ProjectDir(
+                    local = projectDir.local.resolve(it),
+                    remote = projectDir.remote.resolve(it),
+                )
+            }
+
             println("[HERE] [initializeProject] ${this::class.java.simpleName}")
         }
     }
 
-    open class BaseMultiModuleTrunkFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
-        @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
-            println("[HERE] [initializeProject] ${this::class.java.simpleName}")
+    open class BaseMultiModuleGitFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig.GIT_FLOW,
+    ) {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
         }
     }
 
-    open class BaseMultiModuleCustomizedScmProjectTestCase : BaseMultiModuleScmProjectTestCase() {
-        @BeforeEach
-        override fun initializeProject(@TempDir tempDir: File) {
-            println("[HERE] [initializeProject] ${this::class.java.simpleName}")
+    open class BaseMultiModuleTrunkFlowScmProjectTestCase : BaseMultiModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig.TRUNK_BASED_FLOW,
+    ) {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
+        }
+    }
+
+    open class BaseMultiModuleCustomizedScmProjectTestCase : BaseMultiModuleScmProjectTestCase(
+        TestGitActions(CommandLineExecutor()),
+        ScmConfig(
+            featureBranch = "dummy-feature-branch",
+            releaseBranch = "dummy-release-branch",
+            remote = "upstream"
+        ),
+    ) {
+        override fun initializeGradleProjectBuilder(): GradleProjectBuilder {
+            TODO("Not yet implemented")
         }
     }
 
