@@ -34,7 +34,7 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' should fail when there are no acceptable commits on`(testBranch: String) = runTestCase {
             givenTestCase {
                 withGradleProject()
-                withScmSetup {
+                withScmSetUp {
                     scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
             }

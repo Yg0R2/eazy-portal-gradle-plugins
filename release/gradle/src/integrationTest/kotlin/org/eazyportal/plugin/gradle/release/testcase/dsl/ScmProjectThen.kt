@@ -15,13 +15,15 @@ class ScmProjectThen(
     private val executionResult: ExecutionResult,
     private val scmActions: TestScmActions<File>,
     private val scmConfig: ScmConfig,
+    private val projectVersionProvider: (ProjectFile<File>) -> Version,
 ) : Then(executionResult) {
 
     fun projectVersionIn(
         projectFile: ProjectFile<File>,
         expectedVersion: Version,
     ) {
-
+        assertThat(projectVersionProvider(projectFile))
+            .isEqualTo(expectedVersion)
     }
 
     fun scmCommitsIn(

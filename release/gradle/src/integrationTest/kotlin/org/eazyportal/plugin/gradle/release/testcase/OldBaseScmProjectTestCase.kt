@@ -17,7 +17,6 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
-import org.eazyportal.plugin.release.core.scm.ScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import org.junit.jupiter.api.BeforeEach
@@ -51,15 +50,29 @@ abstract class BaseScmProjectTestCase(
         block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
         TestScenario(
-            { ScmProjectGiven(this) },
+            {
+                ScmProjectGiven(
+                    { initializeGradleProjectBuilder() },
+                    { initializeScm() },
+                )
+            },
             { ScmProjectWhen(projectDir) },
-            { ScmProjectThen(it, scmActions, scmConfig) },
+            {
+                ScmProjectThen(
+                    it,
+                    scmActions,
+                    scmConfig,
+                    { projectFile -> getProjectVersion(projectFile) }
+                )
+            },
         ).block()
     }
 
-    abstract fun initializeGradleProjectBuilder(): GradleProjectBuilder
+    protected abstract fun initializeGradleProjectBuilder(): GradleProjectBuilder
 
-    abstract fun initializeScm()
+    protected abstract fun initializeScm()
+
+    protected abstract fun getProjectVersion(projectFile: ProjectFile<File>): Version
 
     protected abstract fun setProjectVersion(version: Version)
 
