@@ -5,15 +5,15 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class OldSingleModuleTrunkFlowScmProjectTestCase(
+open class SingleModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : OldBaseSingleModuleScmProjectTestCase(
+) : BaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig.TRUNK_BASED_FLOW,
 ) {
 
-    override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
-        GradleProjectBuilder(remoteProjectFile.getFile())
+    override fun initializeProject() {
+        GradleProjectBuilder(projectDir.remoteProjectFile.getFile())
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(
                 """
@@ -21,12 +21,11 @@ open class OldSingleModuleTrunkFlowScmProjectTestCase(
                     scmConfig = org.eazyportal.plugin.release.core.scm.model.ScmConfig.TRUNK_BASED_FLOW
                 }
                 """.trimIndent()
-            ).apply { gradleProjectBuilderBlock() }
-            .build()
+            ).build()
 
-        scmActions.initializeRepository(remoteProjectFile)
+        scmActions.initializeRepository(projectDir.remoteProjectFile)
 
-        scmActions.clone(remoteProjectFile, projectFile)
+        scmActions.clone(projectDir.remoteProjectFile, projectDir.localProjectFile)
     }
 
 }

@@ -5,9 +5,9 @@ import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-open class OldSingleModuleCustomizedScmProjectTestCase(
+open class SingleModuleCustomizedScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : OldBaseSingleModuleScmProjectTestCase(
+) : BaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig(
         featureBranch = "dummy-feature-branch",
@@ -16,8 +16,8 @@ open class OldSingleModuleCustomizedScmProjectTestCase(
     ),
 ) {
 
-    override fun initializeProject(gradleProjectBuilderBlock: GradleProjectBuilder.() -> Unit) {
-        GradleProjectBuilder(remoteProjectFile.getFile())
+    override fun initializeProject() {
+        GradleProjectBuilder(projectDir.remoteProjectFile.getFile())
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(
                 """
@@ -39,21 +39,21 @@ open class OldSingleModuleCustomizedScmProjectTestCase(
                     )
                 }
                 """.trimIndent()
-            ).apply { gradleProjectBuilderBlock() }
-            .build()
+            ).build()
 
-        scmActions.initializeRepository(remoteProjectFile, scmConfig.releaseBranch)
+        scmActions.initializeRepository(projectDir.remoteProjectFile, scmConfig.releaseBranch)
 
         // Create remote branches
-        scmActions.execute(remoteProjectFile, "branch", scmConfig.featureBranch)
+        scmActions.execute(projectDir.remoteProjectFile, "branch", scmConfig.featureBranch)
 
-        scmActions.clone(remoteProjectFile, projectFile)
+        scmActions.clone(projectDir.remoteProjectFile, projectDir.localProjectFile)
 
-        scmActions.execute(projectFile, "remote", "rename", "origin", scmConfig.remote)
+        // Rename remote
+        scmActions.execute(projectDir.localProjectFile, "remote", "rename", "origin", scmConfig.remote)
 
         // Create local feature branch
-        scmActions.checkout(projectFile, scmConfig.featureBranch)
-        scmActions.checkout(projectFile, scmConfig.releaseBranch)
+        scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+        scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
     }
 
 }

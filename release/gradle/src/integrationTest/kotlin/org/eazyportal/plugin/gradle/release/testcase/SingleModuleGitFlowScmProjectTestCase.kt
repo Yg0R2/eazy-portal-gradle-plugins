@@ -1,13 +1,9 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.release.core.TestScmActions
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
-import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
-import kotlin.io.path.absolutePathString
 
 open class SingleModuleGitFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
@@ -38,10 +34,5 @@ open class SingleModuleGitFlowScmProjectTestCase(
         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
     }
-
-    override fun getProjectVersion(projectFile: ProjectFile<File>): Version =
-        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
-            GradleProjectActions(projectFile)
-        }.getVersion()
 
 }
