@@ -5,11 +5,9 @@ import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
-import kotlin.io.path.absolutePathString
 
 abstract class BaseSingleModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
@@ -39,12 +37,6 @@ abstract class BaseSingleModuleScmProjectTestCase(
             scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
         }
     }
-
-    final override fun getProjectVersion(projectFile: ProjectFile<File>): Version =
-        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
-            GradleProjectActions(projectFile)
-        }.getVersion()
-
 
     final override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectDir.localDir.absolutePath) {

@@ -58,11 +58,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains(
                             "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
                             "Ignoring missing tag from release version calculation.",
@@ -87,11 +87,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains(
                             "> Task :setReleaseVersion",
                             "Ignoring missing tag from release version calculation.",
@@ -129,11 +129,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -177,11 +177,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains(
                             "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
                             "Ignoring missing tag from release version calculation.",
@@ -208,11 +208,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -248,11 +248,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -295,11 +295,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains(
                             "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
                             *IntRange(0, SUBMODULE_NAMES.size + 1).flatMap {
@@ -328,11 +328,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -393,11 +393,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -468,11 +468,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskFails(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains(
                             "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
                             *IntRange(0, SUBMODULE_NAMES.size + 1).flatMap {
@@ -505,11 +505,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -573,11 +573,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -651,11 +651,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -714,11 +714,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 
@@ -784,11 +784,11 @@ class SetReleaseVersionTaskIntegrationTest {
                 }
 
                 whenExecute {
-                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
+                    gradleTaskSucceeds(SET_RELEASE_VERSION_TASK_NAME)
                 }
 
                 thenVerify {
-                    taskOutput {
+                    gradleTaskOutput {
                         contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
                     }
 

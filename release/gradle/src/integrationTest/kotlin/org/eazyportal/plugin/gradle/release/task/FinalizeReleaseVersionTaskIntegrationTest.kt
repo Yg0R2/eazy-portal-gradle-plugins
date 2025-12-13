@@ -1,129 +1,231 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
+import org.eazyportal.plugin.gradle.release.testcase.*
+import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
-import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
-import org.junit.jupiter.api.io.TempDir
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
-import kotlin.reflect.KClass
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.TestFactory
 
 class FinalizeReleaseVersionTaskIntegrationTest {
 
-    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
-    @ParameterizedTest
-    fun `test 'run' should finalize release version`(
-        testCaseClass: KClass<BaseScmProjectTestCase>,
-        @TempDir workingDir: File,
-    ) {
-        givenTestCase(testCaseClass, workingDir) {
-            scmActions.checkout(projectFile, scmConfig.featureBranch)
+    interface FinalizeReleaseVersionTaskTestCase {
 
-            if (this is BaseMultiModuleScmProjectTestCase) {
-                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
-            }
+        fun `test 'run' should finalize release version`(): List<DynamicTest>
 
-            setProjectVersion(RELEASE_001)
-        }.whenGradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
-            .thenAssert {
-                it.taskOutput {
-                    contains("> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME")
-                }
+        fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest>
 
-                it.scmStatus(projectFile) {
-                    contains(
-                        "On branch ${scmConfig.featureBranch}",
-                        "Your branch is ahead of '${scmConfig.remote}/${scmConfig.featureBranch}' by 1 commit.",
-                        "nothing to commit, working tree clean"
-                    )
-                }
-
-                if (this is BaseMultiModuleScmProjectTestCase) {
-                    it.scmStatus(submoduleProjectFile) {
-                        contains(
-                            "On branch ${scmConfig.featureBranch}",
-                            "Your branch is ahead of '${scmConfig.remote}/${scmConfig.featureBranch}' by 1 commit.",
-                            "nothing to commit, working tree clean"
-                        )
-                    }
-
-                    it.scmCommits(projectFile) {
-                        containsExactly(
-                            "Release version: $RELEASE_001",
-                            "chore: add $SUBMODULE_NAME submodule",
-                            "initial commit",
-                        )
-                    }
-
-                    it.scmCommits(submoduleProjectFile) {
-                        containsExactly(
-                            "Release version: $RELEASE_001",
-                            "initial commit",
-                        )
-                    }
-                } else {
-                    it.scmLocalCommits {
-                        containsExactly(
-                            "Release version: $RELEASE_001",
-                            "initial commit",
-                        )
-                    }
-                }
-
-                it.projectVersion {
-                    isEqualTo(RELEASE_001)
-                }
-            }
     }
 
-    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
-    @ParameterizedTest
-    fun `test 'run' should fail when there is nothing to commit`(
-        testCaseClass: KClass<BaseScmProjectTestCase>,
-        @TempDir workingDir: File,
-    ) {
-        givenTestCase(testCaseClass, workingDir) {
-            scmActions.checkout(projectFile, scmConfig.featureBranch)
+    interface FinalizeReleaseVersionTaskSingleModuleTestCase :
+        FinalizeReleaseVersionTaskTestCase,
+        SingleModuleScmProjectTestCase {
 
-            if (this is BaseMultiModuleScmProjectTestCase) {
-                scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
-            }
-        }.whenGradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
-            .thenAssert {
-                it.taskOutput {
-                    contains(
-                        "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
-                        "nothing to commit, working tree clean",
-                    )
-                }
+        @TestFactory
+        override fun `test 'run' should finalize release version`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
 
-                it.scmStatus(projectFile) {
-                    contains(
-                        "On branch ${scmConfig.featureBranch}",
-                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                        "nothing to commit, working tree clean"
-                    )
-                }
-
-                if (this is BaseMultiModuleScmProjectTestCase) {
-                    it.scmStatus(submoduleProjectFile) {
-                        contains(
-                            "On branch ${scmConfig.featureBranch}",
-                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                            "nothing to commit, working tree clean"
-                        )
+                        setProjectVersion(RELEASE_001)
                     }
                 }
 
-                it.projectVersion {
-                    isEqualTo(SNAPSHOT_001)
+                whenExecute {
+                    gradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME")
+                    }
+
+                    with(projectDir.localProjectFile) {
+                        scmStatusIn(this) {
+                            contains(
+                                "On branch $testBranch",
+                                "Your branch is ahead of '${scmConfig.remote}/$testBranch' by 1 commit.",
+                                "nothing to commit, working tree clean"
+                            )
+                        }
+
+                        scmCommitsIn(this) {
+                            containsExactly(
+                                "Release version: $RELEASE_001",
+                                INITIAL_COMMIT_MESSAGE,
+                            )
+                        }
+
+                        projectVersionIn(this, RELEASE_001)
+                    }
                 }
             }
+
+        @TestFactory
+        override fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    }
+                }
+
+                whenExecute {
+                    gradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains(
+                            "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
+                            "nothing to commit, working tree clean",
+                            "Execution failed for task ':$FINALIZE_RELEASE_VERSION_TASK_NAME'."
+                        )
+                    }
+                }
+            }
+
     }
+
+    interface FinalizeReleaseVersionTaskMultiModuleTestCase :
+        FinalizeReleaseVersionTaskTestCase,
+        MultiModuleScmProjectTestCase {
+
+        @TestFactory
+        override fun `test 'run' should finalize release version`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                        setProjectVersion(RELEASE_001)
+                    }
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(FINALIZE_RELEASE_VERSION_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME")
+                    }
+
+                    with(projectDir.localProjectFile) {
+                        scmStatusIn(this) {
+                            contains(
+                                "On branch $testBranch",
+                                "Your branch is ahead of '${scmConfig.remote}/$testBranch' by 1 commit.",
+                                "nothing to commit, working tree clean"
+                            )
+                        }
+
+                        scmCommitsIn(this) {
+                            containsExactly(
+                                "Release version: $RELEASE_001",
+                                CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                                INITIAL_COMMIT_MESSAGE,
+                            )
+                        }
+
+                        projectVersionIn(this, RELEASE_001)
+                    }
+
+                    submoduleProjectDirs.forEach {
+                        with(it.localProjectFile) {
+                            scmStatusIn(this) {
+                                contains(
+                                    "On branch $testBranch",
+                                    "Your branch is ahead of '${scmConfig.remote}/$testBranch' by 1 commit.",
+                                    "nothing to commit, working tree clean"
+                                )
+                            }
+
+                            scmCommitsIn(this) {
+                                containsExactly(
+                                    "Release version: $RELEASE_001",
+                                    INITIAL_COMMIT_MESSAGE,
+                                )
+                            }
+
+                            projectVersionIn(this, RELEASE_001)
+                        }
+                    }
+                }
+            }
+
+        @TestFactory
+        override fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    }
+                }
+
+                whenExecute {
+                    gradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains(
+                            "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
+                            "nothing to commit, working tree clean",
+                            "Execution failed for task ':$FINALIZE_RELEASE_VERSION_TASK_NAME'."
+                        )
+                    }
+                }
+            }
+
+    }
+
+    @Nested
+    inner class SingleModuleGitFlowTestCase :
+        FinalizeReleaseVersionTaskSingleModuleTestCase,
+        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+
+    @Nested
+    inner class SingleModuleTrunkFlowTestCase :
+        FinalizeReleaseVersionTaskSingleModuleTestCase,
+        SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+
+    @Nested
+    inner class SingleModuleCustomizedTestCase :
+        FinalizeReleaseVersionTaskSingleModuleTestCase,
+        SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+
+    @Nested
+    inner class MultiModuleGitFlowTestCase :
+        FinalizeReleaseVersionTaskMultiModuleTestCase,
+        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+
+    @Nested
+    inner class MultiModuleTrunkFlowTestCase :
+        FinalizeReleaseVersionTaskMultiModuleTestCase,
+        MultiModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+
+    @Nested
+    inner class MultiModuleCustomizedTestCase :
+        FinalizeReleaseVersionTaskMultiModuleTestCase,
+        MultiModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
 
 }

@@ -67,10 +67,10 @@ abstract class BaseScmProjectTestCase : SingleModuleScmProjectTestCase {
 
     protected abstract fun initializeGradleProject(projectDir: File, projectName: String)
 
-    // TODO: remove projectFile?
-    protected abstract fun getProjectVersion(projectFile: ProjectFile<File>): Version
-
-    protected abstract fun setProjectVersion(version: Version)
+    fun getProjectVersion(projectFile: ProjectFile<File>): Version =
+        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
+            GradleProjectActions(projectFile)
+        }.getVersion()
 
 }
 

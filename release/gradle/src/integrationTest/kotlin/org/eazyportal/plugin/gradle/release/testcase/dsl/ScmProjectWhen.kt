@@ -9,11 +9,11 @@ class ScmProjectWhen(
     private val projectDir: ProjectDir,
 ) : When() {
 
-    fun taskSucceeds(taskName: String, vararg args: String): BuildResult =
+    fun gradleTaskSucceeds(taskName: String, vararg args: String): BuildResult =
         createGradleRunner(projectDir.localDir, taskName, *args)
             .build()
 
-    fun taskFails(taskName: String, vararg args: String): BuildResult =
+    fun gradleTaskFails(taskName: String, vararg args: String): BuildResult =
         createGradleRunner(projectDir.localDir, taskName, *args)
             .buildAndFail()
 

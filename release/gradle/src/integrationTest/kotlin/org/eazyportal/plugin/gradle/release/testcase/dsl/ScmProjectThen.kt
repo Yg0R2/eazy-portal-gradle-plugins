@@ -50,7 +50,7 @@ class ScmProjectThen(
         }
     }
 
-    fun taskOutput(block: ListAssert<String>.() -> Unit) {
+    fun gradleTaskOutput(block: ListAssert<String>.() -> Unit) {
         block(
             assertThat(
                 executionResult.actual<BuildResult>()

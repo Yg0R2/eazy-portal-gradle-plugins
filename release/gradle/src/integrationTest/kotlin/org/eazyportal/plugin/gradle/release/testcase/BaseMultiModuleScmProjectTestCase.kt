@@ -12,7 +12,6 @@ import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
-import kotlin.io.path.absolutePathString
 
 abstract class BaseMultiModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
@@ -79,48 +78,22 @@ abstract class BaseMultiModuleScmProjectTestCase(
         }
     }
 
-    final override fun getProjectVersion(projectFile: ProjectFile<File>): Version =
-        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
-            GradleProjectActions(projectFile)
-        }.getVersion()
-
-
-    // TODO: set version for all submodule
     final override fun setProjectVersion(version: Version) {
         projectActionsMap.computeIfAbsent(projectDir.localDir.absolutePath) {
             GradleProjectActions(FileSystemProjectFile(projectDir.localDir))
         }.setVersion(version)
-    }
 
-}
-
-abstract class OldBaseMultiModuleScmProjectTestCase(
-    override val scmActions: TestScmActions<File>,
-    override val scmConfig: ScmConfig,
-) : OldBaseScmProjectTestCase(scmActions, scmConfig) {
-
-    val submoduleProjectFiles: List<ProjectFile<File>>
-        get() = SUBMODULE_NAMES.asSequence()
-            .map { projectFile.resolve(it) }
-            .onEach { it.getFile().mkdirs() }
-            .toList()
-
-    val remoteSubmoduleProjectFiles: List<ProjectFile<File>>
-        get() = SUBMODULE_NAMES.asSequence()
-            .map { remoteProjectFile.resolve(it) }
-            .onEach { it.getFile().mkdirs() }
-            .toList()
-
-    override fun setProjectVersion(version: Version) {
-        projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
-            GradleProjectActions(projectFile)
-        }.setVersion(version)
-
-        submoduleProjectFiles.forEach { submoduleProjectFile ->
-            projectActionsMap.computeIfAbsent(submoduleProjectFile.getPath().absolutePathString()) {
-                GradleProjectActions(submoduleProjectFile)
+        submoduleProjectDirs.forEach { submoduleProjectDir ->
+            projectActionsMap.computeIfAbsent(submoduleProjectDir.localDir.absolutePath) {
+                GradleProjectActions(FileSystemProjectFile(submoduleProjectDir.localDir))
             }.setVersion(version)
         }
     }
+
+//    final override fun setProjectVersion(projectFile: ProjectFile<File>, version: Version) {
+//        projectActionsMap.computeIfAbsent(projectFile.getFile().absolutePath) {
+//            GradleProjectActions(projectFile)
+//        }.setVersion(version)
+//    }
 
 }

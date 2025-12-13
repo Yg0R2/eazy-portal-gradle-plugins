@@ -6,4 +6,6 @@ interface MultiModuleScmProjectTestCase : SingleModuleScmProjectTestCase, ScmPro
 
     var submoduleProjectDirs: List<ProjectDir>
 
+//    fun setProjectVersion(projectFile: ProjectFile<File>, version: Version)
+
 }
