@@ -19,7 +19,6 @@ import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTI
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -48,75 +47,73 @@ class SetReleaseVersionTaskIntegrationTest {
 
         @TestFactory
         override fun `test 'run' should fail when there are no acceptable commits`(): List<DynamicTest> =
-            listOf(scmConfig.releaseBranch, scmConfig.featureBranch).map { testBranch ->
-                dynamicTest("from $testBranch branch") {
-                    runTestCase {
-                        givenTestCase {
-                            withScmProject {
-                                scmActions.checkout(projectDir.localProjectFile, testBranch)
-                            }
-                        }
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "from '$it' branch" }
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    }
+                }
 
-                        whenExecute {
-                            taskFails(SET_RELEASE_VERSION_TASK_NAME)
-                        }
+                whenExecute {
+                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                }
 
-                        thenVerify {
-                            taskOutput {
-                                contains(
-                                    "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
-                                    "Ignoring missing tag from release version calculation.",
-                                    "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                                    "> There are no acceptable commits.",
-                                )
-                            }
-                        }
+                thenVerify {
+                    taskOutput {
+                        contains(
+                            "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
+                            "Ignoring missing tag from release version calculation.",
+                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                            "> There are no acceptable commits.",
+                        )
                     }
                 }
             }
 
         @TestFactory
         override fun `test 'run' should succeed when release is forced but there are no acceptable commits`(): List<DynamicTest> =
-            listOf(scmConfig.releaseBranch, scmConfig.featureBranch).map { testBranch ->
-                dynamicTest("from $testBranch branch") {
-                    runTestCase {
-                        givenTestCase {
-                            withScmProject {
-                                scmActions.checkout(projectDir.localProjectFile, testBranch)
-                            }
-                        }
-
-                        whenExecute {
-                            taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
-                        }
-
-                        thenVerify {
-                            taskOutput {
-                                contains(
-                                    "> Task :setReleaseVersion",
-                                    "Ignoring missing tag from release version calculation.",
-                                    "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                                )
-                            }
-
-                            scmStatusIn(projectDir.localProjectFile) {
-                                contains(
-                                    "On branch ${scmConfig.releaseBranch}",
-                                    "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                                    "Changes not staged for commit:",
-                                    "modified:   $GRADLE_PROPERTIES_FILE_NAME",
-                                    "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
-                                )
-                            }
-
-                            scmCommitsIn(projectDir.localProjectFile) {
-                                containsExactly(INITIAL_COMMIT_MESSAGE)
-                            }
-
-                            projectVersionIn(projectDir.localProjectFile, RELEASE_001)
-                        }
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "from '$it' branch" }
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
                     }
+                }
+
+                whenExecute {
+                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+                }
+
+                thenVerify {
+                    taskOutput {
+                        contains(
+                            "> Task :setReleaseVersion",
+                            "Ignoring missing tag from release version calculation.",
+                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
+                        )
+                    }
+
+                    scmStatusIn(projectDir.localProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.releaseBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                        )
+                    }
+
+                    scmCommitsIn(projectDir.localProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                    }
+
+                    projectVersionIn(projectDir.localProjectFile, RELEASE_001)
                 }
             }
 
@@ -287,99 +284,97 @@ class SetReleaseVersionTaskIntegrationTest {
 
         @TestFactory
         override fun `test 'run' should fail when there are no acceptable commits`(): List<DynamicTest> =
-            listOf(scmConfig.releaseBranch, scmConfig.featureBranch).map { testBranch ->
-                dynamicTest("from $testBranch branch") {
-                    runTestCase {
-                        givenTestCase {
-                            withScmProject {
-                                scmActions.checkout(projectDir.localProjectFile, testBranch)
-                            }
-                        }
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "from '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    }
+                }
 
-                        whenExecute {
-                            taskFails(SET_RELEASE_VERSION_TASK_NAME)
-                        }
+                whenExecute {
+                    taskFails(SET_RELEASE_VERSION_TASK_NAME)
+                }
 
-                        thenVerify {
-                            taskOutput {
-                                contains(
-                                    "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
-                                    *IntRange(0, SUBMODULE_NAMES.size + 1).flatMap {
-                                        listOf(
-                                            "Ignoring missing tag from release version calculation.",
-                                            "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
-                                        )
-                                    }.toTypedArray(),
-                                    "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
-                                    "> There are no acceptable commits.",
+                thenVerify {
+                    taskOutput {
+                        contains(
+                            "> Task :$SET_RELEASE_VERSION_TASK_NAME FAILED",
+                            *IntRange(0, SUBMODULE_NAMES.size + 1).flatMap {
+                                listOf(
+                                    "Ignoring missing tag from release version calculation.",
+                                    "Ignoring invalid commit: $INITIAL_COMMIT_MESSAGE",
                                 )
-                            }
-                        }
+                            }.toTypedArray(),
+                            "Execution failed for task ':$SET_RELEASE_VERSION_TASK_NAME'.",
+                            "> There are no acceptable commits.",
+                        )
                     }
                 }
             }
 
         @TestFactory
         override fun `test 'run' should succeed when release is forced but there are no acceptable commits`(): List<DynamicTest> =
-            listOf(scmConfig.releaseBranch, scmConfig.featureBranch).map { testBranch ->
-                dynamicTest("from $testBranch branch") {
-                    runTestCase {
-                        givenTestCase {
-                            withScmProject {
-                                scmActions.checkout(projectDir.localProjectFile, testBranch)
-                            }
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "from $it branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject {
+                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    }
+                }
+
+                whenExecute {
+                    taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+                }
+
+                thenVerify {
+                    taskOutput {
+                        contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
+                    }
+
+                    with(projectDir.localProjectFile) {
+                        scmStatusIn(this) {
+                            contains(
+                                "On branch ${scmConfig.releaseBranch}",
+                                "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
+                                "Changes not staged for commit:",
+                                *SUBMODULE_NAMES.map { "modified:   $it (modified content)" }
+                                    .toTypedArray(),
+                                "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                                "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                            )
                         }
 
-                        whenExecute {
-                            taskSucceeds(SET_RELEASE_VERSION_TASK_NAME, "-DforceRelease=true")
+                        scmCommitsIn(this) {
+                            containsExactly(
+                                CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                                INITIAL_COMMIT_MESSAGE,
+                            )
                         }
 
-                        thenVerify {
-                            taskOutput {
-                                contains("> Task :$SET_RELEASE_VERSION_TASK_NAME")
-                            }
+                        projectVersionIn(this, RELEASE_001)
+                    }
 
-                            with(projectDir.localProjectFile) {
-                                scmStatusIn(this) {
-                                    contains(
-                                        "On branch ${scmConfig.releaseBranch}",
-                                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                                        "Changes not staged for commit:",
-                                        *SUBMODULE_NAMES.map { "modified:   $it (modified content)" }
-                                            .toTypedArray(),
-                                        "modified:   $GRADLE_PROPERTIES_FILE_NAME",
-                                        "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
-                                    )
-                                }
-
-                                scmCommitsIn(this) {
-                                    containsExactly(
-                                        CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
-                                        INITIAL_COMMIT_MESSAGE,
-                                    )
-                                }
-
-                                projectVersionIn(this, RELEASE_001)
-                            }
-
-                            submoduleProjectDirs.forEach {
-                                scmStatusIn(it.localProjectFile) {
-                                    contains(
-                                        "On branch ${scmConfig.releaseBranch}",
-                                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
-                                        "Changes not staged for commit:",
-                                        "modified:   $GRADLE_PROPERTIES_FILE_NAME",
-                                        "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
-                                    )
-                                }
-
-                                scmCommitsIn(it.localProjectFile) {
-                                    containsExactly(INITIAL_COMMIT_MESSAGE)
-                                }
-
-                                projectVersionIn(it.localProjectFile, RELEASE_001)
-                            }
+                    submoduleProjectDirs.forEach {
+                        scmStatusIn(it.localProjectFile) {
+                            contains(
+                                "On branch ${scmConfig.releaseBranch}",
+                                "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
+                                "Changes not staged for commit:",
+                                "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                                "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                            )
                         }
+
+                        scmCommitsIn(it.localProjectFile) {
+                            containsExactly(INITIAL_COMMIT_MESSAGE)
+                        }
+
+                        projectVersionIn(it.localProjectFile, RELEASE_001)
                     }
                 }
             }
