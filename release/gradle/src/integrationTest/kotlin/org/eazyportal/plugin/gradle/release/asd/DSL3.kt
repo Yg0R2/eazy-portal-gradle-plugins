@@ -36,7 +36,7 @@ object DSL3 {
     }
 
     @TestDsl
-    class TestScenario<C : TestContext<*>>(
+    class TestScenario<C : TestContext>(
         context: C,
     ) {
         private val given = GivenScope(context)
@@ -77,11 +77,7 @@ object DSL3 {
         fun assertOutput(block: OutputAssert.() -> Unit)
     }
 
-    interface TestContext<SELF : TestContext<SELF>> : GivenContext, WhenContext, ThenContext {
-        fun runTest(block: TestScenario<SELF>.() -> Unit) {
-            TestCase(this as SELF).run(block)
-        }
-    }
+    interface TestContext : GivenContext, WhenContext, ThenContext
 
     //------------------------------------
     // Helpers
@@ -115,15 +111,15 @@ object DSL3 {
         }
     }
 
-    abstract class ScmProjectTestContext :
+    class ScmProjectTestContext(
+        private val gradleProjectBuilder: GradleProjectBuilder,
+        private val scmProjectBuilder: ScmProjectBuilder,
+    ) :
         GradleProjectGivenContext,
         ScmProjectGivenContext,
         ExecutionWhenContext,
         OutputThenContext,
-        TestContext<ScmProjectTestContext> {
-
-        private val gradleProjectBuilder = GradleProjectBuilder()
-        private val scmProjectBuilder = ScmProjectBuilder(gradleProjectBuilder)
+        TestContext {
 
         override fun withGradleProject(block: GradleProjectBuilder.() -> Unit) {
             gradleProjectBuilder.block()
@@ -147,18 +143,22 @@ object DSL3 {
     // Test case
     //------------------------------------
 
-    class TestCase<C : TestContext<*>>(
-        private val context: C
-    ) {
-        fun run(block: TestScenario<C>.() -> Unit) {
-            TestScenario(context).block()
+    abstract class TestCase<C : TestContext> {
+        fun runTest(block: TestScenario<C>.() -> Unit) {
+            TestScenario(initContext()).block()
         }
+
+        protected abstract fun initContext() : C
     }
 
-//    inline fun <reified C : TestContext<*>> runTest(noinline block: TestScenario<C>.() -> Unit) {
-//        val context = C::class.createInstance()
-//        TestCase(context).run(block)
-//    }
+    abstract class SingleModuleScmProjectTestCase : TestCase<ScmProjectTestContext>() {
+        override fun initContext(): ScmProjectTestContext {
+            val gradleProjectBuilder = GradleProjectBuilder()
+            val scmProjectBuilder = ScmProjectBuilder(gradleProjectBuilder)
+
+            return ScmProjectTestContext(gradleProjectBuilder, scmProjectBuilder)
+        }
+    }
 
 }
 
@@ -169,7 +169,7 @@ class DSL3Test {
     }
 
     @Nested
-    inner class SimpleDSL3ProjectTest : DSL3TestCase, DSL3.ScmProjectTestContext() {
+    inner class SimpleDSL3ProjectTest : DSL3TestCase, DSL3.SingleModuleScmProjectTestCase() {
 
         @Test
         override fun test() = runTest {
