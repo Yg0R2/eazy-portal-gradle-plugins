@@ -1,6 +1,8 @@
 package org.eazyportal.plugin.gradle.release.asd
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 object DSL3 {
@@ -34,7 +36,7 @@ object DSL3 {
     }
 
     @TestDsl
-    class TestScenario<C : TestContext>(
+    class TestScenario<C : TestContext<*>>(
         context: C,
     ) {
         private val given = GivenScope(context)
@@ -75,7 +77,11 @@ object DSL3 {
         fun assertOutput(block: OutputAssert.() -> Unit)
     }
 
-    interface TestContext : GivenContext, WhenContext, ThenContext
+    interface TestContext<SELF : TestContext<SELF>> : GivenContext, WhenContext, ThenContext {
+        fun runTest(block: TestScenario<SELF>.() -> Unit) {
+            TestCase(this as SELF).run(block)
+        }
+    }
 
     //------------------------------------
     // Helpers
@@ -84,11 +90,22 @@ object DSL3 {
         fun setVersion(version: String) {
             println("[HERE] [GradleProjectBuilder] set version: $version")
         }
+
+        fun build() {
+            println("[HERE] [GradleProjectBuilder] build")
+        }
     }
 
-    class ScmProjectBuilder {
+    class ScmProjectBuilder(
+        private val gradleProjectBuilder: GradleProjectBuilder,
+    ) {
         fun setBranch(branch: String) {
             println("[HERE] [ScmProjectBuilder] set branch: $branch")
+        }
+
+        fun build() {
+            gradleProjectBuilder.build()
+            println("[HERE] [ScmProjectBuilder] build")
         }
     }
 
@@ -98,19 +115,23 @@ object DSL3 {
         }
     }
 
-    class ScmProjectTestContext :
+    abstract class ScmProjectTestContext :
         GradleProjectGivenContext,
         ScmProjectGivenContext,
         ExecutionWhenContext,
         OutputThenContext,
-        TestContext {
+        TestContext<ScmProjectTestContext> {
+
+        private val gradleProjectBuilder = GradleProjectBuilder()
+        private val scmProjectBuilder = ScmProjectBuilder(gradleProjectBuilder)
 
         override fun withGradleProject(block: GradleProjectBuilder.() -> Unit) {
-            GradleProjectBuilder().apply(block)
+            gradleProjectBuilder.block()
         }
 
         override fun withScmProject(block: ScmProjectBuilder.() -> Unit) {
-            ScmProjectBuilder().apply(block)
+            scmProjectBuilder.apply(block)
+                .build()
         }
 
         override fun whenExecute() {
@@ -126,7 +147,7 @@ object DSL3 {
     // Test case
     //------------------------------------
 
-    class TestCase<C : TestContext>(
+    class TestCase<C : TestContext<*>>(
         private val context: C
     ) {
         fun run(block: TestScenario<C>.() -> Unit) {
@@ -134,34 +155,45 @@ object DSL3 {
         }
     }
 
-    inline fun <reified C : TestContext>runTest(noinline block: TestScenario<C>.() -> Unit) {
-        val context = C::class.createInstance()
-        TestCase(context).run(block)
-    }
+//    inline fun <reified C : TestContext<*>> runTest(noinline block: TestScenario<C>.() -> Unit) {
+//        val context = C::class.createInstance()
+//        TestCase(context).run(block)
+//    }
 
 }
 
 class DSL3Test {
-    @Test
-    fun test() = DSL3.runTest<DSL3.ScmProjectTestContext> {
-        givenTestCase {
-            withGradleProject {
-                setVersion("1.0.0")
-            }
-            withScmProject {
-                setBranch("main")
-            }
-        }
 
-        whenExecute {
-            whenExecute()
-        }
-
-        thenValidate {
-            assertOutput {
-                contains("BUILD SUCCESS")
-            }
-        }
+    interface DSL3TestCase {
+        fun test()
     }
+
+    @Nested
+    inner class SimpleDSL3ProjectTest : DSL3TestCase, DSL3.ScmProjectTestContext() {
+
+        @Test
+        override fun test() = runTest {
+            givenTestCase {
+                withGradleProject {
+                    setVersion("1.0.0")
+                }
+                withScmProject {
+                    setBranch("main")
+                }
+            }
+
+            whenExecute {
+                whenExecute()
+            }
+
+            thenValidate {
+                assertOutput {
+                    contains("BUILD SUCCESS")
+                }
+            }
+        }
+
+    }
+
 
 }
