@@ -2,8 +2,6 @@ package org.eazyportal.plugin.gradle.release.asd
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 object DSL3 {
 
@@ -36,20 +34,22 @@ object DSL3 {
     }
 
     @TestDsl
-    class TestScenario<C : TestContext>(
-        context: C,
+    class TestScenario<G : GivenContext, W : WhenContext, T : ThenContext>(
+        givenContext: G,
+        whenContext: W,
+        thenContext: T,
     ) {
-        private val given = GivenScope(context)
-        private val whenStage = WhenScope(context)
-        private val then = ThenScope(context)
+        private val given = GivenScope(givenContext)
+        private val whenStage = WhenScope(whenContext)
+        private val then = ThenScope(thenContext)
 
-        fun givenTestCase(block: C.() -> Unit) =
+        fun givenTestCase(block: G.() -> Unit) =
             given.givenTestCase(block)
 
-        fun whenExecute(block: C.() -> Unit) =
+        fun whenExecute(block: W.() -> Unit) =
             whenStage.whenExecute(block)
 
-        fun thenValidate(block: C.() -> Unit) =
+        fun thenValidate(block: T.() -> Unit) =
             then.thenValidate(block)
     }
 
@@ -61,23 +61,35 @@ object DSL3 {
     interface WhenContext
     interface ThenContext
 
-    interface GradleProjectGivenContext : GivenContext {
-        fun withGradleProject(block: GradleProjectBuilder.() -> Unit)
+    open class GradleProjectGivenContext(
+        private val gradleProjectBuilder: GradleProjectBuilder,
+    ) : GivenContext {
+        fun withGradleProject(block: GradleProjectBuilder.() -> Unit) {
+            gradleProjectBuilder.block()
+        }
     }
 
-    interface ScmProjectGivenContext : GivenContext {
-        fun withScmProject(block: ScmProjectBuilder.() -> Unit)
+    open class ScmProjectGivenContext(
+        private val gradleProjectBuilder: GradleProjectBuilder,
+        private val scmProjectBuilder: ScmProjectBuilder,
+    ) : GivenContext, GradleProjectGivenContext(gradleProjectBuilder) {
+        fun withScmProject(block: ScmProjectBuilder.() -> Unit) {
+            scmProjectBuilder.apply(block)
+                .build()
+        }
     }
 
-    interface ExecutionWhenContext : WhenContext {
-        fun whenExecute()
+    open class ExecutionWhenContext : WhenContext {
+        fun execute() {
+            println("Executing test")
+        }
     }
 
-    interface OutputThenContext : ThenContext {
-        fun assertOutput(block: OutputAssert.() -> Unit)
+    open class OutputThenContext : ThenContext {
+        fun assertOutput(block: OutputAssert.() -> Unit) {
+            OutputAssert().block()
+        }
     }
-
-    interface TestContext : GivenContext, WhenContext, ThenContext
 
     //------------------------------------
     // Helpers
@@ -111,53 +123,38 @@ object DSL3 {
         }
     }
 
-    class ScmProjectTestContext(
-        private val gradleProjectBuilder: GradleProjectBuilder,
-        private val scmProjectBuilder: ScmProjectBuilder,
-    ) :
-        GradleProjectGivenContext,
-        ScmProjectGivenContext,
-        ExecutionWhenContext,
-        OutputThenContext,
-        TestContext {
-
-        override fun withGradleProject(block: GradleProjectBuilder.() -> Unit) {
-            gradleProjectBuilder.block()
-        }
-
-        override fun withScmProject(block: ScmProjectBuilder.() -> Unit) {
-            scmProjectBuilder.apply(block)
-                .build()
-        }
-
-        override fun whenExecute() {
-            println("Executing test")
-        }
-
-        override fun assertOutput(block: OutputAssert.() -> Unit) {
-            OutputAssert().apply(block)
-        }
-    }
 
     //------------------------------------
     // Test case
     //------------------------------------
 
-    abstract class TestCase<C : TestContext> {
-        fun runTest(block: TestScenario<C>.() -> Unit) {
-            TestScenario(initContext()).block()
+    abstract class TestCase<G : GivenContext, W : WhenContext, T : ThenContext> {
+        fun runTest(block: TestScenario<G, W, T>.() -> Unit) {
+            TestScenario(
+                initGivenContext(),
+                initWhenContext(),
+                initThenContext(),
+            ).block()
         }
 
-        protected abstract fun initContext() : C
+        protected abstract fun initGivenContext() : G
+        protected abstract fun initWhenContext() : W
+        protected abstract fun initThenContext() : T
     }
 
-    abstract class SingleModuleScmProjectTestCase : TestCase<ScmProjectTestContext>() {
-        override fun initContext(): ScmProjectTestContext {
+    abstract class SingleModuleScmProjectTestCase : TestCase<ScmProjectGivenContext, ExecutionWhenContext, OutputThenContext>() {
+        override fun initGivenContext(): ScmProjectGivenContext {
             val gradleProjectBuilder = GradleProjectBuilder()
             val scmProjectBuilder = ScmProjectBuilder(gradleProjectBuilder)
 
-            return ScmProjectTestContext(gradleProjectBuilder, scmProjectBuilder)
+            return ScmProjectGivenContext(gradleProjectBuilder, scmProjectBuilder)
         }
+
+        override fun initWhenContext(): ExecutionWhenContext =
+            ExecutionWhenContext()
+
+        override fun initThenContext(): OutputThenContext =
+            OutputThenContext()
     }
 
 }
@@ -183,7 +180,7 @@ class DSL3Test {
             }
 
             whenExecute {
-                whenExecute()
+                execute()
             }
 
             thenValidate {
