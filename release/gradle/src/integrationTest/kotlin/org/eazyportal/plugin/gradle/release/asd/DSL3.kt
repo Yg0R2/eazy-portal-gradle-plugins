@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.asd
 
 import org.junit.jupiter.api.Test
+import kotlin.reflect.full.createInstance
 
 object DSL3 {
 
@@ -12,41 +13,41 @@ object DSL3 {
     annotation class TestDsl
 
     @TestDsl
-    class GivenScope<T : GivenContext>(private val context: T) {
-        fun givenTestCase(block: T.() -> Unit) {
+    class GivenScope<C : GivenContext>(private val context: C) {
+        fun givenTestCase(block: C.() -> Unit) {
             context.block()
         }
     }
 
     @TestDsl
-    class WhenScope<T : WhenContext>(private val context: T) {
-        fun whenExecute(block: T.() -> Unit) {
+    class WhenScope<C : WhenContext>(private val context: C) {
+        fun whenExecute(block: C.() -> Unit) {
             context.block()
         }
     }
 
     @TestDsl
-    class ThenScope<T : ThenContext>(private val context: T) {
-        fun thenValidate(block: T.() -> Unit) {
+    class ThenScope<C : ThenContext>(private val context: C) {
+        fun thenValidate(block: C.() -> Unit) {
             context.block()
         }
     }
 
     @TestDsl
-    class TestCaseDsl(
-        context: ScmProjectTestContext
+    class TestScenario<C : TestContext>(
+        context: C,
     ) {
         private val given = GivenScope(context)
         private val whenStage = WhenScope(context)
         private val then = ThenScope(context)
 
-        fun givenTestCase(block: ScmProjectTestContext.() -> Unit) =
+        fun givenTestCase(block: C.() -> Unit) =
             given.givenTestCase(block)
 
-        fun whenExecute(block: ScmProjectTestContext.() -> Unit) =
+        fun whenExecute(block: C.() -> Unit) =
             whenStage.whenExecute(block)
 
-        fun thenValidate(block: ScmProjectTestContext.() -> Unit) =
+        fun thenValidate(block: C.() -> Unit) =
             then.thenValidate(block)
     }
 
@@ -74,7 +75,7 @@ object DSL3 {
         fun assertOutput(block: OutputAssert.() -> Unit)
     }
 
-    interface TestContext
+    interface TestContext : GivenContext, WhenContext, ThenContext
 
     //------------------------------------
     // Helpers
@@ -96,8 +97,6 @@ object DSL3 {
             println("[HERE] [OutputAssert] contains text: $text")
         }
     }
-
-
 
     class ScmProjectTestContext :
         GradleProjectGivenContext,
@@ -127,16 +126,16 @@ object DSL3 {
     // Test case
     //------------------------------------
 
-    class TestCase(
-        private val context: ScmProjectTestContext
+    class TestCase<C : TestContext>(
+        private val context: C
     ) {
-        fun run(block: TestCaseDsl.() -> Unit) {
-            TestCaseDsl(context).block()
+        fun run(block: TestScenario<C>.() -> Unit) {
+            TestScenario(context).block()
         }
     }
 
-    fun runTest(block: TestCaseDsl.() -> Unit) {
-        val context = ScmProjectTestContext()
+    inline fun <reified C : TestContext>runTest(noinline block: TestScenario<C>.() -> Unit) {
+        val context = C::class.createInstance()
         TestCase(context).run(block)
     }
 
@@ -144,7 +143,7 @@ object DSL3 {
 
 class DSL3Test {
     @Test
-    fun test() = DSL3.runTest {
+    fun test() = DSL3.runTest<DSL3.ScmProjectTestContext> {
         givenTestCase {
             withGradleProject {
                 setVersion("1.0.0")
