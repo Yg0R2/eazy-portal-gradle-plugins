@@ -1,5 +1,6 @@
 package org.eazyportal.plugin.gradle.release.asd
 
+import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -57,8 +58,11 @@ object DSL3 {
     // Context
     //------------------------------------
 
+    @TestDsl
     interface GivenContext
+    @TestDsl
     interface WhenContext
+    @TestDsl
     interface ThenContext
 
     open class GradleProjectGivenContext(
@@ -94,6 +98,7 @@ object DSL3 {
     //------------------------------------
     // Helpers
     //------------------------------------
+    @TestDsl
     class GradleProjectBuilder {
         fun setVersion(version: String) {
             println("[HERE] [GradleProjectBuilder] set version: $version")
@@ -104,6 +109,7 @@ object DSL3 {
         }
     }
 
+    @TestDsl
     class ScmProjectBuilder(
         private val gradleProjectBuilder: GradleProjectBuilder,
     ) {
@@ -117,6 +123,7 @@ object DSL3 {
         }
     }
 
+    @TestDsl
     class OutputAssert {
         fun contains(text: String) {
             println("[HERE] [OutputAssert] contains text: $text")
@@ -129,6 +136,8 @@ object DSL3 {
     //------------------------------------
 
     abstract class TestCase<G : GivenContext, W : WhenContext, T : ThenContext> {
+
+        @IntegrationTestDsl
         fun runTest(block: TestScenario<G, W, T>.() -> Unit) {
             TestScenario(
                 initGivenContext(),
@@ -137,12 +146,13 @@ object DSL3 {
             ).block()
         }
 
-        protected abstract fun initGivenContext() : G
-        protected abstract fun initWhenContext() : W
-        protected abstract fun initThenContext() : T
+        protected abstract fun initGivenContext(): G
+        protected abstract fun initWhenContext(): W
+        protected abstract fun initThenContext(): T
     }
 
-    abstract class SingleModuleScmProjectTestCase : TestCase<ScmProjectGivenContext, ExecutionWhenContext, OutputThenContext>() {
+    abstract class SingleModuleScmProjectTestCase :
+        TestCase<ScmProjectGivenContext, ExecutionWhenContext, OutputThenContext>() {
         override fun initGivenContext(): ScmProjectGivenContext {
             val gradleProjectBuilder = GradleProjectBuilder()
             val scmProjectBuilder = ScmProjectBuilder(gradleProjectBuilder)
@@ -191,6 +201,5 @@ class DSL3Test {
         }
 
     }
-
 
 }
