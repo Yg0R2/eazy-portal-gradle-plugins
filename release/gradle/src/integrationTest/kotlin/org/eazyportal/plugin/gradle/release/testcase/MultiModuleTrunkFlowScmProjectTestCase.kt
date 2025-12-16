@@ -7,7 +7,7 @@ import java.io.File
 
 open class MultiModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectTestCase(
+) : OldBaseMultiModuleScmProjectTestCase(
     scmActions,
     ScmConfig.TRUNK_BASED_FLOW,
 ) {

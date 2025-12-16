@@ -7,7 +7,7 @@ import java.io.File
 
 open class MultiModuleGitFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseMultiModuleScmProjectTestCase(
+) : OldBaseMultiModuleScmProjectTestCase(
     scmActions,
     ScmConfig.GIT_FLOW,
 ) {

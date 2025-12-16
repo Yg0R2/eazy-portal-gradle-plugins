@@ -52,7 +52,9 @@ class SetReleaseVersionTaskIntegrationTest {
                 { "from '$it' branch" }
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, testBranch)
                     }
                 }
@@ -81,7 +83,9 @@ class SetReleaseVersionTaskIntegrationTest {
                 { "from '$it' branch" }
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, testBranch)
                     }
                 }
@@ -121,7 +125,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from release branch should succeed when there are acceptable commits on release branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
                         createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
@@ -167,7 +173,9 @@ class SetReleaseVersionTaskIntegrationTest {
 
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
@@ -198,7 +206,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on release branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
                         createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
@@ -240,7 +250,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on feature branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
@@ -289,7 +301,9 @@ class SetReleaseVersionTaskIntegrationTest {
                 { "from '$it' branch" },
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, testBranch)
                     }
                 }
@@ -322,7 +336,9 @@ class SetReleaseVersionTaskIntegrationTest {
                 { "from $it branch" },
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, testBranch)
                     }
                 }
@@ -383,7 +399,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from release branch should succeed when there are acceptable commits on release branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
                         submoduleProjectDirs.forEach {
@@ -456,7 +474,9 @@ class SetReleaseVersionTaskIntegrationTest {
 
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         submoduleProjectDirs.forEach {
@@ -493,7 +513,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on release branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
                         submoduleProjectDirs.forEach {
@@ -563,7 +585,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on feature branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         submoduleProjectDirs.forEach {
@@ -643,7 +667,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on feature branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
@@ -702,7 +728,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on release branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
                         submoduleProjectDirs.forEach {
@@ -774,7 +802,9 @@ class SetReleaseVersionTaskIntegrationTest {
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on feature branch`() {
             runTestCase {
                 givenTestCase {
-                    withScmProject {
+                    withScmProject()
+
+                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
                         submoduleProjectDirs.forEach {

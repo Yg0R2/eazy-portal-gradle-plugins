@@ -16,29 +16,24 @@ import java.nio.file.Files
 abstract class BaseSingleModuleScmProjectTestCase : SingleModuleScmProjectTestCase {
 
     override fun runTestCase(
-        block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
+        block: TestScenario<SingleModuleScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
     ) {
         val workingDir = Files.createTempDirectory("ep-")
             .toFile()
 
         try {
-            val context = ScmProjectContext(
+            val context = SingleModuleScmProjectContext(
                 scmActions = scmActions,
                 scmConfig = scmConfig,
                 projectDir = ProjectDir(
                     localDir = workingDir.resolve(PROJECT_NAME),
                     remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
-                        .also(File::mkdirs),
+                        .also(File::mkdirs),// TODO: remove this
                 ),
-                projectActionsMap = mutableMapOf()
             )
 
             TestScenario(
-                givenFactory = {
-                    ScmProjectGiven(context) {
-                        setUp(context)
-                    }
-                },
+                givenFactory = { SingleModuleScmProjectGiven(context, this::setUp) },
                 whenFactory = { ScmProjectWhen(context) },
                 thenFactory = { ScmProjectThen(context, it) },
             ).block()
@@ -47,7 +42,11 @@ abstract class BaseSingleModuleScmProjectTestCase : SingleModuleScmProjectTestCa
         }
     }
 
-    protected abstract fun <C : GivenContext> setUp(context: C)
+    // TODO: implement this here
+    protected abstract fun setUp(
+        context: SingleModuleScmProjectContext,
+        finalizeScmBlock: (SingleModuleScmProjectContext) -> Unit,
+    )
 
 }
 

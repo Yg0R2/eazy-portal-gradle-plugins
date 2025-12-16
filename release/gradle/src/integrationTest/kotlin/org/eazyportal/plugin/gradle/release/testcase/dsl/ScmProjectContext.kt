@@ -9,9 +9,12 @@ import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-data class ScmProjectContext(
-    val scmActions: TestScmActions<File>,
-    val scmConfig: ScmConfig,
-    val projectDir: ProjectDir,
-    val projectActionsMap: MutableMap<String, ProjectActions<out Any>>,
-) : GivenContext, WhenContext, ThenContext
+interface ScmProjectContext : GivenContext, WhenContext, ThenContext {
+
+    val projectActionsMap: MutableMap<String, ProjectActions<out Any>>
+
+    val scmActions: TestScmActions<File>
+
+    val scmConfig: ScmConfig
+
+}
