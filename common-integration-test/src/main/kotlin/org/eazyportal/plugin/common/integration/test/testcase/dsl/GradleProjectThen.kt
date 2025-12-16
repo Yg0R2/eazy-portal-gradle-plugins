@@ -5,8 +5,9 @@ import org.assertj.core.api.ListAssert
 import org.gradle.testkit.runner.BuildResult
 
 open class GradleProjectThen(
+    private val context: GradleProjectContext,
     private val executionResult: ExecutionResult,
-) : Then(executionResult) {
+) : Then<GradleProjectContext>(context) {
 
     fun gradleTaskOutput(block: ListAssert<String>.() -> Unit) {
         block(

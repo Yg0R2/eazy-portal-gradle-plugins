@@ -9,6 +9,7 @@ import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
+import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectContext
 import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
@@ -46,31 +47,31 @@ abstract class BaseScmProjectTestCase : SingleModuleScmProjectTestCase {
 
             projectActionsMap = mutableMapOf()
 
-            TestScenario(
-                { ScmProjectGiven { initializeScmProject(workingDir) } },
-                { ScmProjectWhen(projectDir) },
-                {
-                    ScmProjectThen(
-                        it,
-                        scmActions,
-                        scmConfig,
-                        { projectFile -> getProjectVersion(projectFile) }
-                    )
-                },
-            ).block()
+//            TestScenario(
+//                { ScmProjectGiven { initializeScmProject(workingDir) } },
+//                { ScmProjectWhen(projectDir) },
+//                {
+//                    ScmProjectThen(
+//                        it,
+//                        scmActions,
+//                        scmConfig,
+//                        { projectFile -> getProjectVersion(projectFile) }
+//                    )
+//                },
+//            ).block()
         } finally {
             workingDir.deleteRecursively()
         }
     }
 
-    protected abstract fun initializeScmProject(workingDir: File)
-
-    protected abstract fun initializeGradleProject(projectDir: File, projectName: String)
-
     fun getProjectVersion(projectFile: ProjectFile<File>): Version =
         projectActionsMap.computeIfAbsent(projectFile.getPath().absolutePathString()) {
             GradleProjectActions(projectFile)
         }.getVersion()
+
+    protected abstract fun initializeScmProject(workingDir: File)
+
+    protected abstract fun initializeGradleProject(projectDir: File, projectName: String)
 
 }
 

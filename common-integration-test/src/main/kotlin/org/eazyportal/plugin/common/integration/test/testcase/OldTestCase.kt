@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 
 @IntegrationTestDsl
-interface TestCase<G : Given<*>, W : When, T : Then> {
+interface TestCase<G : Given<*>, W : When<*>, T : Then<*>> {
 
     fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
 

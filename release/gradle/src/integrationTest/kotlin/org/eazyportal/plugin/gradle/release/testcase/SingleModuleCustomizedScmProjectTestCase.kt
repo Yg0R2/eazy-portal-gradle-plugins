@@ -7,7 +7,7 @@ import java.io.File
 
 open class SingleModuleCustomizedScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectTestCase(
+) : OldBaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig(
         featureBranch = "dummy-feature-branch",

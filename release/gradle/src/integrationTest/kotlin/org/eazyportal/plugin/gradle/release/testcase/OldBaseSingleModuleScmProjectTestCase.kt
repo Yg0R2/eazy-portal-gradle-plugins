@@ -1,15 +1,57 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.GivenContext
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.*
+import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
+import java.nio.file.Files
 
-abstract class BaseSingleModuleScmProjectTestCase(
+abstract class BaseSingleModuleScmProjectTestCase : SingleModuleScmProjectTestCase {
+
+    override fun runTestCase(
+        block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
+    ) {
+        val workingDir = Files.createTempDirectory("ep-")
+            .toFile()
+
+        try {
+            val context = ScmProjectContext(
+                scmActions = scmActions,
+                scmConfig = scmConfig,
+                projectDir = ProjectDir(
+                    localDir = workingDir.resolve(PROJECT_NAME),
+                    remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME")
+                        .also(File::mkdirs),
+                ),
+                projectActionsMap = mutableMapOf()
+            )
+
+            TestScenario(
+                givenFactory = {
+                    ScmProjectGiven(context) {
+                        setUp(context)
+                    }
+                },
+                whenFactory = { ScmProjectWhen(context) },
+                thenFactory = { ScmProjectThen(context, it) },
+            ).block()
+        } finally {
+            workingDir.deleteRecursively()
+        }
+    }
+
+    protected abstract fun <C : GivenContext> setUp(context: C)
+
+}
+
+abstract class OldBaseSingleModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
 ) : BaseScmProjectTestCase(), SingleModuleScmProjectTestCase {

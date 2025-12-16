@@ -7,7 +7,7 @@ import java.io.File
 
 open class SingleModuleTrunkFlowScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
-) : BaseSingleModuleScmProjectTestCase(
+) : OldBaseSingleModuleScmProjectTestCase(
     scmActions,
     ScmConfig.TRUNK_BASED_FLOW,
 ) {

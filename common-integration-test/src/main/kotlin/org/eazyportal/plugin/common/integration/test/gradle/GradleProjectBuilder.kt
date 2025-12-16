@@ -81,16 +81,16 @@ class GradleProjectBuilder(
         apply {
             extraProjectContent.add(
                 """
-            tasks {
-                register("listPlugins") {
-                    val plugins = project.plugins
-            
-                    doLast {
-                        plugins.forEach { println(it::class.java.name) }
+                tasks {
+                    register("listPlugins") {
+                        val plugins = project.plugins
+                
+                        doLast {
+                            plugins.forEach { println(it::class.java.name) }
+                        }
                     }
                 }
-            }
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 
@@ -151,9 +151,6 @@ class GradleProjectBuilder(
     // Helpers
     //------------------------------------------------------
 
-    private fun createPropertiesFileContent(projectVersion: String): List<String> =
-        listOf("version = $projectVersion")
-
     private fun createBuildFileContent(
         plugins: Set<String>,
         extraProjectContent: List<String>,
@@ -165,6 +162,9 @@ class GradleProjectBuilder(
 
             this
         }.also { println(it.joinToString(System.lineSeparator())) }
+
+    private fun createPropertiesFileContent(projectVersion: String): List<String> =
+        listOf("version = $projectVersion")
 
     private fun createSettingsFileContent(
         projectName: String,

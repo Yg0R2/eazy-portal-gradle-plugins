@@ -1,18 +1,14 @@
 package org.eazyportal.plugin.common.integration.test.testcase.dsl
 
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectTestCase
 
 class GradleProjectGiven(
-    private val testCase: BaseGradleProjectTestCase,
-) : Given<GradleProjectGivenContext>(
-    GradleProjectGivenContext(testCase.workingDir)
-) {
+    private val context: GradleProjectContext,
+    private val initializeProjectBlock: (GradleProjectContext, GradleProjectBuilder.() -> Unit) -> Unit,
+) : Given<GradleProjectContext>(context) {
 
-    fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit) {
-        testCase.initializeGradleProjectBuilder()
-            .apply { initProjectBlock() }
-            .build()
+    fun withGradleProject(finalizeProjectBlock: GradleProjectBuilder.() -> Unit = {}) {
+        initializeProjectBlock(context, finalizeProjectBlock)
     }
 
 }
