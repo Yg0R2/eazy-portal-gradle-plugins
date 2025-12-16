@@ -1,6 +1,5 @@
 package org.eazyportal.plugin.gradle.release.asd
 
-import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -137,7 +136,7 @@ object DSL3 {
 
     abstract class TestCase<G : GivenContext, W : WhenContext, T : ThenContext> {
 
-        @IntegrationTestDsl
+        @TestDsl
         fun runTest(block: TestScenario<G, W, T>.() -> Unit) {
             TestScenario(
                 initGivenContext(),
