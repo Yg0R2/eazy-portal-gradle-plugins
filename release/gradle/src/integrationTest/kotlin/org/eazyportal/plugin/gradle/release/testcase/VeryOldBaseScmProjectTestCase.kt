@@ -5,11 +5,12 @@ import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
+import org.eazyportal.plugin.common.integration.test.testcase.VeryOldTestCase
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.OldSingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
@@ -26,7 +27,7 @@ import java.nio.file.Files
 import java.util.*
 import kotlin.io.path.absolutePathString
 
-abstract class BaseScmProjectTestCase : SingleModuleScmProjectTestCase {
+abstract class OldBaseScmProjectTestCase : OldSingleModuleScmProjectTestCase {
 
     override lateinit var projectDir: ProjectDir
     protected lateinit var projectActionsMap: MutableMap<String, ProjectActions<out Any>>
@@ -74,10 +75,10 @@ abstract class BaseScmProjectTestCase : SingleModuleScmProjectTestCase {
 
 }
 
-abstract class OldBaseScmProjectTestCase(
+abstract class VeryOldBaseScmProjectTestCase(
     open val scmActions: TestScmActions<File>,
     open val scmConfig: ScmConfig,
-) : OldTestCase<OldBaseScmProjectTestCase> {
+) : VeryOldTestCase<VeryOldBaseScmProjectTestCase> {
 
     protected val projectActionsMap: MutableMap<String, ProjectActions<File>> = mutableMapOf()
 
@@ -101,7 +102,7 @@ abstract class OldBaseScmProjectTestCase(
     // TODO: move this to each impl
     override fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit,
-    ): ScmProjectTestCaseBuilder.ScmProjectGiven<OldBaseScmProjectTestCase, *> =
+    ): ScmProjectTestCaseBuilder.ScmProjectGiven<VeryOldBaseScmProjectTestCase, *> =
         ScmProjectTestCaseBuilder.ScmProjectGiven(this, initProjectBlock)
 
     fun createAndCommitDummyFile(

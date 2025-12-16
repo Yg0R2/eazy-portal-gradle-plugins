@@ -11,9 +11,11 @@ import org.eazyportal.plugin.gradle.release.testcase.MultiModuleCustomizedScmPro
 import org.eazyportal.plugin.gradle.release.testcase.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.MultiModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.SingleModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.OldSingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.OldSingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
@@ -24,6 +26,42 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 
 class SetReleaseVersionTaskIntegrationTest {
+
+    interface SetReleaseVersionTaskTestCase {
+        fun test()
+    }
+
+    interface SetReleaseVersionTaskSingleModuleTestCase :
+        SetReleaseVersionTaskTestCase,
+        SingleModuleScmProjectTestCase {
+
+        @Test
+        override fun test() = runTest {
+            givenTestCase {
+                withGradleProject {
+                    withListPluginsTask()
+                }
+
+            }
+
+            whenExecute {
+                taskSucceeds("listPlugins")
+            }
+
+            thenValidate {
+//                scmActions.status(projec)
+            }
+        }
+    }
+
+    class SingleModuleGitFlowTest : SetReleaseVersionTaskSingleModuleTestCase, SingleModuleGitFlowScmProjectTestCase() {
+
+    }
+
+}
+
+
+class OldSetReleaseVersionTaskIntegrationTest {
 
     interface SetReleaseVersionTaskTestCase {
 
@@ -41,9 +79,9 @@ class SetReleaseVersionTaskIntegrationTest {
 
     }
 
-    interface SetReleaseVersionTaskSingleModuleTestCase :
+    interface OldSetReleaseVersionTaskSingleModuleTestCase :
         SetReleaseVersionTaskTestCase,
-        SingleModuleScmProjectTestCase {
+        OldSingleModuleScmProjectTestCase {
 
         @TestFactory
         override fun `test 'run' should fail when there are no acceptable commits`(): List<DynamicTest> =
@@ -631,12 +669,12 @@ class SetReleaseVersionTaskIntegrationTest {
 
     @Nested
     inner class SingleModuleGitFlowTestCase :
-        SetReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        OldSetReleaseVersionTaskSingleModuleTestCase,
+        OldSingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
 
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
-        SetReleaseVersionTaskSingleModuleTestCase,
+        OldSetReleaseVersionTaskSingleModuleTestCase,
         SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
 
         @Test
@@ -685,7 +723,7 @@ class SetReleaseVersionTaskIntegrationTest {
 
     @Nested
     inner class SingleModuleCustomizedTestCase :
-        SetReleaseVersionTaskSingleModuleTestCase,
+        OldSetReleaseVersionTaskSingleModuleTestCase,
         SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
 
     @Nested

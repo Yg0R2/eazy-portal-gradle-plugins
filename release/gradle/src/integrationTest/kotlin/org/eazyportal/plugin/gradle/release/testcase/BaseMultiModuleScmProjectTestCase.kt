@@ -8,7 +8,6 @@ import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTe
 import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
-import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
@@ -16,7 +15,7 @@ import java.io.File
 abstract class BaseMultiModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-) : BaseScmProjectTestCase(), MultiModuleScmProjectTestCase {
+) : OldBaseScmProjectTestCase(), MultiModuleScmProjectTestCase {
 
     override lateinit var submoduleProjectDirs: List<ProjectDir>
 

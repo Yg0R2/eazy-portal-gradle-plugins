@@ -9,7 +9,7 @@ import org.eazyportal.plugin.common.integration.test.testcase.dsl.When
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 
-interface TestCase<G : Given, W : When, T : Then> {
+interface OldTestCase<G : Given, W : When, T : Then> {
 
     fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
 
@@ -36,7 +36,7 @@ interface TestCase<G : Given, W : When, T : Then> {
 
 }
 
-interface OldTestCase<P : OldTestCase<P>> {
+interface VeryOldTestCase<P : VeryOldTestCase<P>> {
 
     fun givenTestCase(
         initProjectBlock: GradleProjectBuilder.() -> Unit = {},

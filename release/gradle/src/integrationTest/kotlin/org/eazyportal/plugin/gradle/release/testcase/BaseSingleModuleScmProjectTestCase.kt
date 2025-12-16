@@ -2,7 +2,7 @@ package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.OldSingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
@@ -12,7 +12,7 @@ import java.io.File
 abstract class BaseSingleModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-) : BaseScmProjectTestCase(), SingleModuleScmProjectTestCase {
+) : OldBaseScmProjectTestCase(), OldSingleModuleScmProjectTestCase {
 
     final override fun initializeScmProject(workingDir: File) {
         initializeGradleProject(projectDir.remoteDir, PROJECT_NAME)
