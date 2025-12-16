@@ -24,11 +24,11 @@ class ProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
         }
 
         whenExecute {
-            taskSucceeds("projects")
+            gradleTaskSucceeds("projects")
         }
 
         thenVerify {
-            taskOutput {
+            gradleTaskOutput {
                 val expectedSubprojects = SUBPROJECT_NAMES.withIndex()
                     .map { (index, subprojectName) ->
                         if (index < SUBPROJECT_NAMES.size - 1) {

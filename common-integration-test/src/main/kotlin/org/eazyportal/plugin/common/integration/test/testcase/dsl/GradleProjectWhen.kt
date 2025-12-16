@@ -8,7 +8,7 @@ open class GradleProjectWhen(
     private val projectDir: File,
 ) : When() {
 
-    fun taskSucceeds(taskName: String, vararg args: String): BuildResult =
+    fun gradleTaskSucceeds(taskName: String, vararg args: String): BuildResult =
         createGradleRunner(projectDir, taskName, *args)
             .build()
 

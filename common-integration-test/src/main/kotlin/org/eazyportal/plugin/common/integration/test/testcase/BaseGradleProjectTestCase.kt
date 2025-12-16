@@ -12,7 +12,7 @@ import java.io.File
 abstract class BaseGradleProjectTestCase :
     TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
 
-    protected lateinit var workingDir: File
+    lateinit var workingDir: File
 
     @BeforeEach
     fun setUpWorkingDir(@TempDir tempDir: File) {

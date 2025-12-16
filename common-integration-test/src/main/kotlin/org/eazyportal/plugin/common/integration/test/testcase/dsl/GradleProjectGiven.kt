@@ -5,7 +5,9 @@ import org.eazyportal.plugin.common.integration.test.testcase.BaseGradleProjectT
 
 class GradleProjectGiven(
     private val testCase: BaseGradleProjectTestCase,
-) : Given() {
+) : Given<GradleProjectGivenContext>(
+    GradleProjectGivenContext(testCase.workingDir)
+) {
 
     fun withGradleProject(initProjectBlock: GradleProjectBuilder.() -> Unit) {
         testCase.initializeGradleProjectBuilder()

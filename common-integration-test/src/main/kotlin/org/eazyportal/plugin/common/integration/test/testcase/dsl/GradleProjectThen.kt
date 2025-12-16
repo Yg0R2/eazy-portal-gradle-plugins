@@ -8,7 +8,7 @@ open class GradleProjectThen(
     private val executionResult: ExecutionResult,
 ) : Then(executionResult) {
 
-    fun taskOutput(block: ListAssert<String>.() -> Unit) {
+    fun gradleTaskOutput(block: ListAssert<String>.() -> Unit) {
         block(
             assertThat(
                 executionResult.actual<BuildResult>()

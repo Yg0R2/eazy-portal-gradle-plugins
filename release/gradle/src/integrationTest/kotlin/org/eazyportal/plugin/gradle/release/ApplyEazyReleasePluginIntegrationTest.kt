@@ -21,11 +21,11 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
         }
 
         whenExecute {
-            taskSucceeds("tasks")
+            gradleTaskSucceeds("tasks")
         }
 
         thenVerify {
-            taskOutput {
+            gradleTaskOutput {
                 contains(
                     "Eazy-release tasks",
                     FINALIZE_RELEASE_VERSION_TASK_NAME,
@@ -55,7 +55,7 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
         }
 
         thenVerify {
-            taskOutput {
+            gradleTaskOutput {
                 contains(
                     "An exception occurred applying plugin request [id: 'org.eazyportal.plugin.gradle.release-gradle']",
                     "> Failed to apply plugin 'org.eazyportal.plugin.gradle.release-gradle'.",

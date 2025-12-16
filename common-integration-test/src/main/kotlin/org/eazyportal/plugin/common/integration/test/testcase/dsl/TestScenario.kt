@@ -1,7 +1,9 @@
 package org.eazyportal.plugin.common.integration.test.testcase.dsl
 
-@Suppress("UNCHECKED_CAST")
-class TestScenario<G : Given, W : When, T : Then>(
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.annotation.IntegrationTestDsl
+
+@IntegrationTestDsl
+class TestScenario<G : Given<*>, W : When, T : Then>(
     private val givenFactory: () -> G,
     private val whenFactory: () -> W,
     private val thenFactory: (ExecutionResult) -> T,

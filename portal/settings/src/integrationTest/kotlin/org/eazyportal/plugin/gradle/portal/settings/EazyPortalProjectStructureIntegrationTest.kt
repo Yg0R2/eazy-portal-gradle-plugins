@@ -33,10 +33,10 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
 
                 withExtraSettingsConfig(
                     """
-                eazyPortal {
-                    applyCoreDependencies = false
-                }
-                """.trimIndent()
+                    eazyPortal {
+                        applyCoreDependencies = false
+                    }
+                    """.trimIndent()
                 )
             }
 
@@ -51,11 +51,11 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
         }
 
         whenExecute {
-            taskSucceeds("build")
+            gradleTaskSucceeds("build")
         }
 
         thenVerify {
-            taskOutput {
+            gradleTaskOutput {
                 containsAll(
                     // TODO: fix project setup:
                     //  - "> Task :test SKIPPED"

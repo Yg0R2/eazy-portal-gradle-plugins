@@ -6,10 +6,12 @@ import org.eazyportal.plugin.common.integration.test.testcase.dsl.Given
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.Then
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.When
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.annotation.IntegrationTestDsl
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 
-interface TestCase<G : Given, W : When, T : Then> {
+@IntegrationTestDsl
+interface TestCase<G : Given<*>, W : When, T : Then> {
 
     fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
 

@@ -1,9 +1,14 @@
 package org.eazyportal.plugin.common.integration.test.testcase.dsl
 
-abstract class Given {
+import org.eazyportal.plugin.common.integration.test.testcase.dsl.annotation.IntegrationTestDsl
 
-    fun withScenarioConfiguration(block: () -> Unit) {
-        block()
+@IntegrationTestDsl
+abstract class Given<C: GivenContext>(
+    private val context: C,
+) {
+
+    fun withScenarioConfiguration(block: C.() -> Unit) {
+        block(context)
     }
 
 }

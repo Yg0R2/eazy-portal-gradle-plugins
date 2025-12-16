@@ -15,11 +15,11 @@ class ApplyEazyPortalProjectPluginIntegrationTest : BaseGradleProjectTestCase() 
         }
 
         whenExecute {
-            taskSucceeds("listPlugins")
+            gradleTaskSucceeds("listPlugins")
         }
 
         thenVerify {
-            taskOutput {
+            gradleTaskOutput {
                 contains(EazyPortalProjectPlugin::class.java.name)
             }
         }
