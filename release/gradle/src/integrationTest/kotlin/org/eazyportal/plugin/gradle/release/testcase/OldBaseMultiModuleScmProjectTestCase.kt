@@ -59,7 +59,7 @@ abstract class BaseMultiModuleScmProjectTestCase : MultiModuleScmProjectTestCase
     // TODO: implement this here
     protected abstract fun setUp(
         context: MultiModuleScmProjectContext,
-        finalizeScmBlock: (MultiModuleScmProjectContext) -> Unit,
+        finalizeScmBlock: () -> Unit,
     )
 
 }
