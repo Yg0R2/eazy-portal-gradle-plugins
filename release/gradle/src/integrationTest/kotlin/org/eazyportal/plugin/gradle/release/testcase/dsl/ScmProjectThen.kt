@@ -12,10 +12,10 @@ import org.gradle.testkit.runner.BuildResult
 import java.io.File
 import kotlin.io.path.absolutePathString
 
-class ScmProjectThen(
-    private val context: ScmProjectContext,
+class ScmProjectThen<C : ScmProjectContext>(
+    private val context: C,
     private val executionResult: ExecutionResult,
-) : Then<ScmProjectContext>(context) {
+) : Then<C>(context) {
 
     fun projectVersionIn(
         projectFile: ProjectFile<File>,
@@ -36,10 +36,10 @@ class ScmProjectThen(
     }
 
     fun scmStatusIn(
-        projectFile: ProjectFile<File>,
+        projectFile: ScmProjectContext.() -> ProjectFile<File>,
         block: ListAssert<String>.() -> Unit,
     ) {
-        block(assertThat(context.scmActions.status(projectFile)))
+        block(assertThat(context.scmActions.status(projectFile(context))))
     }
 
     fun scmClenStatusIn(projectFile: ProjectFile<File>, branch: String) {

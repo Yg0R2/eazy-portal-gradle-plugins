@@ -10,7 +10,7 @@ import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
 import java.util.UUID
 
-interface ScmProjectTestCase<G : ScmProjectGiven<*>> : TestCase<G, ScmProjectWhen, ScmProjectThen> {
+interface ScmProjectTestCase<G : ScmProjectGiven<*>> : TestCase<G, ScmProjectWhen, ScmProjectThen<*>> {
 
     val scmActions: TestScmActions<File>
     val scmConfig: ScmConfig

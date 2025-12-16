@@ -25,7 +25,7 @@ import java.nio.file.Files
 abstract class BaseMultiModuleScmProjectTestCase : MultiModuleScmProjectTestCase {
 
     override fun runTestCase(
-        block: TestScenario<MultiModuleScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit,
+        block: TestScenario<MultiModuleScmProjectGiven, ScmProjectWhen, ScmProjectThen<*>>.() -> Unit,
     ) {
         val workingDir = Files.createTempDirectory("ep-")
             .toFile()

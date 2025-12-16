@@ -103,7 +103,7 @@ class SetReleaseVersionTaskIntegrationTest {
                         )
                     }
 
-                    scmStatusIn(projectDir.localProjectFile) {
+                    scmStatusIn({ projectDir.localProjectFile }) {
                         contains(
                             "On branch ${scmConfig.releaseBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",
