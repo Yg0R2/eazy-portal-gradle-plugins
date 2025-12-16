@@ -10,7 +10,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 abstract class BaseGradleProjectTestCase :
-    OldTestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
+    TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
 
     protected lateinit var workingDir: File
 

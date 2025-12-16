@@ -5,7 +5,7 @@ import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.testcase.*
 import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.dsl.OldSingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.junit.jupiter.api.DynamicTest
@@ -24,7 +24,7 @@ class FinalizeReleaseVersionTaskIntegrationTest {
 
     interface FinalizeReleaseVersionTaskSingleModuleTestCase :
         FinalizeReleaseVersionTaskTestCase,
-        OldSingleModuleScmProjectTestCase {
+        SingleModuleScmProjectTestCase {
 
         @TestFactory
         override fun `test 'run' should finalize release version`(): List<DynamicTest> =
@@ -201,7 +201,7 @@ class FinalizeReleaseVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitFlowTestCase :
         FinalizeReleaseVersionTaskSingleModuleTestCase,
-        OldSingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
 
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
