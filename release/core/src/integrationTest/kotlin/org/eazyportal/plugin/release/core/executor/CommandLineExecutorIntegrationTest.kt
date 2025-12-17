@@ -2,7 +2,7 @@ package org.eazyportal.plugin.release.core.executor
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures
 import org.eazyportal.plugin.release.core.executor.exception.CliExecutionException
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectFile
@@ -23,7 +23,7 @@ class CommandLineExecutorIntegrationTest {
     @BeforeEach
     fun setUp(@TempDir workingDir: File) {
         projectFile = workingDir
-            .resolve(GradleTestFixtures.PROJECT_NAME)
+            .resolve(ProjectTestFixtures.PROJECT_NAME)
             .also { it.mkdir() }
             .let(::FileSystemProjectFile)
     }

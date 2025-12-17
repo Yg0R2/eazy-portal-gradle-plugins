@@ -24,4 +24,7 @@ dependencies {
 
     // Test dependencies
     testImplementation(testFixtures(project(":portal-common")))
+
+    // IntegrationTest dependencies
+    integrationTestImplementation(testFixtures(project(":portal-common")))
 }

@@ -1,7 +1,7 @@
-package org.eazyportal.plugin.common.integration.test.gradle.dsl
+package org.eazyportal.plugin.gradle.portal.common.dsl
 
 import org.eazyportal.plugin.common.integration.test.dsl.`when`.When
-import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils
+import org.eazyportal.plugin.gradle.portal.common.GradleUtils
 import org.gradle.testkit.runner.BuildResult
 import java.io.File
 

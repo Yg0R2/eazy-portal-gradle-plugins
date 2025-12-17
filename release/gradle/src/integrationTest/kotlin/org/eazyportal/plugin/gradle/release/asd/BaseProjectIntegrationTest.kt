@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.asd
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder

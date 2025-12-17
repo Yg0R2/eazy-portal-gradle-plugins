@@ -4,8 +4,8 @@ import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAMES
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.testcase.MultiModuleCustomizedScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.MultiModuleGitFlowScmProjectTestCase

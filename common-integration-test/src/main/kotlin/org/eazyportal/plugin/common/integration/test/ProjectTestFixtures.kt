@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.common.integration.test
 
-object GradleTestFixtures {
+object ProjectTestFixtures {
 
     const val BUILD_GRADLE_KTS_FILE_NAME = "build.gradle.kts"
     const val GRADLE_PROPERTIES_FILE_NAME = "gradle.properties"

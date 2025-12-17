@@ -1,3 +1,3 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.olddsl
 
 abstract class BaseSingleModuleScmProjectTestCase : SingleModuleScmProjectTestCase

@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.dsl.*

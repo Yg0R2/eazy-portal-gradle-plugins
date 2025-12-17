@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.olddsl
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert

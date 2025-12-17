@@ -26,5 +26,7 @@ dependencies {
     testFixturesApi(testFixtures(project(":release-core")))
 
     // IntegrationTest dependencies
+    integrationTestImplementation(testFixtures(project(":portal-common")))
+
     integrationTestImplementation("org.reflections:reflections:0.10.2")
 }

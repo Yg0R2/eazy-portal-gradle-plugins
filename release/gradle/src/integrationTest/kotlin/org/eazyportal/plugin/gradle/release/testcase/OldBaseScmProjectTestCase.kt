@@ -2,7 +2,7 @@ package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario

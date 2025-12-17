@@ -1,7 +1,6 @@
-package org.eazyportal.plugin.common.integration.test.gradle.dsl
+package org.eazyportal.plugin.gradle.portal.common.dsl
 
 import org.eazyportal.plugin.common.integration.test.dsl.given.Given
-import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import java.io.File
 
 class GradleProjectGiven(

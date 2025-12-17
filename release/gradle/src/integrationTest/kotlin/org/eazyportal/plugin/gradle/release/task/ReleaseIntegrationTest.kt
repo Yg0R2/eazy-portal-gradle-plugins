@@ -1,15 +1,12 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_TAG
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder
 import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
 import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_SNAPSHOT_VERSION_TASK_NAME
@@ -21,12 +18,7 @@ import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
 import org.eazyportal.plugin.release.core.version.model.Version
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 

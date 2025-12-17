@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.olddsl
 
 import org.eazyportal.plugin.common.integration.test.dsl.`when`.When
 import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner

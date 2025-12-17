@@ -1,10 +1,8 @@
-package org.eazyportal.plugin.common.integration.test.gradle
+package org.eazyportal.plugin.gradle.portal.common.dsl
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.BUILD_GRADLE_KTS_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures
 import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
+import org.eazyportal.plugin.gradle.portal.common.GradleUtils
 import java.io.File
 import kotlin.io.path.writeLines
 
@@ -13,7 +11,7 @@ class GradleProjectBuilder(
     private val projectDir: File,
 ) {
 
-    private var projectName: String = PROJECT_NAME
+    private var projectName: String = ProjectTestFixtures.PROJECT_NAME
     private var projectVersion: String = "0.0.1-SNAPSHOT"
 
     private val projectPluginIds = mutableSetOf<String>()
@@ -28,14 +26,14 @@ class GradleProjectBuilder(
         GradleUtils.createGradleRunner(projectDir, "--no-configuration-cache", "init", "--dsl", "kotlin")
             .build()
 
-        projectDir.resolve(BUILD_GRADLE_KTS_FILE_NAME)
+        projectDir.resolve(ProjectTestFixtures.BUILD_GRADLE_KTS_FILE_NAME)
             .toPath()
             .writeLines(createBuildFileContent(projectPluginIds, extraProjectContent))
 
         subprojects.forEach { (subprojectName, subprojectBuilder) ->
             projectDir.resolve(subprojectName)
                 .also { it.mkdirs() }
-                .resolve(BUILD_GRADLE_KTS_FILE_NAME).toPath()
+                .resolve(ProjectTestFixtures.BUILD_GRADLE_KTS_FILE_NAME).toPath()
                 .writeLines(
                     createBuildFileContent(
                         subprojectBuilder.projectPluginIds,
@@ -44,11 +42,11 @@ class GradleProjectBuilder(
                 )
         }
 
-        projectDir.resolve(GRADLE_PROPERTIES_FILE_NAME)
+        projectDir.resolve(ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME)
             .toPath()
             .writeLines(createPropertiesFileContent(projectVersion))
 
-        projectDir.resolve(SETTINGS_GRADLE_KTS_FILE_NAME)
+        projectDir.resolve(ProjectTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME)
             .toPath()
             .writeLines(createSettingsFileContent(projectName, settingsPluginIds, subprojects.keys))
     }

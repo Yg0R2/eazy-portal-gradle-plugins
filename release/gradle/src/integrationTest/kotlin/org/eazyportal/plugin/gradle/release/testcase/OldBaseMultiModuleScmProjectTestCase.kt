@@ -1,8 +1,8 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAMES
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectContext

@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.olddsl
 
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions

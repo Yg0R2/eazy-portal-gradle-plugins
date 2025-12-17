@@ -1,10 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
-import org.eazyportal.plugin.gradle.release.dsl.ScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.dsl.ScmProjectTestContext
-import org.eazyportal.plugin.gradle.release.dsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.gradle.release.olddsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.gradle.release.testcase.*
 import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase

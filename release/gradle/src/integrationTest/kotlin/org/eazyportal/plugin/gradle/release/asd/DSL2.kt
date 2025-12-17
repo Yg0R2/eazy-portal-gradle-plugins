@@ -1,7 +1,7 @@
 package org.eazyportal.plugin.gradle.release.asd
 
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SUBMODULE_NAMES
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.release.core.TestGitActions
 import org.eazyportal.plugin.release.core.TestScmActions
