@@ -7,9 +7,8 @@ import org.eazyportal.plugin.common.integration.test.dsl.then.Then
 import org.gradle.testkit.runner.BuildResult
 
 class GradleProjectThen(
-    context: GradleProjectTestContext,
     private val executionResult: TestScenario.ExecutionResult,
-) : Then<GradleProjectTestContext>(context) {
+) : Then {
 
     fun gradleTaskOutput(block: ListAssert<String>.() -> Unit) {
         block(

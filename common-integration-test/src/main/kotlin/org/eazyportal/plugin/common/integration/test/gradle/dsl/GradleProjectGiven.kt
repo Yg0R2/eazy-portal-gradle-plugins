@@ -2,14 +2,15 @@ package org.eazyportal.plugin.common.integration.test.gradle.dsl
 
 import org.eazyportal.plugin.common.integration.test.dsl.given.Given
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
+import java.io.File
 
 class GradleProjectGiven(
-    private val context: GradleProjectTestContext,
-    private val setUpProjectBlock: (GradleProjectTestContext, GradleProjectBuilder.() -> Unit) -> Unit,
-) : Given<GradleProjectTestContext>(context) {
+    val workingDir: File,
+    private val setUpProjectBlock: (File, GradleProjectBuilder.() -> Unit) -> Unit,
+) : Given {
 
     fun withGradleProject(finalizeProjectBlock: GradleProjectBuilder.() -> Unit = {}) {
-        setUpProjectBlock(context, finalizeProjectBlock)
+        setUpProjectBlock(workingDir, finalizeProjectBlock)
     }
 
 }

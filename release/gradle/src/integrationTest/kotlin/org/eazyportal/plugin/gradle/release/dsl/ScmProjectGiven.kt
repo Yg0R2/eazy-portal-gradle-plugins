@@ -8,15 +8,13 @@ import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
-import java.util.UUID
+import java.util.*
 
-abstract class ScmProjectGiven<out C : ScmProjectTestContext>(
-    private val context: C,
-    private val initializeProjectBlock: (C, C.() -> Unit) -> Unit,
-) : Given<C>(context) {
-
-    val scmActions: TestScmActions<File> = context.scmActions
-    val scmConfig: ScmConfig = context.scmConfig
+abstract class ScmProjectGiven(
+    open val scmActions: TestScmActions<File>,
+    open val scmConfig: ScmConfig,
+    private val initializeProjectBlock: (() -> Unit) -> Unit,
+) : Given {
 
     fun createDummyFile(projectFile: ProjectFile<File>) {
         projectFile.resolve(DUMMY_FILE_NAME)
@@ -29,14 +27,14 @@ abstract class ScmProjectGiven<out C : ScmProjectTestContext>(
     ) {
         createDummyFile(projectFile)
 
-        context.scmActions.add(projectFile, DUMMY_FILE_NAME)
-        context.scmActions.commit(projectFile, commitMessage)
+        scmActions.add(projectFile, DUMMY_FILE_NAME)
+        scmActions.commit(projectFile, commitMessage)
     }
 
     abstract fun setProjectVersion(version: Version)
 
-    fun withScmProject(finalizeScmBlock: C.() -> Unit = {}) {
-        initializeProjectBlock(context, finalizeScmBlock)
+    fun withScmProject(finalizeScmBlock: () -> Unit = {}) {
+        initializeProjectBlock(finalizeScmBlock)
     }
 
 }

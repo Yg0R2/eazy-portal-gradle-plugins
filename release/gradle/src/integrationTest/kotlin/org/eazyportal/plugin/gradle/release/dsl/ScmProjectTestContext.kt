@@ -1,6 +1,5 @@
 package org.eazyportal.plugin.gradle.release.dsl
 
-import org.eazyportal.plugin.common.integration.test.dsl.TestContext
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectActions

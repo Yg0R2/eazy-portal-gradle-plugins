@@ -40,13 +40,11 @@ class EazyPortalProjectStructureIntegrationTest : BaseGradleProjectTestCase() {
                 )
             }
 
-            withScenarioConfiguration {
-                SUBPROJECT_NAMES.forEach {
-                    workingDir.copyIntoFromResources(
-                        this@EazyPortalProjectStructureIntegrationTest::class.java.simpleName,
-                        "$it/",
-                    )
-                }
+            SUBPROJECT_NAMES.forEach {
+                workingDir.copyIntoFromResources(
+                    this@EazyPortalProjectStructureIntegrationTest::class.java.simpleName,
+                    "$it/",
+                )
             }
         }
 

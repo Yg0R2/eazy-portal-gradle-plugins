@@ -5,12 +5,8 @@ import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.ExecutionResult
 import org.eazyportal.plugin.common.integration.test.dsl.given.Given
-import org.eazyportal.plugin.common.integration.test.dsl.given.GivenContext
-import org.eazyportal.plugin.common.integration.test.dsl.TestContext
 import org.eazyportal.plugin.common.integration.test.dsl.then.Then
-import org.eazyportal.plugin.common.integration.test.dsl.then.ThenContext
 import org.eazyportal.plugin.common.integration.test.dsl.`when`.When
-import org.eazyportal.plugin.common.integration.test.dsl.`when`.WhenContext
 import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
