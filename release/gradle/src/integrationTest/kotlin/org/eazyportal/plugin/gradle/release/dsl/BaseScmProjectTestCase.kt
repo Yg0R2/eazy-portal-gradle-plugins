@@ -4,9 +4,9 @@ import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import java.io.File
 import java.nio.file.Files
 
-abstract class BaseScmProjectTestCase : ScmProjectTestCase {
+abstract class BaseScmProjectTestCase<G : ScmProjectGiven, T : ScmProjectThen> : ScmProjectTestCase<G, T> {
 
-    final override fun runTestCase(block: TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>.() -> Unit) {
+    final override fun runTestCase(block: TestScenario<G, ScmProjectWhen, T>.() -> Unit) {
         val workingDir = Files.createTempDirectory("ep-")
             .toFile()
 
@@ -17,6 +17,6 @@ abstract class BaseScmProjectTestCase : ScmProjectTestCase {
         }
     }
 
-    protected abstract fun crateTestScenario(workingDir: File): TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen>
+    protected abstract fun crateTestScenario(workingDir: File): TestScenario<G, ScmProjectWhen, T>
 
 }

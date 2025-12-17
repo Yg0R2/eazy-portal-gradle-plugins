@@ -1,31 +1,38 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.dsl.singlemodule
 
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
+import org.eazyportal.plugin.gradle.release.dsl.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.ScmProjectWhen
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
+import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
 abstract class BaseSingleModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-) : BaseScmProjectTestCase() {
+) : BaseScmProjectTestCase<SingleModuleScmProjectGiven, SingleModuleScmProjectThen>() {
 
-    override fun crateTestScenario(workingDir: File): TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
+    override fun crateTestScenario(workingDir: File): TestScenario<SingleModuleScmProjectGiven, ScmProjectWhen, SingleModuleScmProjectThen> {
         val projectDir = ProjectDir(
             localDir = workingDir.resolve(PROJECT_NAME),
             remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
         )
 
+        val projectActionsMap = mutableMapOf<String, ProjectActions<File>>()
+
         return TestScenario(
             givenFactory = {
-                ScmProjectGiven(scmActions, scmConfig, projectDir) {
+                SingleModuleScmProjectGiven(scmActions, scmConfig, projectDir, projectActionsMap) {
                     initScmProjectBlock(projectDir)
                 }
             },
             whenFactory = { ScmProjectWhen(projectDir) },
-            thenFactory = { ScmProjectThen(it) },
+            thenFactory = {
+                SingleModuleScmProjectThen(scmActions, scmConfig, projectDir, projectActionsMap, it)
+            },
         )
     }
 

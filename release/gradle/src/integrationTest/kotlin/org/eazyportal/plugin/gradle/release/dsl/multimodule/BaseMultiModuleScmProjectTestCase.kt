@@ -1,21 +1,24 @@
-package org.eazyportal.plugin.gradle.release.dsl
+package org.eazyportal.plugin.gradle.release.dsl.multimodule
 
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.gradle.portal.common.dsl.GradleProjectBuilder
+import org.eazyportal.plugin.gradle.release.dsl.BaseScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.ScmProjectWhen
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
+import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
 abstract class BaseMultiModuleScmProjectTestCase(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-) : BaseScmProjectTestCase() {
+) : BaseScmProjectTestCase<MultiModuleScmProjectGiven, MultiModuleScmProjectThen>() {
 
-    override fun crateTestScenario(workingDir: File): TestScenario<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
+    override fun crateTestScenario(workingDir: File): TestScenario<MultiModuleScmProjectGiven, ScmProjectWhen, MultiModuleScmProjectThen> {
         val projectDir = ProjectDir(
             localDir = workingDir.resolve(PROJECT_NAME),
             remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
@@ -27,14 +30,18 @@ abstract class BaseMultiModuleScmProjectTestCase(
             )
         }
 
+        val projectActionsMap = mutableMapOf<String, ProjectActions<File>>()
+
         return TestScenario(
             givenFactory = {
-                ScmProjectGiven(scmActions, scmConfig, projectDir) {
+                MultiModuleScmProjectGiven(scmActions, scmConfig, projectDir, submoduleProjectDirs, projectActionsMap) {
                     initScmProjectBlock(projectDir, submoduleProjectDirs)
                 }
             },
             whenFactory = { ScmProjectWhen(projectDir) },
-            thenFactory = { ScmProjectThen(it) },
+            thenFactory = {
+                MultiModuleScmProjectThen(scmActions, scmConfig, projectDir, submoduleProjectDirs, projectActionsMap, it)
+            },
         )
     }
 

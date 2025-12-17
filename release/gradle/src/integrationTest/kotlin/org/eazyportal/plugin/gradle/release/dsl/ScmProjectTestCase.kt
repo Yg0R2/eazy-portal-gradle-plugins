@@ -4,8 +4,8 @@ import org.eazyportal.plugin.common.integration.test.dsl.TestCase
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 
-interface ScmProjectTestCase :
-    TestCase<ScmProjectGiven, ScmProjectWhen, ScmProjectThen> {
+interface ScmProjectTestCase<G : ScmProjectGiven, T : ScmProjectThen> :
+    TestCase<G, ScmProjectWhen, T> {
 
     val scmActions: TestScmActions<*>
 
