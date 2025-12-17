@@ -5,6 +5,7 @@ import org.eazyportal.plugin.common.integration.test.dsl.given.Given
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
+import org.eazyportal.plugin.release.core.version.model.Version
 import java.io.File
 
 interface ScmProjectGiven : Given {
@@ -14,13 +15,18 @@ interface ScmProjectGiven : Given {
     val scmConfig: ScmConfig
 
     //------------------------------------
-    // DSL
+    // Project
     //------------------------------------
+
+    fun setProjectVersion(
+        projectFile: ProjectFile<File>,
+        version: Version,
+    )
 
     fun withScmProject()
 
     //------------------------------------
-    // Helpers
+    // SCM
     //------------------------------------
 
     fun createDummyFile(projectFile: ProjectFile<File>)

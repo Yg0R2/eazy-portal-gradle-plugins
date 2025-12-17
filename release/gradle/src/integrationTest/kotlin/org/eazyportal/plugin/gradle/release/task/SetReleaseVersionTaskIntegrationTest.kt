@@ -5,13 +5,18 @@ import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.project.GradleProjectConstants.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
-import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -159,10 +164,6 @@ class SetReleaseVersionTaskIntegrationTest {
 
         @Test
         override fun `test 'run' from release branch should fail when there are acceptable commits on feature branch`() {
-            assumeTrue(this !is SingleModuleTrunkFlowScmProjectTestCase) {
-                "Test is not valid for Trunk Based SCM flow"
-            }
-
             runTestCase {
                 givenTestCase {
                     withScmProject()
@@ -293,7 +294,7 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                   scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
 
                 whenExecute {
@@ -460,10 +461,6 @@ class SetReleaseVersionTaskIntegrationTest {
 
         @Test
         override fun `test 'run' from release branch should fail when there are acceptable commits on feature branch`() {
-            assumeTrue(this !is MultiModuleTrunkFlowScmProjectTestCase) {
-                "Test is not valid for Trunk Based SCM flow"
-            }
-
             runTestCase {
                 givenTestCase {
                     withScmProject()
@@ -564,7 +561,9 @@ class SetReleaseVersionTaskIntegrationTest {
                             containsExactly(INITIAL_COMMIT_MESSAGE)
                         }
 
-                        projectVersionIn(it.localProjectFile, RELEASE_001)
+                        projectVersionIn(it.localProjectFile) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                 }
@@ -648,12 +647,17 @@ class SetReleaseVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitFlowTestCase :
         SetReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
         SetReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+        SingleModuleTrunkFlowScmProjectTestCase() {
+
+        @Test
+        @Disabled("Test is not valid for Trunk Based SCM flow")
+        override fun `test 'run' from release branch should fail when there are acceptable commits on feature branch`() {
+        }
 
         @Test
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on feature branch`() {
@@ -661,11 +665,9 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
-                        createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
-                    }
+                    createAndCommitDummyFile(projectDir.localProjectFile, FIX_COMMIT_MESSAGE)
                 }
 
                 whenExecute {
@@ -694,7 +696,9 @@ class SetReleaseVersionTaskIntegrationTest {
                         )
                     }
 
-                    projectVersionIn(projectDir.localProjectFile, RELEASE_001)
+                    projectVersionIn(projectDir.localProjectFile) {
+                        isEqualTo(RELEASE_001)
+                    }
                 }
             }
         }
@@ -704,17 +708,22 @@ class SetReleaseVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleCustomizedTestCase :
         SetReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleCustomizedScmProjectTestCase()
 
     @Nested
     inner class MultiModuleGitFlowTestCase :
         SetReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class MultiModuleTrunkFlowTestCase :
         SetReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS) {
+        MultiModuleTrunkFlowScmProjectTestCase() {
+
+        @Test
+        @Disabled("Test is not valid for Trunk Based SCM flow")
+        override fun `test 'run' from release branch should fail when there are acceptable commits on feature branch`() {
+        }
 
         @Test
         override fun `test 'run' from feature branch should succeed when there are acceptable commits on release branch`() {
@@ -722,15 +731,13 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
-                        submoduleProjectDirs.forEach {
-                            createAndCommitDummyFile(it.localProjectFile, FIX_COMMIT_MESSAGE)
-                        }
-
-                        scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                    submoduleProjectDirs.forEach {
+                        createAndCommitDummyFile(it.localProjectFile, FIX_COMMIT_MESSAGE)
                     }
+
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
                 }
 
                 whenExecute {
@@ -762,7 +769,9 @@ class SetReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(this, RELEASE_001)
+                        projectVersionIn(this) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                     submoduleProjectDirs.forEach {
@@ -783,7 +792,9 @@ class SetReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(it.localProjectFile, RELEASE_001)
+                        projectVersionIn(it.localProjectFile) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                 }
@@ -796,12 +807,10 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
 
-                        submoduleProjectDirs.forEach {
-                            createAndCommitDummyFile(it.localProjectFile, FIX_COMMIT_MESSAGE)
-                        }
+                    submoduleProjectDirs.forEach {
+                        createAndCommitDummyFile(it.localProjectFile, FIX_COMMIT_MESSAGE)
                     }
                 }
 
@@ -834,7 +843,9 @@ class SetReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(this, RELEASE_001)
+                        projectVersionIn(this) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                     submoduleProjectDirs.forEach {
@@ -855,7 +866,9 @@ class SetReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(it.localProjectFile, RELEASE_001)
+                        projectVersionIn(it.localProjectFile) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                 }
@@ -867,6 +880,6 @@ class SetReleaseVersionTaskIntegrationTest {
     @Nested
     inner class MultiModuleCustomizedTestCase :
         SetReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleCustomizedScmProjectTestCase()
 
 }

@@ -1,11 +1,15 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.gradle.release.olddsl.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.testcase.*
-import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
-import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
 import org.junit.jupiter.api.DynamicTest
@@ -35,14 +39,12 @@ class SetSnapshotVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-//                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
 
-                        this@givenTestCase.setProjectVersion(RELEASE_001)
-                        scmActions.add(projectDir.localProjectFile, ".")
-                        scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
-                        scmActions.push(projectDir.localProjectFile, scmConfig.remote, testBranch)
-//                    }
+                    setProjectVersion(projectDir.localProjectFile, RELEASE_001)
+                    scmActions.add(projectDir.localProjectFile, ".")
+                    scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
+                    scmActions.push(projectDir.localProjectFile, scmConfig.remote, testBranch)
                 }
 
                 whenExecute {
@@ -54,7 +56,7 @@ class SetSnapshotVersionTaskIntegrationTest {
                         contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
                     }
 
-                    scmStatusIn({ projectDir.localProjectFile }) {
+                    scmStatusIn(projectDir.localProjectFile) {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
@@ -64,7 +66,9 @@ class SetSnapshotVersionTaskIntegrationTest {
                         )
                     }
 
-                    projectVersionIn(projectDir.localProjectFile, SNAPSHOT_002)
+                    projectVersionIn(projectDir.localProjectFile) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
                 }
             }
 
@@ -84,32 +88,32 @@ class SetSnapshotVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitFlowTestCase :
         SetSnapshotVersionTaskSingleModuleTestCase,
-        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
         SetSnapshotVersionTaskSingleModuleTestCase,
-        SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleTrunkFlowScmProjectTestCase()
 
     @Nested
     inner class SingleModuleCustomizedTestCase :
         SetSnapshotVersionTaskSingleModuleTestCase,
-        SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleCustomizedScmProjectTestCase()
 
     @Nested
     inner class MultiModuleGitFlowTestCase :
         SetSnapshotVersionTaskMultiModuleTestCase,
-        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class MultiModuleTrunkFlowTestCase :
         SetSnapshotVersionTaskMultiModuleTestCase,
-        MultiModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleTrunkFlowScmProjectTestCase()
 
     @Nested
     inner class MultiModuleCustomizedTestCase :
         SetSnapshotVersionTaskMultiModuleTestCase,
-        MultiModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleCustomizedScmProjectTestCase()
 
 
     /*
