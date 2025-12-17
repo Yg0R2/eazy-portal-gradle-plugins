@@ -4,15 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.eazyportal.plugin.common.integration.test.gradle.GradleUtils.createGradleRunner
 import org.eazyportal.plugin.common.integration.test.testcase.dsl.ExecutionResult
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.Given
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.GivenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.Then
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.ThenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.When
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.WhenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.annotation.IntegrationTestDsl
-import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.eazyportal.plugin.common.integration.test.dsl.given.Given
+import org.eazyportal.plugin.common.integration.test.dsl.given.GivenContext
+import org.eazyportal.plugin.common.integration.test.dsl.TestContext
+import org.eazyportal.plugin.common.integration.test.dsl.then.Then
+import org.eazyportal.plugin.common.integration.test.dsl.then.ThenContext
+import org.eazyportal.plugin.common.integration.test.dsl.`when`.When
+import org.eazyportal.plugin.common.integration.test.dsl.`when`.WhenContext
+import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
@@ -109,7 +109,7 @@ class TestScenario<G : Given<out GivenContext>, W : When<out WhenContext>, T : T
 }
 
 @IntegrationTestDsl
-interface TestCase<G : Given<out GivenContext>, W : When<out WhenContext>, T : Then<out ThenContext>> {
+interface TestCase<G : Given<GivenContext>, W : When<WhenContext>, T : Then<ThenContext>> {
     fun runTestCase(block: TestScenario<G, W, T>.() -> Unit)
 }
 

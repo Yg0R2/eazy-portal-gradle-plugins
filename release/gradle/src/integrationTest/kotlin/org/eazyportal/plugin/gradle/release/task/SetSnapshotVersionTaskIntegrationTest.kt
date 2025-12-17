@@ -1,15 +1,13 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.gradle.release.TestCaseBuilder.givenTestCase
+import org.eazyportal.plugin.gradle.release.dsl.ScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.ScmProjectTestContext
+import org.eazyportal.plugin.gradle.release.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleCustomizedScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleGitFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleTrunkFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleCustomizedScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleGitFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.testcase.*
 import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
@@ -40,14 +38,14 @@ class SetSnapshotVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
+//                    withScenarioConfiguration {
                         scmActions.checkout(projectDir.localProjectFile, testBranch)
 
-                        setProjectVersion(RELEASE_001)
+                        this@givenTestCase.setProjectVersion(RELEASE_001)
                         scmActions.add(projectDir.localProjectFile, ".")
                         scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
                         scmActions.push(projectDir.localProjectFile, scmConfig.remote, testBranch)
-                    }
+//                    }
                 }
 
                 whenExecute {
@@ -59,7 +57,7 @@ class SetSnapshotVersionTaskIntegrationTest {
                         contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
                     }
 
-                    scmStatusIn(projectDir.localProjectFile) {
+                    scmStatusIn({ projectDir.localProjectFile }) {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",

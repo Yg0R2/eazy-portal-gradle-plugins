@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release.testcase.dsl
 
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.Given
+import org.eazyportal.plugin.common.integration.test.dsl.given.Given
 
 abstract class ScmProjectGiven<C : ScmProjectContext>(
     private val context: C,

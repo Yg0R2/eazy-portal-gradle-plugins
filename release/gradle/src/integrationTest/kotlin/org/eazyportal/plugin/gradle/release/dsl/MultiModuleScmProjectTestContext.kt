@@ -1,4 +1,4 @@
-package org.eazyportal.plugin.gradle.release.testcase.dsl
+package org.eazyportal.plugin.gradle.release.dsl
 
 import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
@@ -6,13 +6,13 @@ import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
-data class MultiModuleScmProjectContext(
+data class MultiModuleScmProjectTestContext(
     override val scmActions: TestScmActions<File>,
     override val scmConfig: ScmConfig,
-    val projectDir: ProjectDir,
+    override val projectDir: ProjectDir,
     val submoduleProjectDirs: List<ProjectDir>,
-) : ScmProjectContext {
+) : ScmProjectTestContext {
 
-    override val projectActionsMap: MutableMap<String, ProjectActions<out Any>> = mutableMapOf()
+    override val projectActionsMap: MutableMap<String, ProjectActions<File>> = mutableMapOf()
 
 }

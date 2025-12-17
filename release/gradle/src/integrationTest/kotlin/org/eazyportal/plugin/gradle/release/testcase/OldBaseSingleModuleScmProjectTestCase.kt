@@ -1,11 +1,10 @@
 package org.eazyportal.plugin.gradle.release.testcase
 
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.GivenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
+import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.dsl.*
-import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig

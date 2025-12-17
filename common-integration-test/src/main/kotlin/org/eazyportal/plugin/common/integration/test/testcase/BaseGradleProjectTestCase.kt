@@ -1,12 +1,16 @@
 package org.eazyportal.plugin.common.integration.test.testcase
 
+import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.*
+import org.eazyportal.plugin.common.integration.test.gradle.dsl.GradleProjectTestContext
+import org.eazyportal.plugin.common.integration.test.gradle.dsl.GradleProjectGiven
+import org.eazyportal.plugin.common.integration.test.gradle.dsl.GradleProjectThen
+import org.eazyportal.plugin.common.integration.test.gradle.dsl.GradleProjectWhen
 import java.nio.file.Files
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 
-abstract class BaseGradleProjectTestCase :
+open class BaseGradleProjectTestCase :
     TestCase<GradleProjectGiven, GradleProjectWhen, GradleProjectThen> {
 
     @OptIn(ExperimentalPathApi::class)
@@ -16,7 +20,7 @@ abstract class BaseGradleProjectTestCase :
         val workingDir = Files.createTempDirectory("ep-")
 
         try {
-            val context = GradleProjectContext(workingDir.toFile())
+            val context = GradleProjectTestContext(workingDir.toFile())
 
             TestScenario(
                 givenFactory = { GradleProjectGiven(context, this::setUpProject) },
@@ -29,7 +33,7 @@ abstract class BaseGradleProjectTestCase :
     }
 
     private fun setUpProject(
-        context: GradleProjectContext,
+        context: GradleProjectTestContext,
         finalizeProjectBlock: GradleProjectBuilder.() -> Unit,
     ) {
         GradleProjectBuilder(context.workingDir)

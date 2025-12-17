@@ -4,7 +4,7 @@ import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.BUILD_GR
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.GRADLE_PROPERTIES_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.SETTINGS_GRADLE_KTS_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.annotation.IntegrationTestDsl
+import org.eazyportal.plugin.common.integration.test.dsl.annotation.IntegrationTestDsl
 import java.io.File
 import kotlin.io.path.writeLines
 

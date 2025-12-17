@@ -1,9 +1,8 @@
 package org.eazyportal.plugin.gradle.release.testcase.dsl
 
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.GivenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.ThenContext
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.WhenContext
-import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.eazyportal.plugin.common.integration.test.dsl.given.GivenContext
+import org.eazyportal.plugin.common.integration.test.dsl.then.ThenContext
+import org.eazyportal.plugin.common.integration.test.dsl.`when`.WhenContext
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectActions
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig

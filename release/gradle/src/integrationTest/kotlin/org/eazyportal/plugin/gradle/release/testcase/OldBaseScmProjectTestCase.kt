@@ -5,15 +5,14 @@ import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
 import org.eazyportal.plugin.common.integration.test.GradleTestFixtures.PROJECT_NAME
 import org.eazyportal.plugin.common.integration.test.gradle.GradleProjectBuilder
 import org.eazyportal.plugin.common.integration.test.testcase.OldTestCase
-import org.eazyportal.plugin.common.integration.test.testcase.dsl.TestScenario
+import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.gradle.release.testcase.builder.ScmProjectTestCaseBuilder
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectGiven
-import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectContext
 import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectThen
 import org.eazyportal.plugin.gradle.release.testcase.dsl.ScmProjectWhen
-import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.FileSystemProjectFile
 import org.eazyportal.plugin.release.core.project.ProjectActions

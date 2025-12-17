@@ -51,7 +51,7 @@ class ApplyEazyReleasePluginIntegrationTest : BaseGradleProjectTestCase() {
         }
 
         whenExecute {
-            taskFails("tasks")
+            gradleTaskFails("tasks")
         }
 
         thenVerify {

@@ -1,6 +1,6 @@
 package org.eazyportal.plugin.gradle.release.testcase.dsl
 
-import org.eazyportal.plugin.gradle.release.testcase.dsl.model.ProjectDir
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 
 interface SingleModuleScmProjectTestCase : ScmProjectTestCase<SingleModuleScmProjectGiven> {
 
