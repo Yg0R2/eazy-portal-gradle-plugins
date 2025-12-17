@@ -1,20 +1,8 @@
 package org.eazyportal.plugin.gradle.release.task
 
-import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.ScmTestFixtures.DUMMY_FILE_NAME
-import org.eazyportal.plugin.common.ScmTestFixtures.FIX_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
-import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
-import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
+import org.eazyportal.plugin.gradle.release.dsl.ScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_RELEASE_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleCustomizedScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleGitFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.MultiModuleTrunkFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleCustomizedScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleGitFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.SingleModuleTrunkFlowScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
 import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -43,7 +31,7 @@ class SetReleaseVersionTaskIntegrationTest {
 
     interface SetReleaseVersionTaskSingleModuleTestCase :
         SetReleaseVersionTaskTestCase,
-        SingleModuleScmProjectTestCase {
+        ScmProjectTestCase {
 
         @TestFactory
         override fun `test 'run' should fail when there are no acceptable commits`(): List<DynamicTest> =
@@ -54,9 +42,7 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
-                    }
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
 
                 whenExecute {
@@ -85,9 +71,7 @@ class SetReleaseVersionTaskIntegrationTest {
                 givenTestCase {
                     withScmProject()
 
-                    withScenarioConfiguration {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
-                    }
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
 
                 whenExecute {
@@ -103,7 +87,7 @@ class SetReleaseVersionTaskIntegrationTest {
                         )
                     }
 
-                    scmStatusIn({ projectDir.localProjectFile }) {
+                    scmStatusIn(projectDir.localProjectFile) {
                         contains(
                             "On branch ${scmConfig.releaseBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.releaseBranch}'.",

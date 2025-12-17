@@ -5,11 +5,12 @@ import java.io.File
 
 class GradleProjectGiven(
     val workingDir: File,
-    private val setUpProjectBlock: (File, GradleProjectBuilder.() -> Unit) -> Unit,
 ) : Given {
 
     fun withGradleProject(finalizeProjectBlock: GradleProjectBuilder.() -> Unit = {}) {
-        setUpProjectBlock(workingDir, finalizeProjectBlock)
+        GradleProjectBuilder(workingDir)
+            .apply(finalizeProjectBlock)
+            .build()
     }
 
 }
