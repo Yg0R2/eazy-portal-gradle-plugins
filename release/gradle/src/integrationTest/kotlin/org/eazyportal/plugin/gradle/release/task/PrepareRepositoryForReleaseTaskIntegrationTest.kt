@@ -1,21 +1,288 @@
-//package org.eazyportal.plugin.gradle.release.task
+package org.eazyportal.plugin.gradle.release.task
+
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
+import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
+import org.eazyportal.plugin.gradle.release.task.UpdateScmTaskIntegrationTest.UpdateScmTaskMultiModuleTestCase
+import org.eazyportal.plugin.gradle.release.task.UpdateScmTaskIntegrationTest.UpdateScmTaskSingleModuleTestCase
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.TestFactory
+
+class PrepareRepositoryForReleaseTaskIntegrationTest {
+
+    interface PrepareRepositoryForReleaseTaskTestCase {
+
+        fun `test 'run' from release branch should clean local commits`(): List<DynamicTest>
+
+        fun `test 'run' from feature branch should clean local commits`(): List<DynamicTest>
+
+//        fun `test 'run' should clean local not committed changes`(): List<DynamicTest>
 //
-//import org.assertj.core.api.Assertions.assertThat
-//import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAME
-//import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_COMMIT_MESSAGE
-//import org.eazyportal.plugin.gradle.release.asd.BaseMultiModuleScmProjectTestCase
-//import org.eazyportal.plugin.gradle.release.asd.BaseScmProjectTestCase
-//import org.eazyportal.plugin.gradle.release.asd.BaseSingleModuleScmProjectTestCase
-//import org.eazyportal.plugin.gradle.release.asd.MultiModuleTrunkFlowScmProjectTestCase
-//import org.eazyportal.plugin.gradle.release.asd.SingleModuleTrunkFlowScmProjectTestCase
-//import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME
-//import org.junit.jupiter.api.io.TempDir
-//import org.junit.jupiter.params.ParameterizedTest
-//import org.junit.jupiter.params.provider.MethodSource
-//import java.io.File
-//import kotlin.reflect.KClass
-//
-//class PrepareRepositoryForReleaseTaskIntegrationTest {
+//        fun `test 'run' should pull remote changes`(): List<DynamicTest>
+
+    }
+
+    interface PrepareRepositoryForReleaseTaskSingleModuleTestCase :
+        PrepareRepositoryForReleaseTaskTestCase,
+        SingleModuleScmProjectTestCase {
+
+        @TestFactory
+        override fun `test 'run' from release branch should clean local commits`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on $it branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    createAndCommitDummyFile(projectDir.localProjectFile, CHORE_COMMIT_MESSAGE)
+
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                    }
+
+                    scmCompareCommitsIn(projectDir.localProjectFile, projectDir.remoteProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                            .doesNotContain(CHORE_COMMIT_MESSAGE)
+                    }
+
+                    scmClenStatusIn(projectDir.localProjectFile, scmConfig.releaseBranch)
+
+                    // Validate feature branch commits
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                    scmCommitsIn(projectDir.localProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                            .doesNotContain(CHORE_COMMIT_MESSAGE)
+                    }
+                }
+            }
+
+        @TestFactory
+        override fun `test 'run' from feature branch should clean local commits`(): List<DynamicTest>  =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on $it branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    createAndCommitDummyFile(projectDir.localProjectFile, CHORE_COMMIT_MESSAGE)
+
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                    }
+
+                    scmCompareCommitsIn(projectDir.localProjectFile, projectDir.remoteProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                            .doesNotContain(CHORE_COMMIT_MESSAGE)
+                    }
+
+                    scmClenStatusIn(projectDir.localProjectFile, scmConfig.featureBranch)
+
+                    // Validate feature branch commits
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+                    scmCommitsIn(projectDir.localProjectFile) {
+                        containsExactly(INITIAL_COMMIT_MESSAGE)
+                            .doesNotContain(CHORE_COMMIT_MESSAGE)
+                    }
+                }
+            }
+
+    }
+
+    interface PrepareRepositoryForReleaseTaskMultiModuleTestCase :
+        PrepareRepositoryForReleaseTaskTestCase,
+        MultiModuleScmProjectTestCase {
+
+        @TestFactory
+        override fun `test 'run' from release branch should clean local commits`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on $it branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    submoduleProjectDirs.forEach { submoduleProject ->
+                        createAndCommitDummyFile(submoduleProject.localProjectFile, CHORE_COMMIT_MESSAGE)
+                    }
+                    scmActions.add(projectDir.localProjectFile, ".")
+                    scmActions.commit(projectDir.localProjectFile, "chore: add submodule changes")
+
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                    }
+
+                    scmCompareCommitsIn(projectDir.localProjectFile, projectDir.remoteProjectFile) {
+                        containsExactly(
+                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        ).doesNotContain("chore: add submodule changes")
+                    }
+
+                    scmClenStatusIn(projectDir.localProjectFile, scmConfig.releaseBranch)
+
+                    submoduleProjectDirs.forEach { submoduleProject ->
+                        scmCompareCommitsIn(submoduleProject.localProjectFile, submoduleProject.remoteProjectFile) {
+                            containsExactly(INITIAL_COMMIT_MESSAGE)
+                                .doesNotContain(CHORE_COMMIT_MESSAGE)
+                        }
+                    }
+
+                    // Validate feature branch commits
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+
+                    scmCommitsIn(projectDir.localProjectFile) {
+                        containsExactly(
+                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        )
+                    }
+
+                    submoduleProjectDirs.forEach { submoduleProjectDir ->
+                        scmCommitsIn(submoduleProjectDir.localProjectFile) {
+                            containsExactly(INITIAL_COMMIT_MESSAGE)
+                        }
+                    }
+                }
+            }
+
+        @TestFactory
+        override fun `test 'run' from feature branch should clean local commits`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on $it branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    submoduleProjectDirs.forEach { submoduleProject ->
+                        createAndCommitDummyFile(submoduleProject.localProjectFile, CHORE_COMMIT_MESSAGE)
+                    }
+                    scmActions.add(projectDir.localProjectFile, ".")
+                    scmActions.commit(projectDir.localProjectFile, "chore: add submodule changes")
+
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                    }
+
+                    scmCompareCommitsIn(projectDir.localProjectFile, projectDir.remoteProjectFile) {
+                        containsExactly(
+                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        ).doesNotContain("chore: add submodule changes")
+                    }
+
+                    scmClenStatusIn(projectDir.localProjectFile, scmConfig.featureBranch)
+
+                    submoduleProjectDirs.forEach { submoduleProject ->
+                        scmCompareCommitsIn(submoduleProject.localProjectFile, submoduleProject.remoteProjectFile) {
+                            containsExactly(INITIAL_COMMIT_MESSAGE)
+                                .doesNotContain(CHORE_COMMIT_MESSAGE)
+                        }
+                    }
+
+                    // Validate feature branch commits
+                    scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+
+                    scmCommitsIn(projectDir.localProjectFile) {
+                        containsExactly(
+                            CHORE_ADD_SUBMODULES_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        )
+                    }
+
+                    submoduleProjectDirs.forEach { submoduleProjectDir ->
+                        scmCommitsIn(submoduleProjectDir.localProjectFile) {
+                            containsExactly(INITIAL_COMMIT_MESSAGE)
+                        }
+                    }
+                }
+            }
+
+    }
+
+    @Nested
+    inner class SingleModuleGitFlowTestCase :
+        PrepareRepositoryForReleaseTaskSingleModuleTestCase,
+        SingleModuleGitFlowScmProjectTestCase()
+
+    @Nested
+    inner class SingleModuleTrunkFlowTestCase :
+        PrepareRepositoryForReleaseTaskSingleModuleTestCase,
+        SingleModuleTrunkFlowScmProjectTestCase()
+
+    @Nested
+    inner class SingleModuleCustomizedTestCase :
+        PrepareRepositoryForReleaseTaskSingleModuleTestCase,
+        SingleModuleCustomizedScmProjectTestCase()
+
+    @Nested
+    inner class MultiModuleGitFlowTestCase :
+        PrepareRepositoryForReleaseTaskMultiModuleTestCase,
+        MultiModuleGitFlowScmProjectTestCase()
+
+    @Nested
+    inner class MultiModuleTrunkFlowTestCase :
+        PrepareRepositoryForReleaseTaskMultiModuleTestCase,
+        MultiModuleTrunkFlowScmProjectTestCase()
+
+    @Nested
+    inner class MultiModuleCustomizedTestCase :
+        PrepareRepositoryForReleaseTaskMultiModuleTestCase,
+        MultiModuleCustomizedScmProjectTestCase()
+
+}
 //
 //    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#singleModuleTestCasesWithBranch")
 //    @ParameterizedTest
@@ -68,7 +335,7 @@
 //                it.compareCommitsIn(submoduleProjectFile, remoteSubmoduleProjectFile)
 //            }
 //    }
-//
+// TODO: this
 //    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
 //    @ParameterizedTest
 //    fun `test 'run' should clean local commits`(
@@ -114,7 +381,7 @@
 //                }
 //            }
 //    }
-//
+// TODO: this
 //    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
 //    @ParameterizedTest
 //    fun `test 'run' should clean local file changes`(
@@ -161,7 +428,7 @@
 //                }
 //            }
 //    }
-//
+// TODO: this
 //    @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCasesWithBranch")
 //    @ParameterizedTest
 //    fun `test 'run' should pull remote changes`(
