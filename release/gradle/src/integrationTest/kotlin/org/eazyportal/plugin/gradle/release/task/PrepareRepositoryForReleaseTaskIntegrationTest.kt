@@ -30,7 +30,15 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
 
         fun `test 'run' from feature branch should clean local not committed changes`(): List<DynamicTest>
 
-//        fun `test 'run' should pull remote changes`(): List<DynamicTest>
+//        fun `test 'run' from release branch should pull remote changes from release branch`()
+//        fun `test 'run' from feature branch should pull remote changes from feature branch`()
+        fun `test 'run' should pull remote changes`(): List<DynamicTest>
+
+
+//        fun `test 'run' from feature branch should pull remote changes from release branch`()
+//        fun `test 'run' from release branch should not pull remote changes from feature branch`()
+//
+
 
     }
 
@@ -193,6 +201,43 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                     scmClenStatusIn(projectDir.localProjectFile, scmConfig.releaseBranch)
                 }
             }
+
+        @TestFactory
+        override fun `test 'run' should pull remote changes`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { testBranch -> "when running from $testBranch branch and there are commits on $testBranch branch" }
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.remoteProjectFile, testBranch)
+
+                    createAndCommitDummyFile(projectDir.remoteProjectFile, CHORE_COMMIT_MESSAGE)
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+                }
+
+                whenExecute {
+                    gradleTaskSucceeds(PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains("> Task :$PREPARE_REPOSITORY_FOR_RELEASE_TASK_NAME")
+                    }
+
+                    scmClenStatusIn(projectDir.localProjectFile, testBranch)
+
+                    scmCompareCommitsIn(projectDir.remoteProjectFile, projectDir.localProjectFile) {
+                        containsExactly(
+                            CHORE_COMMIT_MESSAGE,
+                            INITIAL_COMMIT_MESSAGE,
+                        )
+                    }
+                }
+            }
+
     }
 
     interface PrepareRepositoryForReleaseTaskMultiModuleTestCase :
@@ -425,6 +470,19 @@ class PrepareRepositoryForReleaseTaskIntegrationTest {
                         scmClenStatusIn(submoduleProjectDir.localProjectFile, scmConfig.releaseBranch)
                     }
                 }
+            }
+
+        @TestFactory
+        override fun `test 'run' should pull remote changes`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(
+                    scmConfig.releaseBranch to scmConfig.releaseBranch,
+                    scmConfig.featureBranch to scmConfig.featureBranch,
+                    scmConfig.featureBranch to scmConfig.releaseBranch,
+                ),
+                { (testBranch, commitsOnBranch) -> "when running from $testBranch branch and there are commits on $commitsOnBranch branch" }
+            ) { (testBranch, commitsOnBranch) ->
+
             }
 
     }
