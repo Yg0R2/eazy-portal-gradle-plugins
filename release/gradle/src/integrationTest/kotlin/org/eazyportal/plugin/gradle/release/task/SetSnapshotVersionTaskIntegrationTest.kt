@@ -1,6 +1,7 @@
 package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.GRADLE_PROPERTIES_FILE_NAME
+import org.eazyportal.plugin.common.integration.test.ProjectTestFixtures.SUBMODULE_NAMES
 import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleCustomizedScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleGitFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleScmProjectTestCase
@@ -12,17 +13,18 @@ import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleTrunkFl
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.SET_SNAPSHOT_VERSION_TASK_NAME
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.eazyportal.plugin.release.core.model.VersionFixtures.SNAPSHOT_002
-import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.Test
 
 class SetSnapshotVersionTaskIntegrationTest {
 
     interface SetSnapshotVersionTaskTestCase {
 
-        fun `test 'run' should set SNASPSHOT version`(): List<DynamicTest>
+        fun `test 'run' should fail when project is already on SNASPSHOT version`()
 
-//        fun `test 'run' should fail when project is already on SNASPSHOT version`(): List<DynamicTest>
+        fun `test 'run' from release branch should set SNASPSHOT version`()
+
+        fun `test 'run' from feature branch should set SNASPSHOT version`()
 
     }
 
@@ -30,33 +32,92 @@ class SetSnapshotVersionTaskIntegrationTest {
         SetSnapshotVersionTaskTestCase,
         SingleModuleScmProjectTestCase {
 
-        @TestFactory
-        override fun `test 'run' should set SNASPSHOT version`(): List<DynamicTest> =
-            runDynamicTestCase(
-                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
-                { "on $it branch" }
-            ) { testBranch ->
-                givenTestCase {
-                    withScmProject()
+        @Test
+        override fun `test 'run' should fail when project is already on SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+            }
 
-                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+            whenExecute {
+                gradleTaskFails(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
 
-                    setProjectVersion(projectDir.localProjectFile, RELEASE_001)
-                    scmActions.add(projectDir.localProjectFile, ".")
-                    scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
-                    scmActions.push(projectDir.localProjectFile, scmConfig.remote, testBranch)
+            thenVerify {
+                gradleTaskOutput {
+                    contains(
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME FAILED",
+                        "Execution failed for task ':$SET_SNAPSHOT_VERSION_TASK_NAME'.",
+                        "> Project already on SNAPSHOT version.",
+                    )
+                }
+            }
+        }
+
+        @Test
+        override fun `test 'run' from release branch should set SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+
+                scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+
+                setProjectVersion(projectDir.localProjectFile, RELEASE_001)
+                scmActions.add(projectDir.localProjectFile, ".")
+                scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
+                scmActions.push(projectDir.localProjectFile, scmConfig.remote, scmConfig.releaseBranch)
+            }
+
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
                 }
 
-                whenExecute {
-                    gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
-                }
-
-                thenVerify {
-                    gradleTaskOutput {
-                        contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                with(projectDir.localProjectFile) {
+                    scmStatusIn(this) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes to be committed:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                        )
                     }
 
-                    scmStatusIn(projectDir.localProjectFile) {
+                    projectVersionIn(this) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
+                }
+            }
+        }
+
+        @Test
+        override fun `test 'run' from feature branch should set SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+
+                scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+
+                setProjectVersion(projectDir.localProjectFile, RELEASE_001)
+                scmActions.add(projectDir.localProjectFile, ".")
+                scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
+                scmActions.push(projectDir.localProjectFile, scmConfig.remote, scmConfig.featureBranch)
+            }
+
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
+
+                with(projectDir.localProjectFile) {
+                    scmStatusIn(this) {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
@@ -66,11 +127,12 @@ class SetSnapshotVersionTaskIntegrationTest {
                         )
                     }
 
-                    projectVersionIn(projectDir.localProjectFile) {
+                    projectVersionIn(this) {
                         isEqualTo(SNAPSHOT_002)
                     }
                 }
             }
+        }
 
     }
 
@@ -78,12 +140,148 @@ class SetSnapshotVersionTaskIntegrationTest {
         SetSnapshotVersionTaskTestCase,
         MultiModuleScmProjectTestCase {
 
-        override fun `test 'run' should set SNASPSHOT version`(): List<DynamicTest> {
-            TODO("Not yet implemented")
+        @Test
+        override fun `test 'run' should fail when project is already on SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+            }
+
+            whenExecute {
+                gradleTaskFails(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains(
+                        "> Task :$SET_SNAPSHOT_VERSION_TASK_NAME FAILED",
+                        "Execution failed for task ':$SET_SNAPSHOT_VERSION_TASK_NAME'.",
+                        "> Project already on SNAPSHOT version.",
+                    )
+                }
+            }
+        }
+
+        @Test
+        override fun `test 'run' from release branch should set SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+
+                scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
+
+                allProjectDirs.forEach {
+                    setProjectVersion(it.localProjectFile, RELEASE_001)
+                    scmActions.add(it.localProjectFile, ".")
+                    scmActions.commit(it.localProjectFile, "Release version: $RELEASE_001")
+                    scmActions.push(it.localProjectFile, scmConfig.remote, scmConfig.releaseBranch)
+                }
+            }
+
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
+
+                with(projectDir.localProjectFile) {
+                    scmStatusIn(this) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes to be committed:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                        )
+                    }
+
+                    projectVersionIn(this) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
+                }
+
+                submoduleProjectDirs.forEach {
+                    scmStatusIn(it.localProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes to be committed:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                        )
+                    }
+
+                    projectVersionIn(it.localProjectFile) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
+                }
+            }
+        }
+
+        @Test
+        override fun `test 'run' from feature branch should set SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
+
+                scmActions.checkout(projectDir.localProjectFile, scmConfig.featureBranch)
+
+                allProjectDirs.forEach {
+                    setProjectVersion(it.localProjectFile, RELEASE_001)
+                    scmActions.add(it.localProjectFile, ".")
+                    scmActions.commit(it.localProjectFile, "Release version: $RELEASE_001")
+                    scmActions.push(it.localProjectFile, scmConfig.remote, scmConfig.featureBranch)
+                }
+            }
+
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
+
+                with(projectDir.localProjectFile) {
+                    scmStatusIn(this) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes not staged for commit:",
+                            *SUBMODULE_NAMES.map { "modified:   $it (modified content)" }
+                                .toTypedArray(),
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                        )
+                    }
+
+                    projectVersionIn(this) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
+                }
+
+                submoduleProjectDirs.forEach {
+                    scmStatusIn(it.localProjectFile) {
+                        contains(
+                            "On branch ${scmConfig.featureBranch}",
+                            "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                            "Changes not staged for commit:",
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                        )
+                    }
+
+                    projectVersionIn(it.localProjectFile) {
+                        isEqualTo(SNAPSHOT_002)
+                    }
+                }
+            }
         }
 
     }
-
 
     @Nested
     inner class SingleModuleGitFlowTestCase :
@@ -93,7 +291,56 @@ class SetSnapshotVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
         SetSnapshotVersionTaskSingleModuleTestCase,
-        SingleModuleTrunkFlowScmProjectTestCase()
+        SingleModuleTrunkFlowScmProjectTestCase() {
+
+        @Test
+        override fun `test 'run' from release branch should set SNASPSHOT version`() {
+            `test 'run' from any branch should set SNASPSHOT version`(scmConfig.releaseBranch)
+        }
+
+        @Test
+        override fun `test 'run' from feature branch should set SNASPSHOT version`() {
+            `test 'run' from any branch should set SNASPSHOT version`(scmConfig.featureBranch)
+        }
+
+        private fun `test 'run' from any branch should set SNASPSHOT version`(testBranch: String) = runTestCase {
+            givenTestCase {
+                withScmProject()
+
+                scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                setProjectVersion(projectDir.localProjectFile, RELEASE_001)
+                scmActions.add(projectDir.localProjectFile, ".")
+                scmActions.commit(projectDir.localProjectFile, "Release version: $RELEASE_001")
+                scmActions.push(projectDir.localProjectFile, scmConfig.remote, testBranch)
+            }
+
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
+                }
+
+                scmStatusIn(projectDir.localProjectFile) {
+                    contains(
+                        "On branch ${scmConfig.featureBranch}",
+                        "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
+                        "Changes not staged for commit:",
+                        "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                        "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
+                    )
+                }
+
+                projectVersionIn(projectDir.localProjectFile) {
+                    isEqualTo(SNAPSHOT_002)
+                }
+            }
+        }
+
+    }
 
     @Nested
     inner class SingleModuleCustomizedTestCase :
@@ -108,83 +355,52 @@ class SetSnapshotVersionTaskIntegrationTest {
     @Nested
     inner class MultiModuleTrunkFlowTestCase :
         SetSnapshotVersionTaskMultiModuleTestCase,
-        MultiModuleTrunkFlowScmProjectTestCase()
+        MultiModuleTrunkFlowScmProjectTestCase() {
 
-    @Nested
-    inner class MultiModuleCustomizedTestCase :
-        SetSnapshotVersionTaskMultiModuleTestCase,
-        MultiModuleCustomizedScmProjectTestCase()
+        @Test
+        override fun `test 'run' from release branch should set SNASPSHOT version`() = runTestCase {
+            givenTestCase {
+                withScmProject()
 
+                scmActions.checkout(projectDir.localProjectFile, scmConfig.releaseBranch)
 
-    /*
-        @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
-        @ParameterizedTest
-        fun `test 'run' should fail when project version is not release version`(
-            testCaseClass: KClass<BaseScmProjectTestCase>,
-            @TempDir workingDir: File,
-        ) {
-            givenTestCase(testCaseClass, workingDir) {
-                scmActions.checkout(projectFile, scmConfig.featureBranch)
+                allProjectDirs.forEach {
+                    setProjectVersion(it.localProjectFile, RELEASE_001)
+                    scmActions.add(it.localProjectFile, ".")
+                    scmActions.commit(it.localProjectFile, "Release version: $RELEASE_001")
+                    scmActions.push(it.localProjectFile, scmConfig.remote, scmConfig.releaseBranch)
+                }
+            }
 
-                if (this is BaseMultiModuleScmProjectTestCase) {
-                    scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
+            whenExecute {
+                gradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
+            }
+
+            thenVerify {
+                gradleTaskOutput {
+                    contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
                 }
 
-                setProjectVersion(SNAPSHOT_001)
-            }.whenGradleTaskFails(SET_SNAPSHOT_VERSION_TASK_NAME)
-                .thenAssert {
-                    it.taskOutput {
-                        contains(
-                            "Execution failed for task ':$SET_SNAPSHOT_VERSION_TASK_NAME'.",
-                            "> Project already on ${Version.DEVELOPMENT_VERSION_SUFFIX} version.",
-                        )
-                    }
-
-                    it.scmStatus(projectFile) {
+                with(projectDir.localProjectFile) {
+                    scmStatusIn(this) {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                            "nothing to commit, working tree clean"
+                            "Changes not staged for commit:",
+                            *SUBMODULE_NAMES.map { "modified:   $it (modified content)" }
+                                .toTypedArray(),
+                            "modified:   $GRADLE_PROPERTIES_FILE_NAME",
+                            "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
                         )
                     }
 
-                    if (this is BaseMultiModuleScmProjectTestCase) {
-                        it.scmStatus(submoduleProjectFile) {
-                            contains(
-                                "On branch ${scmConfig.featureBranch}",
-                                "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                                "nothing to commit, working tree clean"
-                            )
-                        }
-                    }
-
-                    it.projectVersion {
-                        isEqualTo(SNAPSHOT_001)
+                    projectVersionIn(this) {
+                        isEqualTo(SNAPSHOT_002)
                     }
                 }
-        }
 
-        @MethodSource("org.eazyportal.plugin.gradle.release.asd.BaseProjectTestCase#testCases")
-        @ParameterizedTest
-        fun `test 'run' should set snapshot version`(
-            testCaseClass: KClass<BaseScmProjectTestCase>,
-            @TempDir workingDir: File,
-        ) {
-            givenTestCase(testCaseClass, workingDir) {
-                scmActions.checkout(projectFile, scmConfig.featureBranch)
-
-                if (this is BaseMultiModuleScmProjectTestCase) {
-                    scmActions.checkout(submoduleProjectFile, scmConfig.featureBranch)
-                }
-
-                setProjectVersion(RELEASE_001)
-            }.whenGradleTaskSucceeds(SET_SNAPSHOT_VERSION_TASK_NAME)
-                .thenAssert {
-                    it.taskOutput {
-                        contains("> Task :$SET_SNAPSHOT_VERSION_TASK_NAME")
-                    }
-
-                    it.scmStatus(projectFile) {
+                submoduleProjectDirs.forEach {
+                    scmStatusIn(it.localProjectFile) {
                         contains(
                             "On branch ${scmConfig.featureBranch}",
                             "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
@@ -194,22 +410,18 @@ class SetSnapshotVersionTaskIntegrationTest {
                         )
                     }
 
-                    if (this is BaseMultiModuleScmProjectTestCase) {
-                        it.scmStatus(submoduleProjectFile) {
-                            contains(
-                                "On branch ${scmConfig.featureBranch}",
-                                "Your branch is up to date with '${scmConfig.remote}/${scmConfig.featureBranch}'.",
-                                "Changes not staged for commit:",
-                                "modified:   $GRADLE_PROPERTIES_FILE_NAME",
-                                "no changes added to commit (use \"git add\" and/or \"git commit -a\")",
-                            )
-                        }
-                    }
-
-                    it.projectVersion {
+                    projectVersionIn(it.localProjectFile) {
                         isEqualTo(SNAPSHOT_002)
                     }
                 }
+            }
         }
-    */
+
+    }
+
+    @Nested
+    inner class MultiModuleCustomizedTestCase :
+        SetSnapshotVersionTaskMultiModuleTestCase,
+        MultiModuleCustomizedScmProjectTestCase()
+
 }

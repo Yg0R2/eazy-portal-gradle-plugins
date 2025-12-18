@@ -11,7 +11,7 @@ open class SingleModuleTrunkFlowScmProjectTestCase : BaseSingleModuleScmProjectT
     ScmConfig.TRUNK_BASED_FLOW,
 ) {
 
-    override fun initializeGradleRootProject(workingDir: File) {
+    final override fun initializeGradleRootProject(workingDir: File) {
         GradleProjectBuilder(workingDir)
             .withProjectName(PROJECT_NAME)
             .withEazyPortalReleasePlugin()

@@ -2,11 +2,15 @@ package org.eazyportal.plugin.gradle.release.task
 
 import org.eazyportal.plugin.common.ScmTestFixtures.CHORE_ADD_SUBMODULES_COMMIT_MESSAGE
 import org.eazyportal.plugin.common.ScmTestFixtures.INITIAL_COMMIT_MESSAGE
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.multimodule.MultiModuleTrunkFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleCustomizedScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleGitFlowScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleScmProjectTestCase
+import org.eazyportal.plugin.gradle.release.dsl.singlemodule.SingleModuleTrunkFlowScmProjectTestCase
 import org.eazyportal.plugin.gradle.release.task.EazyReleaseTaskConstants.FINALIZE_RELEASE_VERSION_TASK_NAME
-import org.eazyportal.plugin.gradle.release.testcase.*
-import org.eazyportal.plugin.gradle.release.testcase.dsl.MultiModuleScmProjectTestCase
-import org.eazyportal.plugin.gradle.release.testcase.dsl.SingleModuleScmProjectTestCase
-import org.eazyportal.plugin.release.core.TestGitActions.Companion.TEST_GIT_ACTIONS
 import org.eazyportal.plugin.release.core.model.VersionFixtures.RELEASE_001
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
@@ -16,9 +20,9 @@ class FinalizeReleaseVersionTaskIntegrationTest {
 
     interface FinalizeReleaseVersionTaskTestCase {
 
-        fun `test 'run' should finalize release version`(): List<DynamicTest>
-
         fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest>
+
+        fun `test 'run' should finalize release version`(): List<DynamicTest>
 
     }
 
@@ -27,17 +31,44 @@ class FinalizeReleaseVersionTaskIntegrationTest {
         SingleModuleScmProjectTestCase {
 
         @TestFactory
+        override fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest> =
+            runDynamicTestCase(
+                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
+                { "on '$it' branch" },
+            ) { testBranch ->
+                givenTestCase {
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+                }
+
+                whenExecute {
+                    gradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
+                }
+
+                thenVerify {
+                    gradleTaskOutput {
+                        contains(
+                            "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
+                            "nothing to commit, working tree clean",
+                            "Execution failed for task ':$FINALIZE_RELEASE_VERSION_TASK_NAME'."
+                        )
+                    }
+                }
+            }
+
+        @TestFactory
         override fun `test 'run' should finalize release version`(): List<DynamicTest> =
             runDynamicTestCase(
                 listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
                 { "on '$it' branch" },
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    withScmProject()
 
-                        setProjectVersion(RELEASE_001)
-                    }
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    setProjectVersion(projectDir.localProjectFile, RELEASE_001)
                 }
 
                 whenExecute {
@@ -65,10 +96,18 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(this, RELEASE_001)
+                        projectVersionIn(this) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
                 }
             }
+
+    }
+
+    interface FinalizeReleaseVersionTaskMultiModuleTestCase :
+        FinalizeReleaseVersionTaskTestCase,
+        MultiModuleScmProjectTestCase {
 
         @TestFactory
         override fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest> =
@@ -77,9 +116,9 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                 { "on '$it' branch" },
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
-                    }
+                    withScmProject()
+
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
                 }
 
                 whenExecute {
@@ -97,12 +136,6 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                 }
             }
 
-    }
-
-    interface FinalizeReleaseVersionTaskMultiModuleTestCase :
-        FinalizeReleaseVersionTaskTestCase,
-        MultiModuleScmProjectTestCase {
-
         @TestFactory
         override fun `test 'run' should finalize release version`(): List<DynamicTest> =
             runDynamicTestCase(
@@ -110,10 +143,12 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                 { "on '$it' branch" },
             ) { testBranch ->
                 givenTestCase {
-                    withScmProject {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
+                    withScmProject()
 
-                        setProjectVersion(RELEASE_001)
+                    scmActions.checkout(projectDir.localProjectFile, testBranch)
+
+                    allProjectDirs.forEach {
+                        setProjectVersion(it.localProjectFile, RELEASE_001)
                     }
                 }
 
@@ -143,7 +178,9 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                             )
                         }
 
-                        projectVersionIn(this, RELEASE_001)
+                        projectVersionIn(this) {
+                            isEqualTo(RELEASE_001)
+                        }
                     }
 
                     submoduleProjectDirs.forEach {
@@ -163,35 +200,10 @@ class FinalizeReleaseVersionTaskIntegrationTest {
                                 )
                             }
 
-                            projectVersionIn(this, RELEASE_001)
+                            projectVersionIn(this) {
+                                isEqualTo(RELEASE_001)
+                            }
                         }
-                    }
-                }
-            }
-
-        @TestFactory
-        override fun `test 'run' should fail when there is nothing to commit`(): List<DynamicTest> =
-            runDynamicTestCase(
-                listOf(scmConfig.releaseBranch, scmConfig.featureBranch),
-                { "on '$it' branch" },
-            ) { testBranch ->
-                givenTestCase {
-                    withScmProject {
-                        scmActions.checkout(projectDir.localProjectFile, testBranch)
-                    }
-                }
-
-                whenExecute {
-                    gradleTaskFails(FINALIZE_RELEASE_VERSION_TASK_NAME)
-                }
-
-                thenVerify {
-                    gradleTaskOutput {
-                        contains(
-                            "> Task :$FINALIZE_RELEASE_VERSION_TASK_NAME FAILED",
-                            "nothing to commit, working tree clean",
-                            "Execution failed for task ':$FINALIZE_RELEASE_VERSION_TASK_NAME'."
-                        )
                     }
                 }
             }
@@ -201,31 +213,31 @@ class FinalizeReleaseVersionTaskIntegrationTest {
     @Nested
     inner class SingleModuleGitFlowTestCase :
         FinalizeReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class SingleModuleTrunkFlowTestCase :
         FinalizeReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleTrunkFlowScmProjectTestCase()
 
     @Nested
     inner class SingleModuleCustomizedTestCase :
         FinalizeReleaseVersionTaskSingleModuleTestCase,
-        SingleModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        SingleModuleCustomizedScmProjectTestCase()
 
     @Nested
     inner class MultiModuleGitFlowTestCase :
         FinalizeReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleGitFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleGitFlowScmProjectTestCase()
 
     @Nested
     inner class MultiModuleTrunkFlowTestCase :
         FinalizeReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleTrunkFlowScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleTrunkFlowScmProjectTestCase()
 
     @Nested
     inner class MultiModuleCustomizedTestCase :
         FinalizeReleaseVersionTaskMultiModuleTestCase,
-        MultiModuleCustomizedScmProjectTestCase(TEST_GIT_ACTIONS)
+        MultiModuleCustomizedScmProjectTestCase()
 
 }

@@ -10,7 +10,7 @@ open class MultiModuleTrunkFlowScmProjectTestCase : BaseMultiModuleScmProjectTes
     ScmConfig.TRUNK_BASED_FLOW,
 ) {
 
-    override fun initializeGradleRootProject(workingDir: File) {
+    final override fun initializeGradleRootProject(workingDir: File) {
         GradleProjectBuilder(workingDir)
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(

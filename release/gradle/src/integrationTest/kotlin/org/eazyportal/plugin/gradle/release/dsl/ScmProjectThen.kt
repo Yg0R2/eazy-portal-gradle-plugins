@@ -3,6 +3,7 @@ package org.eazyportal.plugin.gradle.release.dsl
 import org.assertj.core.api.ListAssert
 import org.assertj.core.api.ObjectAssert
 import org.eazyportal.plugin.common.integration.test.dsl.then.Then
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectFile
 import org.eazyportal.plugin.release.core.scm.model.ScmConfig
@@ -36,6 +37,12 @@ interface ScmProjectThen : Then {
     fun scmCommitsIn(
         projectFile: ProjectFile<File>,
         block: ListAssert<String>.() -> Unit,
+    )
+
+    fun scmCompareCommitsIn(
+        left: ProjectFile<File>,
+        right: ProjectFile<File>,
+        alsoAssertBlock: ListAssert<String>.() -> Unit = {}
     )
 
     //------------------------------------

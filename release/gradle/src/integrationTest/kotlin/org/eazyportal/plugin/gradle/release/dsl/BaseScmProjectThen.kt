@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ListAssert
 import org.assertj.core.api.ObjectAssert
 import org.eazyportal.plugin.common.integration.test.dsl.TestScenario
+import org.eazyportal.plugin.gradle.release.dsl.model.ProjectDir
 import org.eazyportal.plugin.gradle.release.project.GradleProjectActions
 import org.eazyportal.plugin.release.core.TestScmActions
 import org.eazyportal.plugin.release.core.project.ProjectActions
@@ -65,6 +66,16 @@ abstract class BaseScmProjectThen(
                 scmActions.getCommits(projectFile)
             )
         )
+    }
+
+    override fun scmCompareCommitsIn(
+        left: ProjectFile<File>,
+        right: ProjectFile<File>,
+        alsoAssertBlock: ListAssert<String>.() -> Unit,
+    ) {
+        assertThat(scmActions.getCommits(left))
+            .containsExactlyElementsOf(scmActions.getCommits(right))
+            .alsoAssertBlock()
     }
 
     //------------------------------------

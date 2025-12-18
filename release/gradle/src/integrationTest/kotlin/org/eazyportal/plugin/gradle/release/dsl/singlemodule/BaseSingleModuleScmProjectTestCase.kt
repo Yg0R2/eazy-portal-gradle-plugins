@@ -11,11 +11,11 @@ import org.eazyportal.plugin.release.core.scm.model.ScmConfig
 import java.io.File
 
 abstract class BaseSingleModuleScmProjectTestCase(
-    override val scmActions: TestScmActions<File>,
-    override val scmConfig: ScmConfig,
+    final override val scmActions: TestScmActions<File>,
+    final override val scmConfig: ScmConfig,
 ) : BaseScmProjectTestCase<SingleModuleScmProjectGiven, SingleModuleScmProjectThen>() {
 
-    override fun crateTestScenario(workingDir: File): TestScenario<SingleModuleScmProjectGiven, ScmProjectWhen, SingleModuleScmProjectThen> {
+    final override fun crateTestScenario(workingDir: File): TestScenario<SingleModuleScmProjectGiven, ScmProjectWhen, SingleModuleScmProjectThen> {
         val projectDir = ProjectDir(
             localDir = workingDir.resolve(PROJECT_NAME),
             remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
@@ -37,7 +37,16 @@ abstract class BaseSingleModuleScmProjectTestCase(
     }
 
     protected fun initScmProjectBlock(projectDir: ProjectDir) {
-        initializeGradleRootProject(projectDir.remoteDir)
+        projectDir.remoteDir
+            .also(File::mkdirs)
+            .run(::initializeGradleRootProject)
+
+        scmActions.initializeRepository(projectDir.remoteProjectFile, scmConfig.releaseBranch)
+
+        if (scmConfig.releaseBranch != "main") {
+            // Rename release branch in submodule
+            scmActions.execute(projectDir.remoteProjectFile, "branch", "-m", scmConfig.releaseBranch)
+        }
 
         if (scmConfig.featureBranch != scmConfig.releaseBranch) {
             // Create remote branches

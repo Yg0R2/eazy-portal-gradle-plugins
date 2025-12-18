@@ -14,7 +14,7 @@ open class MultiModuleCustomizedScmProjectTestCase : BaseMultiModuleScmProjectTe
     ),
 ) {
 
-    override fun initializeGradleRootProject(workingDir: File) {
+    final override fun initializeGradleRootProject(workingDir: File) {
         GradleProjectBuilder(workingDir)
             .withEazyPortalReleasePlugin()
             .withExtraProjectConfig(

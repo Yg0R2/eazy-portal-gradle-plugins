@@ -18,7 +18,7 @@ abstract class BaseMultiModuleScmProjectTestCase(
     override val scmConfig: ScmConfig,
 ) : BaseScmProjectTestCase<MultiModuleScmProjectGiven, MultiModuleScmProjectThen>() {
 
-    override fun crateTestScenario(workingDir: File): TestScenario<MultiModuleScmProjectGiven, ScmProjectWhen, MultiModuleScmProjectThen> {
+    final override fun crateTestScenario(workingDir: File): TestScenario<MultiModuleScmProjectGiven, ScmProjectWhen, MultiModuleScmProjectThen> {
         val projectDir = ProjectDir(
             localDir = workingDir.resolve(PROJECT_NAME),
             remoteDir = workingDir.resolve("${scmConfig.remote}/$PROJECT_NAME"),
@@ -55,6 +55,11 @@ abstract class BaseMultiModuleScmProjectTestCase(
 
         scmActions.initializeRepository(projectDir.remoteProjectFile)
 
+        if (scmConfig.releaseBranch != "main") {
+            // Rename release branch in submodule
+            scmActions.execute(projectDir.remoteProjectFile, "branch", "-m", scmConfig.releaseBranch)
+        }
+
         submoduleProjectDirs.forEach { submoduleProjectDir ->
             submoduleProjectDir.remoteDir
                 .also(File::mkdirs)
@@ -67,6 +72,11 @@ abstract class BaseMultiModuleScmProjectTestCase(
             scmActions.initializeRepository(submoduleProjectDir.remoteProjectFile, scmConfig.releaseBranch)
 
             scmActions.addSubmodule(projectDir.remoteProjectFile, submoduleProjectDir.remoteProjectFile)
+
+            if (scmConfig.releaseBranch != "main") {
+                // Rename release branch in submodule
+                scmActions.execute(submoduleProjectDir.remoteProjectFile, "branch", "-m", scmConfig.releaseBranch)
+            }
 
             if (scmConfig.featureBranch != scmConfig.releaseBranch) {
                 // Create remote feature branch in submodule

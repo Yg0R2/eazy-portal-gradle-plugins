@@ -19,4 +19,9 @@ class MultiModuleScmProjectGiven(
     scmConfig,
     projectActionsMap,
     initScmProjectBlock,
-)
+) {
+
+    val allProjectDirs: List<ProjectDir> =
+        listOf(*submoduleProjectDirs.toTypedArray(), projectDir)
+
+}

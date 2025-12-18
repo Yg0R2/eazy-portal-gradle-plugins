@@ -15,7 +15,7 @@ open class SingleModuleCustomizedScmProjectTestCase : BaseSingleModuleScmProject
     ),
 ) {
 
-    override fun initializeGradleRootProject(workingDir: File) {
+    final override fun initializeGradleRootProject(workingDir: File) {
         GradleProjectBuilder(workingDir)
             .withProjectName(PROJECT_NAME)
             .withEazyPortalReleasePlugin()
