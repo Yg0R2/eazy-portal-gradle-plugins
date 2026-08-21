@@ -10,6 +10,7 @@ plugins {
     `kotlin-dsl`      // pins Kotlin to embeddedKotlinVersion + enables precompiled script plugins
     `maven-publish`   // the conventions jar must itself be published (§4.1) — cannot dogfood here
     signing           // release artifacts are signed (mirrors publication-convention)
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -20,7 +21,12 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)
     testImplementation(gradleTestKit())
+
     testRuntimeOnly(libs.junit.platform.launcher)
+
+    testFixturesImplementation(platform(libs.junit.bom))
+    testFixturesImplementation(libs.assertj.core)
+    testFixturesImplementation(gradleTestKit())
 }
 
 // Align the Java toolchain used to COMPILE the plugins to 25 (→ bytecode 25 → requires a JDK 25+ daemon).
