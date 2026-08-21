@@ -59,15 +59,6 @@ publishing {
                 credentials(PasswordCredentials::class)   // lazy: GitHubPackagesUsername / GitHubPackagesPassword
             }
         }
-
-        // Hermetic-test hook (TOOLS-59 acceptance: "publishing to a file:// repository succeeds"):
-        // `-PtestPublishRepo=<uri>` registers a plain sink repository. Never set outside tests.
-        providers.gradleProperty("testPublishRepo").orNull?.let { testRepo ->
-            maven {
-                name = "TestPublish"
-                url = uri(testRepo)
-            }
-        }
     }
 
     // Central POM applied to EVERY publication (`pluginMaven` + plugin markers): license + scm are

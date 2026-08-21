@@ -1,7 +1,8 @@
 package org.eazyportal.gradle.internal
 
 import org.assertj.core.api.Assertions.assertThat
-import org.gradle.testkit.runner.GradleRunner
+import org.eazyportal.gradle.internal.GradleUtils.runFailingGradleTask
+import org.eazyportal.gradle.internal.GradleUtils.runGradleTask
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.w3c.dom.Document
@@ -10,44 +11,57 @@ import org.w3c.dom.Node
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Properties
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.io.path.absolutePathString
 
 class CoordinatesAndPublishingTest {
 
-    private val conventionsProjectDir: File = File("")
-
     @Test
     fun `group and version originate from root gradle properties`() {
-        val output = runGradle("properties")
+        val actual = runGradleTask(PROJECT_DIR, "properties")
 
         // conventions/settings.gradle.kts keeps the root group and appends ".conventions" (decided
         // in TOOLS-59; the design's substitution coordinates are adjusted accordingly later).
-        assertThat(output).contains("group: org.eazyportal.gradle.conventions")
-        assertThat(output).contains("version: 0.1.0-SNAPSHOT")
+        assertThat(actual)
+            .contains("group: $GROUP_ID")
+            .contains("version: $VERSION")
     }
 
     @Test
     fun `command-line version property overrides gradle properties`() {
-        val output = runGradle("properties", "-Pversion=2.3.4")
+        val version = "2.3.4-DUMMY"
 
-        assertThat(output).contains("group: org.eazyportal.gradle.conventions")
-        assertThat(output).contains("version: 2.3.4")
+        val actual = runGradleTask(PROJECT_DIR,  "properties", "-Pversion=$version")
+
+        assertThat(actual)
+            .contains("group: $GROUP_ID")
+            .contains("version: $version")
     }
 
     @Test
-    fun `publishing to a file repository produces a non-bare POM`(@TempDir tempDir: Path) {
-        val repoDir = tempDir.resolve("repository")
-        Files.createDirectories(repoDir)
-
-        runGradle(
+    fun `publishing release version should fail without credentials`() {
+        val actual = runFailingGradleTask(
+            PROJECT_DIR,
             "publish",
-            "-PtestPublishRepo=${repoDir.toUri()}",
-            "-Dmaven.repo.local=${tempDir.resolve("m2").absolutePathString()}",
+            "-Pversion=0.0.1",
         )
 
-        val pom = findPublishedPom(repoDir)
-        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(pom.toFile())
+        assertThat(actual)
+            .contains("The following Gradle properties are missing for 'GitHubPackages' credentials:")
+            .contains("- GitHubPackagesUsername")
+            .contains("- GitHubPackagesPassword")
+    }
+
+    @Test
+    fun `publishing SNAPSHOT to a file repository produces a non-bare POM`(@TempDir workingDir: Path) {
+        runGradleTask(
+            PROJECT_DIR,
+            "publish",
+            "-Dmaven.repo.local=${workingDir.absolutePathString()}",
+        )
+
+        val document = parsePom(findSinglePublishedPom(workingDir))
 
         assertThat(document.getElementsByTagName("license").length).isGreaterThan(0)
         assertThat(document.getElementsByTagName("scm").length).isGreaterThan(0)
@@ -63,40 +77,58 @@ class CoordinatesAndPublishingTest {
         assertThat(textOf(document, "scm/developerConnection"))
             .isEqualTo("scm:git:ssh://git@github.com/«github-owner»/«github-repo».git")
         assertThat(textOf(document, "scm/url")).isEqualTo("https://github.com/«github-owner»/«github-repo»")
-        assertThat(textOf(document, "groupId")).isEqualTo("org.eazyportal.gradle.conventions")
+        assertThat(textOf(document, "groupId")).isEqualTo(GROUP_ID)
         assertThat(textOf(document, "artifactId")).isEqualTo("conventions")
-        assertThat(textOf(document, "version")).isEqualTo("0.1.0-SNAPSHOT")
+        assertThat(textOf(document, "version")).isEqualTo(VERSION)
     }
 
-    private fun runGradle(vararg arguments: String): String {
-        val result = GradleRunner.create()
-            .withProjectDir(conventionsProjectDir)
-            .withArguments(*arguments)
-            .forwardOutput()
-            .build()
-
-        assertThat(result.output).isNotBlank
-        return result.output
-    }
-
-    private fun findPublishedPom(repoDir: Path): Path {
-        val poms = Files.walk(repoDir)
-            .filter { it.fileName.toString().endsWith(".pom") }
+    /** All POMs published into a (temp) repository directory. */
+    private fun findPublishedPoms(repoDir: Path): List<Path> =
+        Files.walk(repoDir)
+            .filter { it.fileName.toString().endsWith(".pom", true) }
             .toList()
 
-        assertThat(poms).isNotEmpty
-        return poms.single()
-    }
+    /** The single POM published into a (temp) repository directory — fails if there isn't exactly one. */
+    private fun findSinglePublishedPom(repoDir: Path): Path =
+        findPublishedPoms(repoDir)
+            .also { assertThat(it).isNotEmpty }
+            .single()
+
+    private fun parsePom(pom: Path): Document =
+        DocumentBuilderFactory.newInstance()
+            .newDocumentBuilder()
+            .parse(pom.toFile())
 
     /** First text content of the (slash-separated) element path, or null if absent. */
-    private fun textOf(document: Document, path: String): String? {
-        val elements = path.split('/').fold(listOf<Node>(document.documentElement)) { parents, child ->
-            parents.flatMap { parent ->
-                (0 until parent.childNodes.length)
-                    .map { parent.childNodes.item(it) }
-                    .filter { it is Element && it.tagName == child }
-            }
+    private fun textOf(document: Document, path: String): String? =
+        path.split('/')
+            .fold(listOf<Node>(document.documentElement)) { parents, child ->
+                parents.flatMap { parent ->
+                    (0 until parent.childNodes.length)
+                        .map { parent.childNodes.item(it) }
+                        .filter { (it is Element) && (it.tagName == child) }
+                }
+            }.firstOrNull()
+                ?.textContent
+                ?.trim()
+
+    companion object {
+        /** The conventions project dir — the Test task's working directory. */
+        private val PROJECT_DIR = File("")
+
+        /** The ROOT gradle.properties — the single source of truth for group/version (design §2). */
+        private val ROOT_PROPERTIES = Properties().apply {
+            PROJECT_DIR.resolve("../gradle.properties")
+                .inputStream()
+                .use { load(it) }
         }
-        return elements.firstOrNull()?.textContent?.trim()
+
+        /** The conventions build's group (root group + ".conventions" — conventions/settings.gradle.kts). */
+        private val GROUP_ID = "${ROOT_PROPERTIES.getProperty("group")}.conventions"
+            .also { assertThat(it).isEqualTo("org.eazyportal.gradle.conventions") }
+
+        /** The conventions build's version (same as root version). */
+        private val VERSION = ROOT_PROPERTIES.getProperty("version")
     }
+
 }
