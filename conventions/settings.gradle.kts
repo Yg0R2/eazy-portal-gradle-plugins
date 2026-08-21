@@ -5,7 +5,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 
-    // Included builds do not inherit the root version catalig; read it explicitly.
+    // Included builds do not inherit the root version catalog; read it explicitly.
     versionCatalogs {
         create("libs") {
             from(files("../gradle/libs.versions.toml"))
@@ -19,8 +19,20 @@ val rootProperties = Properties().apply {
     file("../gradle.properties").inputStream().use { load(it) }
 }
 gradle.rootProject {
-    group = "${(findProperty("group") ?: rootProperties["group"])}.conventions"
-    version = (findProperty("version") ?: rootProperties["version"]).toString()
+    group = getPropertyOrElse("group") {
+        rootProperties["group"]
+    }.let { "$it.conventions" }
+
+    version = getPropertyOrElse("version") {
+        rootProperties["version"]
+    }
 }
 
 rootProject.name = "conventions"
+
+private fun Project.getPropertyOrElse(propertyName: String, defaultBlock: () -> Any?): String =
+    findProperty(propertyName)
+        ?.toString()
+        ?.takeIf { it.isNotBlank() && !it.equals("unspecified", true) }
+        ?: defaultBlock()?.toString()
+        ?: throw IllegalStateException("Property $propertyName is not set")
