@@ -16,10 +16,11 @@ class Java25BytecodeGateTest {
             projectDir.resolve("build/classes/kotlin/main"),
         )
 
-        // Scan-only for now (decided in TOOLS-59): the conventions build has no main sources yet
-        // (ConventionsSupport arrives in TOOLS-60, the script plugins in TOOLS-61+), so an output
-        // directory may legitimately be empty. Once sources exist, every class file found must be
-        // major 69 — a clamped compile output fails.
+        // Kotlin main sources exist (ConventionsSupport since TOOLS-60, the script plugins in
+        // TOOLS-61+), so the Kotlin compile output must be non-empty and every class file major 69 —
+        // a clamped compile output fails. Java main stays scan-only: this build is Kotlin-only, so
+        // that directory is legitimately empty unless Java sources ever appear.
+        assertThat(kotlinClasses).isNotEmpty
         (javaClasses + kotlinClasses).forEach { classFile ->
             assertThat(ClassFileMajorVersionSupport.readMajorVersion(classFile))
                 .describedAs("major version of %s", classFile)

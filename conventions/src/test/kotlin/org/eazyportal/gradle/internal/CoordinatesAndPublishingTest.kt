@@ -61,7 +61,7 @@ class CoordinatesAndPublishingTest {
             "-Dmaven.repo.local=${workingDir.absolutePathString()}",
         )
 
-        val document = parsePom(findSinglePublishedPom(workingDir))
+        val document = parsePom(findPublishedConventionsPom(workingDir))
 
         assertThat(document.getElementsByTagName("license").length).isGreaterThan(0)
         assertThat(document.getElementsByTagName("scm").length).isGreaterThan(0)
@@ -82,16 +82,12 @@ class CoordinatesAndPublishingTest {
         assertThat(textOf(document, "version")).isEqualTo(VERSION)
     }
 
-    /** All POMs published into a (temp) repository directory. */
-    private fun findPublishedPoms(repoDir: Path): List<Path> =
+    /** All POMs published into a (temp) repository directory, but there should be only one for the `conventions` project. */
+    private fun findPublishedConventionsPom(repoDir: Path): Path =
         Files.walk(repoDir)
-            .filter { it.fileName.toString().endsWith(".pom", true) }
+            .filter { it.fileName.toString().equals("conventions-$VERSION.pom", true) }
             .toList()
-
-    /** The single POM published into a (temp) repository directory — fails if there isn't exactly one. */
-    private fun findSinglePublishedPom(repoDir: Path): Path =
-        findPublishedPoms(repoDir)
-            .also { assertThat(it).isNotEmpty }
+            .also { assertThat(it).hasSize(1) }
             .single()
 
     private fun parsePom(pom: Path): Document =
