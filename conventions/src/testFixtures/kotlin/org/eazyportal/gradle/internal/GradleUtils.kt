@@ -10,33 +10,49 @@ import java.io.File
  */
 object GradleUtils {
 
-    /** Runs a failing Gradle build and returns its output. */
+    /**
+     * Runs a failing Gradle build and returns its output.
+     *
+     * Set [withPluginClasspath] to inject the plugin-under-test classpath (needed when a synthetic project applies our convention plugins).
+     */
     fun runFailingGradleTask(
         projectDir: File,
         vararg arguments: String,
+        withPluginClasspath: Boolean = false,
     ): String =
-        createGradleRunner(projectDir, *arguments)
+        createGradleRunner(projectDir, arguments, withPluginClasspath)
             .buildAndFail()
             .output
             .also { assertThat(it).isNotBlank }
 
-    /** Runs a successful Gradle build and returns its output. */
+    /**
+     * Runs a successful Gradle build and returns its output.
+     *
+     * Set [withPluginClasspath] to inject the plugin-under-test classpath (needed when a synthetic project applies our convention plugins).
+     */
     fun runGradleTask(
         projectDir: File,
         vararg arguments: String,
+        withPluginClasspath: Boolean = false,
     ): String =
-        createGradleRunner(projectDir, *arguments)
+        createGradleRunner(projectDir, arguments, withPluginClasspath)
             .build()
             .output
             .also { assertThat(it).isNotBlank }
 
     private fun createGradleRunner(
         projectDir: File,
-        vararg arguments: String,
+        arguments: Array<out String>,
+        withPluginClasspath: Boolean,
     ): GradleRunner =
         GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments(*arguments)
             .forwardOutput()
+            .apply {
+                if (withPluginClasspath) {
+                    withPluginClasspath()
+                }
+            }
 
 }
