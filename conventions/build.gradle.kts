@@ -13,6 +13,8 @@ plugins {
     `java-test-fixtures`
 }
 
+description = "EazyPortal Gradle convention plugins"
+
 dependencies {
     // Makes `kotlin("jvm")` applicable from our precompiled scripts, tied to the embedded version:
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$embeddedKotlinVersion")

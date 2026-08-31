@@ -2,6 +2,7 @@ package org.eazyportal.gradle.internal
 
 import org.eazyportal.gradle.internal.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.internal.GradleUtils.runGradleTask
+import org.eazyportal.gradle.internal.project.ExampleProjectBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -16,7 +17,12 @@ class KotlinProjectConventionTest {
 
     @Test
     fun `a kotlin compiler warning fails the build by default`(@TempDir projectDir: File) {
-        writeSampleProject(projectDir, true)
+        ExampleProjectBuilder(projectDir)
+            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
+            .withMavenCentral()   // resolve kotlin-stdlib for compilation
+            .withKotlinSource {
+                KOTLIN_SOURCE_WITH_COMPILER_WARNING
+            }.build()
 
         val output = runFailingGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
 
@@ -25,7 +31,12 @@ class KotlinProjectConventionTest {
 
     @Test
     fun `a kotlin compiler warning passes the build with -PsuppressAllErrors`(@TempDir projectDir: File) {
-        writeSampleProject(projectDir, true)
+        ExampleProjectBuilder(projectDir)
+            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
+            .withMavenCentral()   // resolve kotlin-stdlib for compilation
+            .withKotlinSource {
+                KOTLIN_SOURCE_WITH_COMPILER_WARNING
+            }.build()
 
         val output = runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors", withPluginClasspath = true)
 
@@ -34,27 +45,29 @@ class KotlinProjectConventionTest {
 
     @Test
     fun `applying kotlin-project-convention transitively applies java-project-convention`(@TempDir projectDir: File) {
-        writeSampleProject(projectDir, false)
-        File(projectDir, "build.gradle.kts").appendText(
-            """
-
-            tasks.register("verifyConventions") {
-                // Capture at configuration time (the doLast receiver is the Task, not the Project).
-                val javaConventionApplied = project.plugins.hasPlugin("org.eazyportal.gradle.java-project-convention")
-                val javaPluginApplied = project.plugins.hasPlugin("java")
-                val toolchainVersion = project.extensions.getByType(JavaPluginExtension::class.java)
-                    .toolchain.languageVersion.get().asInt()
-                val junitPlatform = project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java).get()
-                    .options is org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
-                doLast {
-                    println("java-project-convention applied: ${'$'}javaConventionApplied")
-                    println("java plugin applied: ${'$'}javaPluginApplied")
-                    println("toolchain: ${'$'}toolchainVersion")
-                    println("junit platform: ${'$'}junitPlatform")
+        ExampleProjectBuilder(projectDir)
+            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
+            .withMavenCentral()   // resolve kotlin-stdlib for compilation
+            .withKotlinSource()
+            .withBuildScript {
+                """
+                tasks.register("verifyConventions") {
+                    // Capture at configuration time (the doLast receiver is the Task, not the Project).
+                    val javaConventionApplied = project.plugins.hasPlugin("org.eazyportal.gradle.java-project-convention")
+                    val javaPluginApplied = project.plugins.hasPlugin("java")
+                    val toolchainVersion = project.extensions.getByType(JavaPluginExtension::class.java)
+                        .toolchain.languageVersion.get().asInt()
+                    val junitPlatform = project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java).get()
+                        .options is org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
+                    doLast {
+                        println("java-project-convention applied: ${'$'}javaConventionApplied")
+                        println("java plugin applied: ${'$'}javaPluginApplied")
+                        println("toolchain: ${'$'}toolchainVersion")
+                        println("junit platform: ${'$'}junitPlatform")
+                    }
                 }
-            }
-            """.trimIndent(),
-        )
+                """.trimIndent()
+            }.build()
 
         val output = runGradleTask(projectDir, "verifyConventions", withPluginClasspath = true)
 
@@ -65,39 +78,19 @@ class KotlinProjectConventionTest {
             .contains("junit platform: true")
     }
 
-    /** A minimal Kotlin project; when [enableWarnings] is set, it emits an "unused variable" warning. */
-    private fun writeSampleProject(projectDir: File, enableWarnings: Boolean) {
-        File(projectDir, "settings.gradle.kts").writeText(
+    companion object {
+        /** A minimal Kotlin code that emits a deprecation warning. */
+        private val KOTLIN_SOURCE_WITH_COMPILER_WARNING =
             """
-            rootProject.name = "sample"
-            """.trimIndent(),
-        )
-        File(projectDir, "build.gradle.kts").writeText(
-            """
-            plugins {
-                id("org.eazyportal.gradle.kotlin-project-convention")
+            package org.eazyportal.example
+
+            @Deprecated("emit a compiler warning")
+            fun deprecatedGreetings() {}
+
+            fun greetings() {
+                deprecatedGreetings()
             }
-
-            repositories {
-                mavenCentral()   // resolve kotlin-stdlib for compilation
-            }
-            """.trimIndent(),
-        )
-        if (enableWarnings) {
-            val sourceDir = File(projectDir, "src/main/kotlin/sample").apply { mkdirs() }
-            File(sourceDir, "Sample.kt").writeText(
-                """
-                package sample
-
-                @Deprecated("emit a compiler warning")
-                fun deprecated() {}
-
-                fun sample() {
-                    deprecated()
-                }
-                """.trimIndent(),
-            )
-        }
+            """.trimIndent()
     }
 
 }
