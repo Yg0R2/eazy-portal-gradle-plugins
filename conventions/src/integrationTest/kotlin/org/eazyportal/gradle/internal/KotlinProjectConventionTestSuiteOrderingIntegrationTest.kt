@@ -11,14 +11,14 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 /**
- * TestKit coverage for the `test` / `functionalTest` / `integrationTest` suite wiring in `org.eazyportal.gradle.gradle-plugin-convention` (design §7.4, TOOLS-64):
+ * TestKit coverage for the `test` / `functionalTest` / `integrationTest` suite wiring in `org.eazyportal.gradle.kotlin-project-convention` (design §7.4, TOOLS-64):
  * the three tiers run independently when invoked directly, and — under `check`, where they run together, ORDERED (`mustRunAfter`, not `dependsOn`) —
  * a failure in a lower tier aborts the default (no `--continue`) build before any higher tier starts.
  *
  * Each probe project has one trivial JUnit test per tier that fails only when `-PfailTestTier=<tier>` names it,
  * so a single build script drives every scenario below without touching the real `conventions`/`test` sources.
  */
-class GradlePluginConventionTestSuiteOrderingIntegrationTest {
+class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
 
     @Test
     fun `running 'test' alone executes only the unit tier`(@TempDir projectDir: File) {
@@ -93,14 +93,14 @@ class GradlePluginConventionTestSuiteOrderingIntegrationTest {
     }
 
     /**
-     * A minimal `org.eazyportal.gradle.gradle-plugin-convention` project with one probe test per tier (`src/test`, `src/functionalTest`, `src/integrationTest`),
+     * A minimal `org.eazyportal.gradle.kotlin-project-convention` project with one probe test per tier (`src/test`, `src/functionalTest`, `src/integrationTest`),
      * each failing only for the tier named by `-PfailTestTier`.
      *
      * No main sources — the tier-ordering wiring under test doesn't need any.
      */
     private fun buildExampleProject(projectDir: File) {
         ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("java-test-fixtures", "org.eazyportal.gradle.gradle-plugin-convention")
+            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
             .withMavenCentral()
             .withBuildScript {
                 """
