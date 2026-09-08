@@ -1,5 +1,6 @@
-package org.eazyportal.gradle.conventions.internal
+package org.eazyportal.gradle.conventions
 
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.junit.jupiter.api.DynamicTest.dynamicTest
@@ -18,7 +19,7 @@ class ConventionsUtilsTest {
             // Pair("2.4", KotlinVersion.KOTLIN_2_4), TODO: TOOLS-77: proper SemVer validation, 2-part input (design §4.5/D13)
         ).map { (version, kotlinVersion) ->
             dynamicTest("$version to KotlinVersion.${kotlinVersion.name}") {
-                assertThat(ConventionsUtils.kotlinLanguageVersion(version)).isEqualTo(kotlinVersion)
+                Assertions.assertThat(ConventionsUtils.kotlinLanguageVersion(version)).isEqualTo(kotlinVersion)
             }
         }
 

@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.internal
+package org.eazyportal.gradle.conventions
 
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner

@@ -1,9 +1,9 @@
 package org.eazyportal.gradle.internal
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.gradle.internal.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.internal.GradleUtils.runGradleTask
-import org.eazyportal.gradle.internal.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
+import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
+import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

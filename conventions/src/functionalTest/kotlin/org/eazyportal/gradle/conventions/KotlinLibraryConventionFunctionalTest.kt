@@ -1,9 +1,9 @@
-package org.eazyportal.gradle.internal
+package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.internal.GradleUtils.runGradleTask
-import org.eazyportal.gradle.internal.project.ExampleProjectBuilder
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

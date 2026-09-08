@@ -1,4 +1,4 @@
-import org.eazyportal.gradle.conventions.internal.ConventionsUtils
+import org.eazyportal.gradle.conventions.ConventionsUtils
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /*

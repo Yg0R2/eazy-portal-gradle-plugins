@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.internal.project
+package org.eazyportal.gradle.conventions.project
 
 object ExampleProjectFixtures {
 

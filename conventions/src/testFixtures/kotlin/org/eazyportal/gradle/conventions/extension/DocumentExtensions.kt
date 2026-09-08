@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.internal.extension
+package org.eazyportal.gradle.conventions.extension
 
 import org.w3c.dom.Document
 import org.w3c.dom.Element

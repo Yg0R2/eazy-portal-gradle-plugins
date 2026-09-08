@@ -1,12 +1,12 @@
-package org.eazyportal.gradle.internal.assertion
+package org.eazyportal.gradle.conventions.assertion
 
 import org.assertj.core.api.AbstractObjectAssert
 import org.assertj.core.api.Assertions
-import org.eazyportal.gradle.internal.extension.textOf
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.DESCRIPTION
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.GROUP_ID
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.conventions.extension.textOf
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.DESCRIPTION
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.GROUP_ID
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
 import org.w3c.dom.Document
 import java.io.File
 import java.nio.file.Path

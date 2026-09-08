@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.internal.assertion.extension
+package org.eazyportal.gradle.conventions.assertion.extension
 
 import org.assertj.core.api.AbstractStringAssert
 import java.util.regex.Pattern

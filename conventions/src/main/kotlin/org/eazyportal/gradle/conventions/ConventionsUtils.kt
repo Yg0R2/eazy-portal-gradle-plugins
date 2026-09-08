@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.conventions.internal
+package org.eazyportal.gradle.conventions
 
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 

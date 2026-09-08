@@ -1,12 +1,12 @@
-package org.eazyportal.gradle.internal.project
+package org.eazyportal.gradle.conventions.project
 
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.DESCRIPTION
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.GROUP_ID
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.DESCRIPTION
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.GROUP_ID
 import java.io.File
 
 /**
- * Fluent builder for a synthetic Gradle project scaffolded into a working directory and driven by the TestKit helpers in [org.eazyportal.gradle.internal.GradleUtils].
+ * Fluent builder for a synthetic Gradle project scaffolded into a working directory and driven by the TestKit helpers in [org.eazyportal.gradle.conventions.GradleUtils].
  * Each `with…` mutator returns `this` for chaining; the terminal [build] materializes the files and returns the project directory.
  *
  * Only the parts that differ between tests need to be declared — everything else has a sensible default for a minimal Gradle project.

@@ -1,10 +1,10 @@
-package org.eazyportal.gradle.internal
+package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.internal.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.internal.GradleUtils.runGradleTask
-import org.eazyportal.gradle.internal.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
-import org.eazyportal.gradle.internal.project.ExampleProjectBuilder
-import org.eazyportal.gradle.internal.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
+import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
+import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
+import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
