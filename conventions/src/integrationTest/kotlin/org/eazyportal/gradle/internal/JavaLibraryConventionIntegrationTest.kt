@@ -15,7 +15,7 @@ import java.io.File
  * exposes an `api` configuration, produces a `maven` publication with a sources jar and a Javadoc jar, and
  * reuses the central (non-bare) POM from `publication-convention`.
  */
-class JavaLibraryConventionTest {
+class JavaLibraryConventionIntegrationTest {
 
     @Test
     fun `exposes an api configuration`(@TempDir projectDir: File) {

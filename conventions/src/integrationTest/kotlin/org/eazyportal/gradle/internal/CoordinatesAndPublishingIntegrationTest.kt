@@ -12,7 +12,7 @@ import java.nio.file.Path
 import java.util.Properties
 import kotlin.io.path.absolutePathString
 
-class CoordinatesAndPublishingTest {
+class CoordinatesAndPublishingIntegrationTest {
 
     @Test
     fun `group and version originate from root gradle properties`() {

@@ -12,7 +12,7 @@ import java.io.File
  * TestKit coverage for `org.eazyportal.gradle.java-project-convention` (design §4.2, TOOLS-61 acceptance criteria):
  * a javac lint warning fails the build by default and passes with `-PsuppressAllErrors`.
  */
-class JavaProjectConventionTest {
+class JavaProjectConventionIntegrationTest {
 
     @Test
     fun `a javac lint warning fails the build by default`(@TempDir projectDir: File) {
@@ -37,9 +37,7 @@ class JavaProjectConventionTest {
                 JAVA_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        val output = runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors", withPluginClasspath = true)
-
-        assertThat(output).contains("BUILD SUCCESSFUL")
+        runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors", withPluginClasspath = true)
     }
 
     companion object {

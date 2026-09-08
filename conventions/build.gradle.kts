@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.plugins.jvm.JvmTestSuite
 
 /*
  * Hand-written build for the conventions included build — the one build that cannot apply its own
@@ -105,4 +106,63 @@ if (!release) {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+// jvm-test-suite STRUCTURE mirrored from `gradle-plugin-convention` (design §7.4) — this build can't apply its
+// own precompiled script plugins, so functionalTest/integrationTest are declared inline here too. Dependencies
+// that a real build script can freely add (unlike the precompiled convention, `libs`/`testFixtures` work here)
+// are declared inside each suite's own block, since the suite doesn't exist yet when the top `dependencies {}`
+// block above runs.
+testing {
+    suites {
+        register<JvmTestSuite>("functionalTest") {      // TestKit, hermetic
+            useJUnitJupiter()
+            dependencies {
+                implementation(project())
+                implementation(testFixtures(project()))
+                implementation(gradleTestKit())
+                implementation(libs.assertj.core)
+            }
+        }
+
+        register<JvmTestSuite>("integrationTest") {     // end-to-end cascade, hermetic
+            useJUnitJupiter()
+            dependencies {
+                implementation(project())
+                implementation(testFixtures(project()))
+                implementation(gradleTestKit())
+                implementation(libs.assertj.core)
+            }
+        }
+    }
+}
+
+// Each suite runs INDEPENDENTLY (`./gradlew test` / `functionalTest` / `integrationTest` alone never pulls the
+// others in). Under `check` they run together, ORDERED (`mustRunAfter`, not `dependsOn`); the default
+// first-failure abort (no `--continue`) skips whatever hasn't started yet.
+tasks.named("functionalTest") {
+    mustRunAfter(
+        tasks.named("test"),
+    )
+}
+tasks.named("integrationTest") {
+    mustRunAfter(
+        tasks.named("test"),
+        tasks.named("functionalTest"),
+    )
+}
+
+gradlePlugin {
+    // `testSourceSets(...)` REPLACES the default list (normally just `test`) rather than appending to it —
+    // `test` must be listed explicitly or it loses its plugin-under-test-metadata.properties resource.
+    testSourceSets(
+        sourceSets["test"],
+        sourceSets["functionalTest"],
+        sourceSets["integrationTest"],
+    )
+}
+
+tasks.named("check") {
+    // `test` is already wired to `check`
+    dependsOn("functionalTest", "integrationTest")
 }

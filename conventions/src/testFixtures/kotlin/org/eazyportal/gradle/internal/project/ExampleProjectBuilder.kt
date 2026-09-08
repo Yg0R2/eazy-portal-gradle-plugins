@@ -63,19 +63,21 @@ class ExampleProjectBuilder(
     fun withBuildScript(scriptBlock: () -> String): ExampleProjectBuilder =
         apply { buildScriptBlocks += scriptBlock().trimIndent() }
 
-    /** Writes a custom Java source under `src/main/java/[relativePath]`. */
+    /** Writes a custom Java source under `src/[sourceSet]/java/[classPath]`. */
     fun withJavaSource(
-        relativePath: String = "com/eazyportal/example/Example.java",
+        sourceSet: String = "main",
+        classPath: String = "org/eazyportal/example/Example.java",
         contentBlock: () -> String = { EXAMPLE_JAVA_SOURCE },
     ): ExampleProjectBuilder =
-        apply { sourceFiles += SourceFile("src/main/java/$relativePath", contentBlock().trimIndent()) }
+        apply { sourceFiles += SourceFile("src/$sourceSet/java/$classPath", contentBlock().trimIndent()) }
 
-    /** Writes a custom Kotlin source under `src/main/kotlin/[relativePath]`. */
+    /** Writes a custom Kotlin source under `src/[sourceSet]/kotlin/[classPath]`. */
     fun withKotlinSource(
-        relativePath: String = "com/eazyportal/example/Example.kt",
+        sourceSet: String = "main",
+        classPath: String = "org/eazyportal/example/Example.kt",
         contentBlock: () -> String = { EXAMPLE_KOTLIN_SOURCE },
     ): ExampleProjectBuilder =
-        apply { sourceFiles += SourceFile("src/main/kotlin/$relativePath", contentBlock().trimIndent()) }
+        apply { sourceFiles += SourceFile("src/$sourceSet/kotlin/$classPath", contentBlock().trimIndent()) }
 
     /** Appends a raw block to `settings.gradle.kts` (e.g. `dependencyResolutionManagement {}`). */
     fun withSettingsScript(scriptBlock: () -> String): ExampleProjectBuilder =

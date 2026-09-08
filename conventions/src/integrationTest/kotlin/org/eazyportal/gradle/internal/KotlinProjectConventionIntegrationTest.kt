@@ -13,7 +13,7 @@ import java.io.File
  * a Kotlin compiler warning fails by default and passes with `-PsuppressAllErrors`, and applying the plugin
  * transitively applies `java-project-convention` (toolchain + JUnit platform).
  */
-class KotlinProjectConventionTest {
+class KotlinProjectConventionIntegrationTest {
 
     @Test
     fun `a kotlin compiler warning fails the build by default`(@TempDir projectDir: File) {
@@ -38,9 +38,7 @@ class KotlinProjectConventionTest {
                 KOTLIN_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        val output = runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors", withPluginClasspath = true)
-
-        assertThat(output).contains("BUILD SUCCESSFUL")
+        runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors", withPluginClasspath = true)
     }
 
     @Test

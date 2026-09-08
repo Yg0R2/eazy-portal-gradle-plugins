@@ -15,7 +15,7 @@ import java.io.File
  * central POM applied to every publication (a `maven` publication and a plugin-marker publication),
  * SNAPSHOT/release repository routing, and typed lazy GitHub Packages credentials.
  */
-class PublicationConventionTest {
+class PublicationConventionIntegrationTest {
 
     @Test
     fun `applies the central POM to a maven publication and a plugin-marker publication`(@TempDir projectDir: File) {
@@ -122,7 +122,7 @@ class PublicationConventionTest {
                     }
                 }
                 """.trimIndent()
-            }.withJavaSource("com/eazyportal/example/ExampleEazyPortalPlugin.java") {
+            }.withJavaSource("org/eazyportal/example/ExampleEazyPortalPlugin.java") {
                 """
                 package org.eazyportal.example;
 

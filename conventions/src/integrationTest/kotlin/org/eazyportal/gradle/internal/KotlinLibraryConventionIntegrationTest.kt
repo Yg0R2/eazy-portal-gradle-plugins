@@ -17,7 +17,7 @@ import java.io.File
  * by `kotlin-project-convention` — the convention exposes an `api` configuration, and it produces a `maven`
  * publication with a sources jar (no Javadoc jar) plus the central (non-bare) POM from `publication-convention`.
  */
-class KotlinLibraryConventionTest {
+class KotlinLibraryConventionIntegrationTest {
 
     @Test
     fun `a public declaration missing an explicit return type fails under explicitApi`(@TempDir projectDir: File) {
@@ -42,9 +42,7 @@ class KotlinLibraryConventionTest {
                 KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
             }.build()
 
-        val output = runGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
-
-        assertThat(output).contains("BUILD SUCCESSFUL")
+        runGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
     }
 
     @Test

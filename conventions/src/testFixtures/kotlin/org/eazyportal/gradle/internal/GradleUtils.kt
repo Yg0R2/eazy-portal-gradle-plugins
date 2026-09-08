@@ -23,7 +23,11 @@ object GradleUtils {
         createGradleRunner(projectDir, arguments, withPluginClasspath)
             .buildAndFail()
             .output
-            .also { assertThat(it).isNotBlank }
+            .also {
+                assertThat(it)
+                    .isNotBlank
+                    .contains("BUILD FAILED")
+            }
 
     /**
      * Runs a successful Gradle build and returns its output.
@@ -38,7 +42,11 @@ object GradleUtils {
         createGradleRunner(projectDir, arguments, withPluginClasspath)
             .build()
             .output
-            .also { assertThat(it).isNotBlank }
+            .also {
+                assertThat(it)
+                    .isNotBlank
+                    .contains("BUILD SUCCESSFUL")
+            }
 
     private fun createGradleRunner(
         projectDir: File,
