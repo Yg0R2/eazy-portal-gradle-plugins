@@ -17,5 +17,5 @@ rootProject.name = "gradle-plugins"
 
 include(
     "dummy-settings",
-    "dummy-project",
+    "eazy-project",
 )

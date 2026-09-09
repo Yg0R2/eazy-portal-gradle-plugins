@@ -3,7 +3,7 @@ import org.gradle.api.plugins.jvm.JvmTestSuite
 
 /*
  * Base JVM configuration shared by every project (Java and Kotlin) — design §4.2.
- * Non-publishing. Adds NO test dependencies — those are contributed by dummy-project.
+ * Non-publishing. Adds NO test dependencies — those are contributed by eazy-project.
  */
 plugins {
     java
