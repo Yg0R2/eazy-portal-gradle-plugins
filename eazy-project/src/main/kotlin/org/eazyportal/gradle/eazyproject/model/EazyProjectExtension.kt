@@ -1,5 +1,6 @@
-package org.eazyportal.gradle.eazyproject
+package org.eazyportal.gradle.eazyproject.model
 
+import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.gradle.api.provider.Property
 
 /**
@@ -18,7 +19,7 @@ abstract class EazyProjectExtension {
         // Set here (rather than in EazyProjectPlugin.apply(), as design §5.5 shows) so the default is
         // unit-testable without the plugin, which lands in TOOLS-67. TOOLS-67: revisit — either drop the
         // plugin's own redundant `.convention(...)` call, or remove this init block, so there's one owner.
-        eazyPortalCoreVersion.convention(DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION)
+        eazyPortalCoreVersion.convention(EXAMPLE_CORE_DEFAULT_VERSION)
     }
 
 }

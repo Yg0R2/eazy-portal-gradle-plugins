@@ -25,4 +25,5 @@ dependencies {
     testFixturesImplementation(gradleTestKit())
 
     testImplementation(gradleTestKit())
+    testImplementation(gradleKotlinDsl())
 }
