@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.eazyproject
+package org.eazyportal.gradle.eazyproject.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DynamicTest

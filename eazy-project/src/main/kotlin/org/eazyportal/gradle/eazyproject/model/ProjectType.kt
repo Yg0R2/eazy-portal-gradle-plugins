@@ -1,4 +1,4 @@
-package org.eazyportal.gradle.eazyproject
+package org.eazyportal.gradle.eazyproject.model
 
 /**
  * Name-based archetype for a receiver module (design §5.2). Each constant carries its **explicit kebab name**,
@@ -17,6 +17,9 @@ enum class ProjectType(
     WEB("web"),
     DEFAULT("default");
 
+    override fun toString(): String =
+        type
+
     companion object {
         /**
          * Case-insensitive match on the kebab-case module name; unknown names fall back to [DEFAULT] —
@@ -27,4 +30,5 @@ enum class ProjectType(
                 it.type.equals(name, ignoreCase = true)
             } ?: DEFAULT
     }
+
 }
