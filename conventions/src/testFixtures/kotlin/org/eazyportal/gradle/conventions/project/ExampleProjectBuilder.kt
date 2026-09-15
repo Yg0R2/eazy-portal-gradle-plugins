@@ -12,7 +12,7 @@ import java.io.File
  * Only the parts that differ between tests need to be declared — everything else has a sensible default for a minimal Gradle project.
  */
 class ExampleProjectBuilder(
-    private val workingDir: File,
+    private val projectDir: File,
 ) {
 
     private var rootProjectName: String = ARTIFACT_ID
@@ -23,6 +23,7 @@ class ExampleProjectBuilder(
     private val buildScriptBlocks = mutableListOf<String>()
     private val settingsScriptBlocks = mutableListOf<String>()
     private val sourceFiles = mutableListOf<SourceFile>()
+    private val subprojects = mutableListOf<Pair<String, ExampleProjectBuilder>>()
 
     /** Overrides the root project name (`settings.gradle.kts`). */
     fun withRootProjectName(name: String): ExampleProjectBuilder =
@@ -84,22 +85,25 @@ class ExampleProjectBuilder(
         apply { settingsScriptBlocks += scriptBlock().trimIndent() }
 
     /**
-     * Materializes `settings.gradle.kts`, `build.gradle.kts`, and any source files.
+     * Declares a subproject `include("name")`d from the root, configured with its own (independent)
+     * [ExampleProjectBuilder] rooted at `workingDir/name`. Only one level deep — a subproject cannot itself
+     * declare further subprojects.
+     */
+    fun withSubproject(name: String, configure: ExampleProjectBuilder.() -> Unit = {}): ExampleProjectBuilder =
+        apply { subprojects += name to ExampleProjectBuilder(File(projectDir, name)).apply(configure) }
+
+    /**
+     * Materializes `settings.gradle.kts`, `build.gradle.kts`, any source files, and any [withSubproject] projects.
      *
-     * @return the project dir.
+     * @return the (root) project dir.
      */
     fun build(): File {
-        File(workingDir, "settings.gradle.kts").writeText(generateSettingsGradleKtsContent())
+        File(projectDir, "settings.gradle.kts").writeText(generateSettingsGradleKtsContent())
 
-        File(workingDir, "build.gradle.kts").writeText(generateBuildGradleKtsContent())
+        writeProjectFiles()
+        subprojects.forEach { (_, subproject) -> subproject.writeProjectFiles() }
 
-        sourceFiles.forEach { source ->
-            File(workingDir, source.relativePath)
-                .also { it.parentFile.mkdirs() }
-                .writeText(source.content)
-        }
-
-        return workingDir
+        return projectDir
     }
 
     private fun generateBuildGradleKtsContent(): String =
@@ -132,8 +136,23 @@ class ExampleProjectBuilder(
                 rootProject.name = "$rootProjectName"
                 """.trimIndent()
             )
+            if (subprojects.isNotEmpty()) {
+                add(subprojects.joinToString(separator = "\n") { (name, _) -> "include(\"$name\")" })
+            }
             addAll(settingsScriptBlocks)
         }.joinToString(separator = "\n\n", postfix = "\n")
+
+    private fun writeProjectFiles() {
+        File(projectDir, "build.gradle.kts")
+            .also { it.parentFile.mkdirs() }
+            .writeText(generateBuildGradleKtsContent())
+
+        sourceFiles.forEach { source ->
+            File(projectDir, source.relativePath)
+                .also { it.parentFile.mkdirs() }
+                .writeText(source.content)
+        }
+    }
 
     private data class SourceFile(
         val relativePath: String,
