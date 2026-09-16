@@ -13,10 +13,10 @@ import org.gradle.api.Task
  * - creates [EazyProjectExtension],
  * - resolves the module's [ProjectType] from its name,
  * - runs the matching [org.eazyportal.gradle.eazyproject.configurer.ProjectConfigurer],
- * - and registers the `dummyDiagnostics` task.
+ * - and registers the `eazyDiagnostics` task.
  *
  * Applied directly by a receiver module,
- * or — the normal path — auto-applied by `«dummy-settings»` to every subproject (never the root),
+ * or — the normal path — auto-applied by `«eazy-settings»` to every subproject (never the root),
  * which also feeds [EazyProjectExtension.eazyPortalCoreVersion] (design §6).
  */
 class EazyProjectPlugin : Plugin<Project> {
@@ -41,19 +41,21 @@ class EazyProjectPlugin : Plugin<Project> {
         project: Project,
         extension: EazyProjectExtension,
     ) {
-        project.tasks.register("dummyDiagnostics") { task: Task ->
+        project.tasks.register("eazyDiagnostics") { task: Task ->
             task.group = "help"
             task.description = "Reports how eazy-project configured this module."
 
             // Captured as plain data here — CC-safe, no Project escapes the doLast (design §5.7).
             val summary = project.wiringSummary()
             val eazyPortalCoreVersion = extension.eazyPortalCoreVersion.get()
+            val projectPath = project.path
+            val archetype = ProjectType.fromProjectName(project.name)
 
             task.doLast {
                 task.logger.lifecycle(
                     """
-                    eazy-project diagnostics — ${project.path}
-                      archetype           : ${ProjectType.fromProjectName(project.name)}
+                    eazy-project diagnostics — $projectPath
+                      archetype           : $archetype
                       convention          : ${summary.pluginIds}
                       siblings            : ${summary.siblings}
                       eazy-portal-core        : ${summary.eazyPortalCore}   (versions via the eazy-portal-core BOM)
@@ -68,7 +70,7 @@ class EazyProjectPlugin : Plugin<Project> {
         if (eazyPortalCoreVersion == DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION) {
             "default (DefaultVersions)"
         } else {
-            "«dummy-settings» DSL override"
+            "«eazy-settings» DSL override"
         }
 
 }

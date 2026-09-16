@@ -29,7 +29,7 @@ class EazyProjectExtensionTest {
         val project = ProjectBuilder.builder().build()
 
         val extension = project.extensions.create("eazyProject", EazyProjectExtension::class.java).apply {
-            // This is the same as what dummy-settings does in its plugin, design §6.
+            // This is the same as what eazy-settings does in its plugin, design §6.
             eazyPortalCoreVersion.set("9.9.9")
         }
 
