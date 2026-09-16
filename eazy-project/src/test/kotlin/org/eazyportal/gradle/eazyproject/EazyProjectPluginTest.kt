@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  * the extension's default,
  * the archetype → Configurer hand-off (already exhaustively covered per-archetype by [org.eazyportal.gradle.eazyproject.configurer.ProjectConfigurerWiringTest];
  * this class only proves the *plugin* wires that hand-off correctly),
- * and the `dummyDiagnostics` task registration.
+ * and the `eazyDiagnostics` task registration.
  */
 class EazyProjectPluginTest {
 
@@ -61,12 +61,12 @@ class EazyProjectPluginTest {
     }
 
     @Test
-    fun `applying registers a dummyDiagnostics task in the help group that reads the recorded WiringSummary`() {
+    fun `applying registers a eazyDiagnostics task in the help group that reads the recorded WiringSummary`() {
         val common = buildReceiverSubproject("common")
 
         EazyProjectPlugin().apply(common)
 
-        val task = common.tasks.getByName("dummyDiagnostics")
+        val task = common.tasks.getByName("eazyDiagnostics")
         assertThat(task.group).isEqualTo("help")
         assertThat(task.description).isNotBlank()
     }

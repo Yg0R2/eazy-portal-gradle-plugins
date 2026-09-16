@@ -21,6 +21,6 @@ dependencyResolutionManagement {
 rootProject.name = "gradle-plugins"
 
 include(
-    "dummy-settings",
+    "eazy-settings",
     "eazy-project",
 )

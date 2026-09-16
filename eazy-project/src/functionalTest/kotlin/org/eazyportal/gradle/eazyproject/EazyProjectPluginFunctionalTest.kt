@@ -49,7 +49,7 @@ class EazyProjectPluginFunctionalTest {
 
         val projectDir = buildExampleProject(workingDir, subprojectName, siblingProjectNames = siblings)
 
-        val output = runGradleTask(projectDir, ":$subprojectName:dummyDiagnostics")
+        val output = runGradleTask(projectDir, ":$subprojectName:eazyDiagnostics")
 
         val expectedArchetype = ProjectType.fromProjectName(subprojectName).toString()
         val expectedSiblings = siblings.joinToString(", ", "[", "]") {
@@ -60,7 +60,7 @@ class EazyProjectPluginFunctionalTest {
             ?.let { "eazyportal-core-$subprojectName (implementation), " }
             .orEmpty()
         assertThat(output).containsSubsequence(
-            "> Task :$subprojectName:dummyDiagnostics",
+            "> Task :$subprojectName:eazyDiagnostics",
             "eazy-project diagnostics — :$subprojectName",
             "  archetype              : $expectedArchetype",
             "  convention             : [$expectedConvention]",

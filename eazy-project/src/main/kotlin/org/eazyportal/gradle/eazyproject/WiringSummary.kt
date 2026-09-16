@@ -6,7 +6,7 @@ import org.gradle.api.Project
 /**
  * The single source of truth for what a [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer] wired into a module (design §5.7):
  * the applied convention plus every sibling and eazyportal-core dependency, each with the configuration it landed on.
- * Built by the Configurer *as it wires* (never recomputed), so the `dummyDiagnostics` task (TOOLS-67) can report the wiring without duplicating —
+ * Built by the Configurer *as it wires* (never recomputed), so the `eazyDiagnostics` task (TOOLS-67) can report the wiring without duplicating —
  *   and therefore never drifting from — the logic that produced it.
  */
 internal data class WiringSummary(
