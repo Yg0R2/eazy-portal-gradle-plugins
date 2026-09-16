@@ -24,7 +24,7 @@ class KotlinProjectConventionIntegrationTest {
                 KOTLIN_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        val output = runFailingGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "compileKotlin")
 
         assertThat(output).contains("is deprecated")
     }
@@ -38,7 +38,7 @@ class KotlinProjectConventionIntegrationTest {
                 KOTLIN_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors", withPluginClasspath = true)
+        runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors")
     }
 
     @Test
@@ -67,7 +67,7 @@ class KotlinProjectConventionIntegrationTest {
                 """.trimIndent()
             }.build()
 
-        val output = runGradleTask(projectDir, "verifyConventions", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "verifyConventions")
 
         assertThat(output)
             .contains("java-project-convention applied: true")

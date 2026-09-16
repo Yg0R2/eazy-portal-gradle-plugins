@@ -26,7 +26,6 @@ class PublicationConventionIntegrationTest {
             "generatePomFileForMavenPublication",
             "generatePomFileForExampleEazyPortalPluginPluginMarkerMavenPublication",
             "-Pversion=$VERSION",
-            withPluginClasspath = true,
         )
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml")) {
@@ -48,7 +47,7 @@ class PublicationConventionIntegrationTest {
     fun `a SNAPSHOT version routes publish to publishToMavenLocal`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runGradleTask(projectDir, "publish", "-Pversion=$VERSION-SNAPSHOT", "-m", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "publish", "-Pversion=$VERSION-SNAPSHOT", "-m")
 
         assertThat(output).contains(":publishToMavenLocal").contains(":publish")
     }
@@ -66,7 +65,7 @@ class PublicationConventionIntegrationTest {
             }
         }
 
-        val output = runGradleTask(projectDir, "printRepositories", "-Pversion=$VERSION", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "printRepositories", "-Pversion=$VERSION")
 
         assertThat(output).contains("repositories: [GitHubPackages]")
     }
@@ -79,7 +78,6 @@ class PublicationConventionIntegrationTest {
             projectDir,
             "publishMavenPublicationToGitHubPackagesRepository",
             "-Pversion=$VERSION",
-            withPluginClasspath = true,
         )
 
         assertThat(output)

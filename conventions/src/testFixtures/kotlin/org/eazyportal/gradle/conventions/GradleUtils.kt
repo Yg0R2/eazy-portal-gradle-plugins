@@ -18,7 +18,7 @@ object GradleUtils {
     fun runFailingGradleTask(
         projectDir: File,
         vararg arguments: String,
-        withPluginClasspath: Boolean = false,
+        withPluginClasspath: Boolean = true,
     ): String =
         createGradleRunner(projectDir, arguments, withPluginClasspath)
             .buildAndFail()
@@ -37,7 +37,7 @@ object GradleUtils {
     fun runGradleTask(
         projectDir: File,
         vararg arguments: String,
-        withPluginClasspath: Boolean = false,
+        withPluginClasspath: Boolean = true,
     ): String =
         createGradleRunner(projectDir, arguments, withPluginClasspath)
             .build()

@@ -28,7 +28,7 @@ class KotlinLibraryConventionIntegrationTest {
                 KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
             }.build()
 
-        val output = runFailingGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "compileKotlin")
 
         assertThat(output).contains("Return type must be specified in explicit API mode")
     }
@@ -42,7 +42,7 @@ class KotlinLibraryConventionIntegrationTest {
                 KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
             }.build()
 
-        runGradleTask(projectDir, "compileKotlin", withPluginClasspath = true)
+        runGradleTask(projectDir, "compileKotlin")
     }
 
     @Test
@@ -58,7 +58,7 @@ class KotlinLibraryConventionIntegrationTest {
             }
         }
 
-        val output = runGradleTask(projectDir, "verifyApiConfiguration", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "verifyApiConfiguration")
 
         assertThat(output).contains("api configuration: true")
     }
@@ -67,7 +67,7 @@ class KotlinLibraryConventionIntegrationTest {
     fun `publishes a maven publication with a sources jar and no javadoc jar`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION", withPluginClasspath = true)
+        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION")
 
         assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-sources.jar")).exists()
         assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-javadoc.jar")).doesNotExist()
@@ -77,7 +77,7 @@ class KotlinLibraryConventionIntegrationTest {
     fun `applies the central non-bare POM to the maven publication`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION", withPluginClasspath = true)
+        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }

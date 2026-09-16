@@ -49,7 +49,7 @@ class EazyProjectPluginFunctionalTest {
 
         val projectDir = buildExampleProject(workingDir, subprojectName, siblingProjectNames = siblings)
 
-        val output = runGradleTask(projectDir, ":$subprojectName:dummyDiagnostics", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, ":$subprojectName:dummyDiagnostics")
 
         val expectedArchetype = ProjectType.fromProjectName(subprojectName).toString()
         val expectedSiblings = siblings.joinToString(", ", "[", "]") {
@@ -77,7 +77,7 @@ class EazyProjectPluginFunctionalTest {
             .withBuildPlugins("org.eazyportal.gradle.eazy-project")
             .build()
 
-        val output = runFailingGradleTask(projectDir, "help", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "help")
 
         assertThat(output)
             .contains("org.eazyportal.gradle.eazy-project plugin must not be applied to the root project — it is only for subprojects.")
@@ -108,7 +108,7 @@ class EazyProjectPluginFunctionalTest {
             }
         }
 
-        val output = runFailingGradleTask(rootDir, ":common:compileKotlin", withPluginClasspath = true)
+        val output = runFailingGradleTask(rootDir, ":common:compileKotlin")
 
         assertThat(output).contains("Visibility must be specified in explicit API mode.")
     }
@@ -121,7 +121,7 @@ class EazyProjectPluginFunctionalTest {
             extraPluginIds = listOf("org.eazyportal.gradle.kotlin-library-convention"),
         )
 
-        runGradleTask(projectDir, ":extras:publishToMavenLocal", "-Pversion=1.0.0-SNAPSHOT", withPluginClasspath = true)
+        runGradleTask(projectDir, ":extras:publishToMavenLocal", "-Pversion=1.0.0-SNAPSHOT")
     }
 
     /**

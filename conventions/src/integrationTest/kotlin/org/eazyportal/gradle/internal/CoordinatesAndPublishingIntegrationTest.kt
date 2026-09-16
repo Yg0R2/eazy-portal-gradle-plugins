@@ -16,7 +16,7 @@ class CoordinatesAndPublishingIntegrationTest {
 
     @Test
     fun `group and version originate from root gradle properties`() {
-        val actual = runGradleTask(PROJECT_DIR, "properties")
+        val actual = runGradleTask(PROJECT_DIR, "properties", withPluginClasspath = false)
 
         // conventions/settings.gradle.kts keeps the root group and appends ".conventions" (decided
         // in TOOLS-59; the design's substitution coordinates are adjusted accordingly later).
@@ -29,7 +29,7 @@ class CoordinatesAndPublishingIntegrationTest {
     fun `command-line version property overrides gradle properties`() {
         val version = "2.3.4-DUMMY"
 
-        val actual = runGradleTask(PROJECT_DIR,  "properties", "-Pversion=$version")
+        val actual = runGradleTask(PROJECT_DIR,  "properties", "-Pversion=$version", withPluginClasspath = false)
 
         assertThat(actual)
             .contains("group: $CONVENTIONS_PLUGIN_GROUP_ID")
@@ -42,6 +42,7 @@ class CoordinatesAndPublishingIntegrationTest {
             PROJECT_DIR,
             "publish",
             "-Pversion=0.0.1",
+            withPluginClasspath = false,
         )
 
         assertThat(actual)
@@ -56,6 +57,7 @@ class CoordinatesAndPublishingIntegrationTest {
             PROJECT_DIR,
             "publish",
             "-Dmaven.repo.local=${workingDir.absolutePathString()}",
+            withPluginClasspath = false,
         )
 
         // Non-bare POM, precisely: license + scm fields and coordinates (design §4.1).

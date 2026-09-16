@@ -24,7 +24,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'test' alone executes only the unit tier`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runGradleTask(projectDir, "test", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "test")
 
         assertThat(output)
             .taskDidRun("test")
@@ -36,7 +36,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'functionalTest' alone executes only the functional tier`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runGradleTask(projectDir, "functionalTest", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "functionalTest")
 
         assertThat(output)
             .taskDidRun("functionalTest")
@@ -48,7 +48,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'integrationTest' alone executes only the integration tier`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runGradleTask(projectDir, "integrationTest", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "integrationTest")
 
         assertThat(output)
             .taskDidRun("integrationTest")
@@ -60,7 +60,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing unit test aborts 'check' before the functional or integration test starts`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=test", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=test")
 
         assertThat(output)
             .taskDidRun("test")
@@ -72,7 +72,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing functional test aborts 'check' before the integration test starts, after the unit test ran`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=functionalTest", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=functionalTest")
 
         assertThat(output)
             .taskDidRun("test")
@@ -84,7 +84,7 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing integration test aborts 'check', after the unit and integration test ran`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=integrationTest", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=integrationTest")
 
         assertThat(output)
             .taskDidRun("test")

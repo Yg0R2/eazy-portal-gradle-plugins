@@ -30,7 +30,7 @@ class JavaLibraryConventionIntegrationTest {
             }
         }
 
-        val output = runGradleTask(projectDir, "verifyApiConfiguration", withPluginClasspath = true)
+        val output = runGradleTask(projectDir, "verifyApiConfiguration")
 
         assertThat(output).contains("api configuration: true")
     }
@@ -39,7 +39,7 @@ class JavaLibraryConventionIntegrationTest {
     fun `publishes a maven publication with a sources jar and a javadoc jar`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION", withPluginClasspath = true)
+        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION")
 
         assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-sources.jar")).exists()
         assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-javadoc.jar")).exists()
@@ -49,7 +49,7 @@ class JavaLibraryConventionIntegrationTest {
     fun `applies the central non-bare POM to the maven publication`(@TempDir projectDir: File) {
         buildExampleProject(projectDir)
 
-        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION", withPluginClasspath = true)
+        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }
