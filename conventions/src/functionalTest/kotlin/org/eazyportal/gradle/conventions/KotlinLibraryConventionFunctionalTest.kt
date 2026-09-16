@@ -31,7 +31,7 @@ class KotlinLibraryConventionFunctionalTest {
                 """.trimIndent()
             }.build()
 
-        runGradleTask(projectDir, "build", "-Pversion=$VERSION", withPluginClasspath = true)
+        runGradleTask(projectDir, "build", "-Pversion=$VERSION")
 
         val jar = File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION.jar")
         assertThat(jar).exists()

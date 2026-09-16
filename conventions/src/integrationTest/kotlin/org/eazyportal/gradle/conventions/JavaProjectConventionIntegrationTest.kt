@@ -22,7 +22,7 @@ class JavaProjectConventionIntegrationTest {
                 JAVA_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        val output = runFailingGradleTask(projectDir, "compileJava", withPluginClasspath = true)
+        val output = runFailingGradleTask(projectDir, "compileJava")
 
         assertThat(output)
             .contains("[cast] redundant cast")
@@ -37,7 +37,7 @@ class JavaProjectConventionIntegrationTest {
                 JAVA_SOURCE_WITH_COMPILER_WARNING
             }.build()
 
-        runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors", withPluginClasspath = true)
+        runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors")
     }
 
     companion object {
