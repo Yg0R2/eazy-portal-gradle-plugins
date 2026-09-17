@@ -7,6 +7,7 @@ import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -66,7 +67,7 @@ class EazyProjectPluginTest {
 
         EazyProjectPlugin().apply(common)
 
-        val task = common.tasks.getByName("eazyDiagnostics")
+        val task = common.tasks.getByName(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
         assertThat(task.group).isEqualTo("help")
         assertThat(task.description).isNotBlank()
     }

@@ -6,6 +6,7 @@ import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.gradle.dummysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -27,13 +28,13 @@ class EazySettingsPluginFunctionalTest {
     fun `every subproject gets eazy-project auto-applied, the root does not`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, subprojectNames = listOf("extras-a", "extras-b"))
 
-        val output = runGradleTask(projectDir, ":extras-a:eazyDiagnostics", ":extras-b:eazyDiagnostics")
+        val output = runGradleTask(projectDir, ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output)
             .contains("eazy-project diagnostics — :extras-a")
             .contains("eazy-project diagnostics — :extras-b")
 
-        val rootOutput = runFailingGradleTask(projectDir, ":eazyDiagnostics")
+        val rootOutput = runFailingGradleTask(projectDir, ":$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(rootOutput).contains("not found in root project")
     }
@@ -42,7 +43,7 @@ class EazySettingsPluginFunctionalTest {
     fun `eazy-project's own default applies when the DSL override is absent`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, subprojectNames = listOf("extras"))
 
-        val output = runGradleTask(projectDir, ":extras:eazyDiagnostics")
+        val output = runGradleTask(projectDir, ":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output).contains("eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION")
     }
@@ -51,7 +52,7 @@ class EazySettingsPluginFunctionalTest {
     fun `the eazySettings override wins over eazy-project's own default`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, subprojectNames = listOf("extras"), eazyPortalCoreVersionOverride = "9.9.9")
 
-        val output = runGradleTask(projectDir, ":extras:eazyDiagnostics")
+        val output = runGradleTask(projectDir, ":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output).contains("eazyPortalCoreVersion  : 9.9.9")
     }
@@ -62,7 +63,7 @@ class EazySettingsPluginFunctionalTest {
 
         val firstRun = runGradleTask(
             projectDir,
-            ":extras-a:eazyDiagnostics", ":extras-b:eazyDiagnostics",
+            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "--configuration-cache", "--configuration-cache-problems=fail",
         )
         assertThat(firstRun)
@@ -72,7 +73,7 @@ class EazySettingsPluginFunctionalTest {
 
         val secondRun = runGradleTask(
             projectDir,
-            ":extras-a:eazyDiagnostics", ":extras-b:eazyDiagnostics",
+            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "--configuration-cache", "--configuration-cache-problems=fail",
         )
         assertThat(secondRun)
