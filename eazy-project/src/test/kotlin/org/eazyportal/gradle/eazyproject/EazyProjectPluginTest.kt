@@ -1,6 +1,7 @@
 package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
@@ -66,7 +67,7 @@ class EazyProjectPluginTest {
 
         EazyProjectPlugin().apply(common)
 
-        val task = common.tasks.getByName("eazyDiagnostics")
+        val task = common.tasks.getByName(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
         assertThat(task.group).isEqualTo("help")
         assertThat(task.description).isNotBlank()
     }

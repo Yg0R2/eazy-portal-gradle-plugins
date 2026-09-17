@@ -26,7 +26,7 @@ class EazyProjectPlugin : Plugin<Project> {
             throw GradleException("org.eazyportal.gradle.eazy-project plugin must not be applied to the root project — it is only for subprojects.",)
         }
 
-        val extension = project.extensions.create("eazyProject", EazyProjectExtension::class.java).apply {
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
             eazyPortalCoreVersion.convention(DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION)
         }
 
@@ -41,7 +41,7 @@ class EazyProjectPlugin : Plugin<Project> {
         project: Project,
         extension: EazyProjectExtension,
     ) {
-        project.tasks.register("eazyDiagnostics") { task: Task ->
+        project.tasks.register(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME) { task: Task ->
             task.group = "help"
             task.description = "Reports how eazy-project configured this module."
 
@@ -72,5 +72,10 @@ class EazyProjectPlugin : Plugin<Project> {
         } else {
             "«eazy-settings» DSL override"
         }
+
+    companion object {
+        const val EAZY_PROJECT_EXTENSION_NAME = "eazyProject"
+        const val EAZY_PROJECT_DIAGNOSTICS_TASK_NAME = "eazyDiagnostics"
+    }
 
 }

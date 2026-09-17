@@ -1,5 +1,6 @@
 package org.eazyportal.gradle.eazyproject
 
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy
@@ -17,7 +18,7 @@ class EazyProjectExtensionTest {
     fun `eazyPortalCoreVersion retrieval should fail since default value is not set`() {
         val project = ProjectBuilder.builder().build()
 
-        val extension = project.extensions.create("eazyProject", EazyProjectExtension::class.java)
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
 
         assertThatThrownBy { extension.eazyPortalCoreVersion.get() }
             .isInstanceOf(MissingValueException::class.java)
@@ -28,7 +29,7 @@ class EazyProjectExtensionTest {
     fun `eazyPortalCoreVersion can be overridden`() {
         val project = ProjectBuilder.builder().build()
 
-        val extension = project.extensions.create("eazyProject", EazyProjectExtension::class.java).apply {
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
             // This is the same as what eazy-settings does in its plugin, design §6.
             eazyPortalCoreVersion.set("9.9.9")
         }

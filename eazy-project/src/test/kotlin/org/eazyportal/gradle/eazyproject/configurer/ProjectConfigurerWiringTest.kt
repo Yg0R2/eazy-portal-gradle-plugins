@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazyproject.configurer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.eazyportal.gradle.eazyproject.DefaultVersions
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
@@ -115,7 +116,7 @@ class ProjectConfigurerWiringTest {
         }
 
         val eazyProjectExtension = root.extensions
-            .create("eazyProject", EazyProjectExtension::class.java)
+            .create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
             .apply { eazyPortalCoreVersion.set(EXAMPLE_CORE_VERSION) }
 
         return root.childProjects.getValue(projectName).also {

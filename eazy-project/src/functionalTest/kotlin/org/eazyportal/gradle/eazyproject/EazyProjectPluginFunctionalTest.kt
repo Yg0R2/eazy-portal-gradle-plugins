@@ -4,6 +4,7 @@ import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -49,7 +50,7 @@ class EazyProjectPluginFunctionalTest {
 
         val projectDir = buildExampleProject(workingDir, subprojectName, siblingProjectNames = siblings)
 
-        val output = runGradleTask(projectDir, ":$subprojectName:eazyDiagnostics")
+        val output = runGradleTask(projectDir, ":$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         val expectedArchetype = ProjectType.fromProjectName(subprojectName).toString()
         val expectedSiblings = siblings.joinToString(", ", "[", "]") {
@@ -60,7 +61,7 @@ class EazyProjectPluginFunctionalTest {
             ?.let { "eazyportal-core-$subprojectName (implementation), " }
             .orEmpty()
         assertThat(output).containsSubsequence(
-            "> Task :$subprojectName:eazyDiagnostics",
+            "> Task :$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "eazy-project diagnostics — :$subprojectName",
             "  archetype              : $expectedArchetype",
             "  convention             : [$expectedConvention]",
