@@ -11,7 +11,8 @@ import org.gradle.api.initialization.resolve.RepositoriesMode
 import java.net.URI
 
 /**
- * Receiver entry point (design §6.3): creates the [EazySettingsExtension], centralizes dependency repositories (design §6.5 — a deliberate supply-chain control, not tidiness) and,
+ * Receiver entry point (design §6.3): creates the [EazySettingsExtension], auto-provisions the JDK toolchain,
+ * centralizes dependency repositories (design §6.5 — a deliberate supply-chain control, not tidiness) and,
  * once the settings file has fully evaluated, auto-applies [EazyProjectPlugin] to every subproject (never the root),
  * feeding the resolved `eazyPortalCoreVersion` override when the DSL sets one — else `eazy-project`'s own convention default stands.
  *
@@ -24,6 +25,9 @@ class EazySettingsPlugin : Plugin<Settings> {
 
     override fun apply(settings: Settings) {
         val extension = settings.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java)
+
+        // JDK auto-provisioning (design §6.3): the receivers auto-provisions the required Java toolchain (e.g. 25) with no local setup.
+        settings.pluginManager.apply("org.gradle.toolchains.foojay-resolver-convention")
 
         settings.configureDependencyResolutionManagement()
 

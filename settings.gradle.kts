@@ -15,6 +15,8 @@ includeBuild("conventions")
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
+        // The foojay-resolver implementation jar (eazy-settings' `implementation(libs.foojay.resolver)`, design §6.3/§7.1).
+        gradlePluginPortal()
     }
 }
 
