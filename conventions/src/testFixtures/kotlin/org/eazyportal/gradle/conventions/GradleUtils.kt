@@ -14,13 +14,16 @@ object GradleUtils {
      * Runs a failing Gradle build and returns its output.
      *
      * Set [withPluginClasspath] to inject the plugin-under-test classpath (needed when a synthetic project applies our convention plugins).
+     * Set [environment] to isolate/override the forked daemon's environment (e.g. redirect `GRADLE_USER_HOME` and strip ambient
+     * `ORG_GRADLE_PROJECT_*` credentials) — omit it for tests that don't touch credential-gated repositories.
      */
     fun runFailingGradleTask(
         projectDir: File,
         vararg arguments: String,
         withPluginClasspath: Boolean = true,
+        environment: Map<String, String>? = null,
     ): String =
-        createGradleRunner(projectDir, arguments, withPluginClasspath)
+        createGradleRunner(projectDir, arguments, withPluginClasspath, environment)
             .buildAndFail()
             .output
             .also {
@@ -33,13 +36,16 @@ object GradleUtils {
      * Runs a successful Gradle build and returns its output.
      *
      * Set [withPluginClasspath] to inject the plugin-under-test classpath (needed when a synthetic project applies our convention plugins).
+     * Set [environment] to isolate/override the forked daemon's environment (e.g. redirect `GRADLE_USER_HOME` and strip ambient
+     * `ORG_GRADLE_PROJECT_*` credentials) — omit it for tests that don't touch credential-gated repositories.
      */
     fun runGradleTask(
         projectDir: File,
         vararg arguments: String,
         withPluginClasspath: Boolean = true,
+        environment: Map<String, String>? = null,
     ): String =
-        createGradleRunner(projectDir, arguments, withPluginClasspath)
+        createGradleRunner(projectDir, arguments, withPluginClasspath, environment)
             .build()
             .output
             .also {
@@ -52,10 +58,12 @@ object GradleUtils {
         projectDir: File,
         arguments: Array<out String>,
         withPluginClasspath: Boolean,
+        environment: Map<String, String>?,
     ): GradleRunner =
         GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments(*arguments)
+            .withEnvironment(environment)
             .forwardOutput()
             .apply {
                 if (withPluginClasspath) {

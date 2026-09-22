@@ -95,8 +95,8 @@ class ProjectConfigurerWiringTest {
 
                 assertConventionApplied(project, expectation)
                 assertSiblings(project, expectation)
-                assertExampleCoreMainDependency(project, expectation)
-                assertExampleCoreTest(project)
+                assertEazyPortalCoreMainDependency(project, expectation)
+                assertEazyPortalCoreTest(project)
                 assertBom(project, expectation)
                 assertWiringSummary(project, expectation)
             }
@@ -141,7 +141,7 @@ class ProjectConfigurerWiringTest {
             .containsExactlyInAnyOrderElementsOf(expectation.implementationSiblings.map { ":$it" })
     }
 
-    private fun assertExampleCoreMainDependency(project: Project, expectation: Expectation) {
+    private fun assertEazyPortalCoreMainDependency(project: Project, expectation: Expectation) {
         // The eazyportal-core main layer must sit on EXACTLY its expected configuration and nowhere else — this is what
         // catches a leaked level (an `implementation` layer declared on `api`, or vice versa).
         assertThat(project.eazyPortalCoreMainModules(API))
@@ -162,7 +162,7 @@ class ProjectConfigurerWiringTest {
             }
     }
 
-    private fun assertExampleCoreTest(project: Project) {
+    private fun assertEazyPortalCoreTest(project: Project) {
         val testDependency = project.eazyPortalCoreExternalDependencies(TEST_IMPLEMENTATION)
             .singleOrNull { it.name == "eazyportal-core-test" }
 
