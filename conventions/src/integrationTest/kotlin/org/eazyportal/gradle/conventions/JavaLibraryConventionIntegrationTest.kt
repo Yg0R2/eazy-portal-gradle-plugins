@@ -2,9 +2,10 @@ package org.eazyportal.gradle.conventions
 
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -18,9 +19,9 @@ import java.io.File
 class JavaLibraryConventionIntegrationTest {
 
     @Test
-    fun `exposes an api configuration`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir) {
-            withBuildScript {
+    fun `exposes an api configuration`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            script {
                 """
                 tasks.register("verifyApiConfiguration") {
                     val hasApi = configurations.findByName("api") != null
@@ -36,34 +37,37 @@ class JavaLibraryConventionIntegrationTest {
     }
 
     @Test
-    fun `publishes a maven publication with a sources jar and a javadoc jar`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `publishes a maven publication with a sources jar and a javadoc jar`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION")
+        runGradleTask(projectDir, "assemble", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-sources.jar")).exists()
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-javadoc.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).exists()
     }
 
     @Test
-    fun `applies the central non-bare POM to the maven publication`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `applies the central non-bare POM to the maven publication`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION")
+        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }
 
     /** A minimal Java library project with a `maven` publication `from(components["java"])`. */
     private fun buildExampleProject(
-        projectDir: File,
-        builder: ExampleProjectBuilder.() -> ExampleProjectBuilder = { this },
-    ) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.java-library-convention")
-            .withJavaSource()
-            .apply { builder(this) }
-            .build()
-    }
+        workingDir: File,
+        configureRoot: ExampleProjectBuilder.RootProjectBuilder.() -> Unit = {},
+    ): File =
+        exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.java-library-convention")
+
+                javaSource()
+
+                configureRoot()
+            }
+        }
 
 }

@@ -4,7 +4,7 @@ import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.extension.taskDidRun
 import org.eazyportal.gradle.conventions.assertion.extension.taskDidNotRun
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -21,8 +21,8 @@ import java.io.File
 class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
 
     @Test
-    fun `running 'test' alone executes only the unit tier`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `running 'test' alone executes only the unit tier`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runGradleTask(projectDir, "test")
 
@@ -33,8 +33,8 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
     }
 
     @Test
-    fun `running 'functionalTest' alone executes only the functional tier`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `running 'functionalTest' alone executes only the functional tier`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runGradleTask(projectDir, "functionalTest")
 
@@ -45,8 +45,8 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
     }
 
     @Test
-    fun `running 'integrationTest' alone executes only the integration tier`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `running 'integrationTest' alone executes only the integration tier`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runGradleTask(projectDir, "integrationTest")
 
@@ -57,8 +57,8 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
     }
 
     @Test
-    fun `a failing unit test aborts 'check' before the functional or integration test starts`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `a failing unit test aborts 'check' before the functional or integration test starts`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=test")
 
@@ -69,8 +69,8 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
     }
 
     @Test
-    fun `a failing functional test aborts 'check' before the integration test starts, after the unit test ran`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `a failing functional test aborts 'check' before the integration test starts, after the unit test ran`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=functionalTest")
 
@@ -81,8 +81,8 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
     }
 
     @Test
-    fun `a failing integration test aborts 'check', after the unit and integration test ran`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `a failing integration test aborts 'check', after the unit and integration test ran`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=integrationTest")
 
@@ -98,24 +98,32 @@ class KotlinProjectConventionTestSuiteOrderingIntegrationTest {
      *
      * No main sources — the tier-ordering wiring under test doesn't need any.
      */
-    private fun buildExampleProject(projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
-            .withMavenCentral()
-            .withBuildScript {
-                """
-                tasks.withType<Test>().configureEach {
-                    systemProperty("failTestTier", providers.gradleProperty("failTestTier").getOrElse(""))
+    private fun buildExampleProject(projectDir: File): File =
+        exampleProject(projectDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-project-convention")
+
+                useMavenCentral()
+
+                script {
+                    """
+                    tasks.withType<Test>().configureEach {
+                        systemProperty("failTestTier", providers.gradleProperty("failTestTier").getOrElse(""))
+                    }
+                    """.trimIndent()
                 }
-                """.trimIndent()
-            }.withKotlinSource("test") {
-                createExampleKotlinTestSource("test")
-            }.withKotlinSource("functionalTest") {
-                createExampleKotlinTestSource("functionalTest")
-            }.withKotlinSource("integrationTest") {
-                createExampleKotlinTestSource("integrationTest")
-            }.build()
-    }
+
+                kotlinSource("test") {
+                    createExampleKotlinTestSource("test")
+                }
+                kotlinSource("functionalTest") {
+                    createExampleKotlinTestSource("functionalTest")
+                }
+                kotlinSource("integrationTest") {
+                    createExampleKotlinTestSource("integrationTest")
+                }
+            }
+        }
 
     companion object {
         /** Creates a one-test JUnit Jupiter class source that fails only when `failTestTier == sourceSet`. */

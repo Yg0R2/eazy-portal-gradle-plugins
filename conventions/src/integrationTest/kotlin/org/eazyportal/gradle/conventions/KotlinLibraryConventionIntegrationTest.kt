@@ -3,9 +3,10 @@ package org.eazyportal.gradle.conventions
 import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -20,13 +21,18 @@ import java.io.File
 class KotlinLibraryConventionIntegrationTest {
 
     @Test
-    fun `a public declaration missing an explicit return type fails under explicitApi`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-library-convention")
-            .withMavenCentral()
-            .withKotlinSource {
-                KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
-            }.build()
+    fun `a public declaration missing an explicit return type fails under explicitApi`(@TempDir workingDir: File) {
+        val projectDir = exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-library-convention")
+
+                useMavenCentral()
+
+                kotlinSource {
+                    KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
+                }
+            }
+        }
 
         val output = runFailingGradleTask(projectDir, "compileKotlin")
 
@@ -34,27 +40,34 @@ class KotlinLibraryConventionIntegrationTest {
     }
 
     @Test
-    fun `the same declaration compiles under kotlin-project-convention`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
-            .withMavenCentral()
-            .withKotlinSource {
-                KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
-            }.build()
+    fun `the same declaration compiles under kotlin-project-convention`(@TempDir workingDir: File) {
+        val projectDir = exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-project-convention")
+
+                useMavenCentral()
+
+                kotlinSource {
+                    KOTLIN_SOURCE_WITHOUT_EXPLICIT_TYPES
+                }
+            }
+        }
 
         runGradleTask(projectDir, "compileKotlin")
     }
 
     @Test
-    fun `exposes an api configuration`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir) {
-            withBuildScript {
-                """
-                tasks.register("verifyApiConfiguration") {
-                    val hasApi = configurations.findByName("api") != null
-                    doLast { println("api configuration: ${'$'}hasApi") }
+    fun `exposes an api configuration`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            rootProject {
+                script {
+                    """
+                    tasks.register("verifyApiConfiguration") {
+                        val hasApi = configurations.findByName("api") != null
+                        doLast { println("api configuration: ${'$'}hasApi") }
+                    }
+                    """.trimIndent()
                 }
-                """.trimIndent()
             }
         }
 
@@ -64,37 +77,42 @@ class KotlinLibraryConventionIntegrationTest {
     }
 
     @Test
-    fun `publishes a maven publication with a sources jar and no javadoc jar`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `publishes a maven publication with a sources jar and no javadoc jar`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "assemble", "-Pversion=$VERSION")
+        runGradleTask(projectDir, "assemble", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-sources.jar")).exists()
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-javadoc.jar")).doesNotExist()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).doesNotExist()
     }
 
     @Test
-    fun `applies the central non-bare POM to the maven publication`(@TempDir projectDir: File) {
-        buildExampleProject(projectDir)
+    fun `applies the central non-bare POM to the maven publication`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$VERSION")
+        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }
 
     /** A minimal, `explicitApi`-compliant Kotlin library project with a `maven` publication `from(components["java"])`. */
     private fun buildExampleProject(
-        projectDir: File,
-        builder: ExampleProjectBuilder.() -> ExampleProjectBuilder = { this },
-    ) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-library-convention")
-            .withMavenCentral()
-            .withKotlinSource {
-                EXPLICIT_API_COMPLIANT_KOTLIN_SOURCE
-            }.apply { builder(this) }
-            .build()
-    }
+        workingDir: File,
+        configure: ExampleProjectBuilder.() -> Unit = {},
+    ): File =
+        exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-library-convention")
+
+                useMavenCentral()
+
+                kotlinSource {
+                    EXPLICIT_API_COMPLIANT_KOTLIN_SOURCE
+                }
+            }
+
+            configure()
+        }
 
     companion object {
         /** A public top-level function relying on the default (implicit) visibility and inferred return type. */

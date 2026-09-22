@@ -2,10 +2,11 @@ package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.ProjectType
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -73,10 +74,11 @@ class EazyProjectPluginFunctionalTest {
 
     @Test
     fun `applying to the root project throws`(@TempDir workingDir: File) {
-        val projectDir = ExampleProjectBuilder(workingDir)
-            .withRootProjectName("receiver")
-            .withBuildPlugins("org.eazyportal.gradle.eazy-project")
-            .build()
+        val projectDir = exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.eazy-project")
+            }
+        }
 
         val output = runFailingGradleTask(projectDir, "help")
 
@@ -86,19 +88,19 @@ class EazyProjectPluginFunctionalTest {
 
     @Test
     fun `the transitively-applied convention takes effect, not just its id`(@TempDir workingDir: File) {
-        val eazyPortalCoreRepo = File(workingDir, "eazyportal-core-repo")
+        val exampleRepositoryDir = File(workingDir, "eazyportal-core-repo")
             .also {
                 Files.createDirectories(it.toPath())
 
-                writeExampleCoreRepo(it)
+                writeExampleRepository(it)
             }
 
-        val rootDir = buildExampleProject(
-            projectDir = workingDir.resolve("receiver").also { Files.createDirectories(it.toPath()) },
+        val projectDir = buildExampleProject(
+            workingDir = workingDir,
             subprojectName = "common",
-            eazyPortalCoreRepo = eazyPortalCoreRepo,
+            exampleRepositoryDir = exampleRepositoryDir,
         ) {
-            withKotlinSource(classPath = "org/eazyportal/example/Example.kt") {
+            kotlinSource {
                 """
                 package org.eazyportal.example
 
@@ -109,7 +111,7 @@ class EazyProjectPluginFunctionalTest {
             }
         }
 
-        val output = runFailingGradleTask(rootDir, ":common:compileKotlin")
+        val output = runFailingGradleTask(projectDir, ":common:compileKotlin")
 
         assertThat(output).contains("Visibility must be specified in explicit API mode.")
     }
@@ -117,7 +119,7 @@ class EazyProjectPluginFunctionalTest {
     @Test
     fun `a default module applies kotlin-library-convention by bare id and publishes`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(
-            projectDir = workingDir,
+            workingDir = workingDir,
             subprojectName = "extras",
             extraPluginIds = listOf("org.eazyportal.gradle.kotlin-library-convention"),
         )
@@ -129,38 +131,44 @@ class EazyProjectPluginFunctionalTest {
      * A receiver: an empty root + `moduleName`'s subproject applying `eazy-project` [+ `extraPluginIds`],
      * plus an empty subproject per [siblingProjectNames] — needed only so a `project.project(":x")` sibling reference
      * (e.g. `application`'s, which depends on every other layer) resolves; they are never built themselves.
-     * The root always carries `allprojects { repositories { mavenCentral() [+ eazyPortalCoreRepo] } }` — needed once
-     * real compilation/publishing is exercised. [eazyPortalCoreRepo], when given, is the `file://`-published sample
-     * (see [writeExampleCoreRepo]) so a real `compileClasspath` resolution of `org.eazyportal.gradle:eazyportal-core-*`
+     * The root always carries `allprojects { repositories { mavenCentral() [+ exampleRepositoryDir] } }` — needed once
+     * real compilation/publishing is exercised. [exampleRepositoryDir], when given, is the `file://`-published sample
+     * (see [writeExampleRepository]) so a real `compileClasspath` resolution of `org.eazyportal.core:eazyportal-core-*`
      * (added unconditionally by every [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer]) succeeds —
      * those coordinates are design placeholders for a real internal registry, not anything mavenCentral() has.
      */
     private fun buildExampleProject(
-        projectDir: File,
+        workingDir: File,
         subprojectName: String,
         extraPluginIds: List<String> = emptyList(),
         siblingProjectNames: List<String> = emptyList(),
-        eazyPortalCoreRepo: File? = null,
-        configureSubproject: ExampleProjectBuilder.() -> Unit = {},
+        exampleRepositoryDir: File? = null,
+        configureSubproject: ExampleProjectBuilder.SubprojectBuilder.() -> Unit = {},
     ): File =
-        ExampleProjectBuilder(projectDir)
-            .withRootProjectName("receiver")
-            .withBuildScript {
-                """
-                allprojects {
-                    repositories {
-                        mavenCentral()
-                        ${eazyPortalCoreRepo?.let { "maven { url = uri(\"${it.toURI()}\") }" }.orEmpty()}
+        exampleProject(workingDir) {
+            rootProject {
+                script {
+                    """
+                    allprojects {
+                        repositories {
+                            mavenCentral()
+                            ${exampleRepositoryDir?.let { "maven { url = uri(\"${it.toURI()}\") }" }.orEmpty()}
+                        }
                     }
+                    """.trimIndent()
                 }
-                """
-            }.withSubproject(subprojectName) {
-                withBuildPlugins("org.eazyportal.gradle.eazy-project", *extraPluginIds.toTypedArray())
+            }
+
+            subproject(subprojectName) {
+                plugins("org.eazyportal.gradle.eazy-project", *extraPluginIds.toTypedArray())
 
                 configureSubproject()
-            }.apply {
-                siblingProjectNames.forEach { withSubproject(it) }
-            }.build()
+            }
+
+            siblingProjectNames.forEach {
+                subproject(it)
+            }
+        }
 
     /**
      * Hand-written minimal `org.eazyportal.core:eazyportal-core-{bom,common,test}:[EXAMPLE_CORE_DEFAULT_VERSION]` artifacts in a Maven2-layout directory —
@@ -168,7 +176,7 @@ class EazyProjectPluginFunctionalTest {
      * just enough for a real `compileClasspath` to resolve
      * (a `platform()`-only POM for the BOM, POM + an empty-but-valid jar for the two libraries actually placed on a configuration).
      */
-    private fun writeExampleCoreRepo(repoDir: File) {
+    private fun writeExampleRepository(repoDir: File) {
         // The BOM's own dependencyManagement is what pins the versionless eazyportal-core-* dependencies
         // GradleProjectConfigurer adds (design §5.6) — without it `platform(...)` imports no constraints at all.
         writeArtifact(repoDir, "eazyportal-core-bom", "pom", listOf("eazyportal-core-common", "eazyportal-core-test"))

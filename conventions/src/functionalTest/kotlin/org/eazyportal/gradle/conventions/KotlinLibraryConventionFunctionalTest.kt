@@ -1,9 +1,9 @@
 package org.eazyportal.gradle.conventions
 
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -19,26 +19,31 @@ import java.util.zip.ZipFile
 class KotlinLibraryConventionFunctionalTest {
 
     @Test
-    fun `a plain 'build' produces a usable jar and a sources jar, but no javadoc jar`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-library-convention")
-            .withMavenCentral()
-            .withKotlinSource {
-                """
-                package org.eazyportal.example
+    fun `a plain 'build' produces a usable jar and a sources jar, but no javadoc jar`(@TempDir workingDir: File) {
+        val projectDir = exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-library-convention")
 
-                public fun greetings(): String = "Hello World!"
-                """.trimIndent()
-            }.build()
+                useMavenCentral()
 
-        runGradleTask(projectDir, "build", "-Pversion=$VERSION")
+                kotlinSource {
+                    """
+                    package org.eazyportal.example
 
-        val jar = File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION.jar")
+                    public fun greetings(): String = "Hello World!"
+                    """.trimIndent()
+                }
+            }
+        }
+
+        runGradleTask(projectDir, "build", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+
+        val jar = File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION.jar")
         assertThat(jar).exists()
         assertThat(classEntriesOf(jar)).contains("org/eazyportal/example/ExampleKt.class")
 
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-sources.jar")).exists()
-        assertThat(File(projectDir, "build/libs/$ARTIFACT_ID-$VERSION-javadoc.jar")).doesNotExist()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).doesNotExist()
     }
 
     /** The `.class` entries in [jar] — proof the jar is a real, loadable artifact and not just a file that happens to exist. */

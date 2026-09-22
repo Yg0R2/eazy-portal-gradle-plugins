@@ -2,7 +2,8 @@ package org.eazyportal.gradle.conventions
 
 import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -16,13 +17,12 @@ import java.io.File
 class KotlinProjectConventionIntegrationTest {
 
     @Test
-    fun `a kotlin compiler warning fails the build by default`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
-            .withMavenCentral()   // resolve kotlin-stdlib for compilation
-            .withKotlinSource {
+    fun `a kotlin compiler warning fails the build by default`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            kotlinSource {
                 KOTLIN_SOURCE_WITH_COMPILER_WARNING
-            }.build()
+            }
+        }
 
         val output = runFailingGradleTask(projectDir, "compileKotlin")
 
@@ -30,24 +30,20 @@ class KotlinProjectConventionIntegrationTest {
     }
 
     @Test
-    fun `a kotlin compiler warning passes the build with -PsuppressAllErrors`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
-            .withMavenCentral()   // resolve kotlin-stdlib for compilation
-            .withKotlinSource {
+    fun `a kotlin compiler warning passes the build with -PsuppressAllErrors`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            kotlinSource {
                 KOTLIN_SOURCE_WITH_COMPILER_WARNING
-            }.build()
+            }
+        }
 
         runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors")
     }
 
     @Test
-    fun `applying kotlin-project-convention transitively applies java-project-convention`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.kotlin-project-convention")
-            .withMavenCentral()   // resolve kotlin-stdlib for compilation
-            .withKotlinSource()
-            .withBuildScript {
+    fun `applying kotlin-project-convention transitively applies java-project-convention`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            script {
                 """
                 tasks.register("verifyConventions") {
                     // Capture at configuration time (the doLast receiver is the Task, not the Project).
@@ -65,7 +61,10 @@ class KotlinProjectConventionIntegrationTest {
                     }
                 }
                 """.trimIndent()
-            }.build()
+            }
+
+            kotlinSource()
+        }
 
         val output = runGradleTask(projectDir, "verifyConventions")
 
@@ -75,6 +74,21 @@ class KotlinProjectConventionIntegrationTest {
             .contains("toolchain: 25")
             .contains("junit platform: true")
     }
+
+    private fun buildExampleProject(
+        projectDir: File,
+        configureRoot: ExampleProjectBuilder.RootProjectBuilder.() -> Unit,
+    ): File =
+        exampleProject(projectDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.kotlin-project-convention")
+
+                useMavenCentral() // resolve kotlin-stdlib for compilation
+
+                configureRoot()
+            }
+        }
+
 
     companion object {
         /** A minimal Kotlin code that emits a deprecation warning. */

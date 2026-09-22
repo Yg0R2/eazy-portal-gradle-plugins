@@ -89,7 +89,7 @@ internal abstract class GradleProjectConfigurer(
 
     /** eazyportal-core notation WITHOUT a version — the BOM (see [importEazyPortalCoreBom]) pins it. */
     private fun createEazyPortalCoreNotation(projectName: String): String =
-        "org.eazyportal.gradle:eazyportal-core-$projectName"
+        "org.eazyportal.core:eazyportal-core-$projectName"
 
     /** Imports the eazyportal-core BOM/platform so every eazyportal-core-* dependency resolves to one aligned version. */
     private fun importEazyPortalCoreBom() {

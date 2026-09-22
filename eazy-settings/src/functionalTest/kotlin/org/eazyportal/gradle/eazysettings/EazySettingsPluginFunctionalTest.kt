@@ -2,10 +2,11 @@ package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -29,7 +30,11 @@ class EazySettingsPluginFunctionalTest {
     fun `every subproject gets eazy-project auto-applied, the root does not`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras-a", "extras-b")
 
-        val output = runGradleTask(projectDir, ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val output = runGradleTask(
+            projectDir,
+            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+        )
 
         assertThat(output)
             .contains("eazy-project diagnostics — :extras-a")
@@ -52,8 +57,10 @@ class EazySettingsPluginFunctionalTest {
     @Test
     fun `the eazySettings override wins over eazy-project's own default`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras") {
-            withSettingsScript {
-                generateEazySettingsString("9.9.9")
+            settings {
+                script {
+                    generateEazySettingsString("9.9.9")
+                }
             }
         }
 
@@ -65,15 +72,19 @@ class EazySettingsPluginFunctionalTest {
     @Test
     fun `CC double-run - override wins, the 2nd run reuses the CC entry, and zero CC problems occur`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras-a", "extras-b") {
-            withSettingsScript {
-                generateEazySettingsString("9.9.9")
+            settings {
+                script {
+                    generateEazySettingsString("9.9.9")
+                }
             }
         }
 
         val firstRun = runGradleTask(
             projectDir,
-            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
-            "--configuration-cache", "--configuration-cache-problems=fail",
+            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
         )
         assertThat(firstRun)
             .contains("Configuration cache entry stored.")
@@ -82,8 +93,10 @@ class EazySettingsPluginFunctionalTest {
 
         val secondRun = runGradleTask(
             projectDir,
-            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME", ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
-            "--configuration-cache", "--configuration-cache-problems=fail",
+            ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
         )
         assertThat(secondRun)
             .contains("Reusing configuration cache.")
@@ -93,11 +106,11 @@ class EazySettingsPluginFunctionalTest {
 
     @Test
     fun `a module declaring its own repositories fails the build (FAIL_ON_PROJECT_REPOS)`(@TempDir workingDir: File) {
-        val projectDir = ExampleProjectBuilder(workingDir)
-            .withRootProjectName("receiver")
-            .withSettingsScript { generatePluginString() }
-            .withSubproject("extras") { withMavenCentral() }
-            .build()
+        val projectDir = buildExampleProject(workingDir) {
+            subproject("extras") {
+                useMavenCentral()
+            }
+        }
 
         val output = runFailingGradleTask(projectDir, "help")
 
@@ -106,38 +119,36 @@ class EazySettingsPluginFunctionalTest {
 
     @Test
     fun `the hermetic stub resolves eazyportal-core with no credentials — the real GitHub repo is registered but never hit`(
-        @TempDir workspace: File,
+        @TempDir workingDir: File,
     ) {
-        val stubRepoDir = File(workspace, "repository")
+        val exampleRepositoryDir = File(workingDir, "repository")
             .also { Files.createDirectories(it.toPath()) }
             .also { writeExampleCoreStubRepo(it) }
 
-        val projectDir = File(workspace, "eazyportal-project")
-            .also { Files.createDirectories(it.toPath()) }
-            .also {
-                buildExampleProject(it, "common") {
-                    withSettingsScript {
-                        """
-                        dependencyResolutionManagement {
-                            repositories {
-                                exclusiveContent {
-                                    forRepository {
-                                        maven { url = uri("${stubRepoDir.toURI()}") }
-                                    }
+        val projectDir = buildExampleProject(workingDir, "common") {
+            settings {
+                script {
+                    """
+                    dependencyResolutionManagement {
+                        repositories {
+                            exclusiveContent {
+                                forRepository {
+                                    maven { url = uri("${exampleRepositoryDir.toURI()}") }
+                                }
 
-                                    filter {
-                                        includeGroup("org.eazyportal.gradle")
-                                    }
+                                filter {
+                                    includeGroup("org.eazyportal.core")
                                 }
                             }
                         }
-                        """.trimIndent()
                     }
+                    """.trimIndent()
                 }
             }
+        }
 
-        val gradleHomeDir = File(workspace, "gradle-home")
-            .also { Files.createDirectories(it.toPath()) }
+        val gradleHomeDir = File(workingDir, "gradle-home")
+            .also { it.mkdirs() }
 
         val output = runGradleTask(
             projectDir,
@@ -145,24 +156,20 @@ class EazySettingsPluginFunctionalTest {
             environment = hermeticEnvironmentWithFakeCredentials(gradleHomeDir),
         )
 
-        assertThat(output).contains("org.eazyportal.gradle:eazyportal-core-common:$EXAMPLE_CORE_DEFAULT_VERSION")
+        assertThat(output).contains("org.eazyportal.core:eazyportal-core-common:$EXAMPLE_CORE_DEFAULT_VERSION")
     }
 
     @Test
     fun `forcing resolution from the real GitHub repo without credentials fails with a clear error, never silent anonymous`(
-        @TempDir workspace: File,
+        @TempDir workingDir: File,
     ) {
-        val gradleHomeDir = File(workspace, "gradle-home").also { Files.createDirectories(it.toPath()) }
-        val projectDir = File(workspace, "eazyportal-project").also { Files.createDirectories(it.toPath()) }
+        val gradleHomeDir = File(workingDir, "gradle-home")
+            .also { it.mkdirs() }
 
-        val receiverDir = ExampleProjectBuilder(projectDir)
-            .withRootProjectName("receiver")
-            .withSettingsScript { generatePluginString() }
-            .withSubproject("common")
-            .build()
+        val projectDir = buildExampleProject(workingDir, "common")
 
         val output = runFailingGradleTask(
-            receiverDir,
+            projectDir,
             ":common:dependencies", "--configuration", "compileClasspath",
             environment = hermeticEnvironment(gradleHomeDir),
         )
@@ -254,32 +261,21 @@ class EazySettingsPluginFunctionalTest {
      * overriding `eazyPortalCoreVersion` via the `eazySettings { }` DSL.
      */
     private fun buildExampleProject(
-        projectDir: File,
+        workingDir: File,
         vararg subprojectNames: String,
-        eazyportalProjectBuilder: ExampleProjectBuilder.() -> ExampleProjectBuilder =  { ExampleProjectBuilder(projectDir) },
+        builder: ExampleProjectBuilder.() -> Unit =  { },
     ): File =
-        ExampleProjectBuilder(projectDir)
-            .withRootProjectName("receiver")
-            .withSettingsScript { generatePluginString() }
-            .apply { subprojectNames.forEach { withSubproject(it) } }
-            .apply { eazyportalProjectBuilder(this) }
-            .build()
+        exampleProject(workingDir) {
+            settings {
+                plugins("org.eazyportal.gradle.eazy-settings")
+            }
 
-    // Built with plain concatenation, not a nested trimIndent(): mixing raw-string indentation levels leaves stray
-    // leading whitespace that trimIndent() can't reconcile across both blocks (same pitfall as
-    // EazyProjectPluginFunctionalTest.writeArtifact).
-    //
-    // [stubRepoDir], when given, is emitted as its own `dependencyResolutionManagement { repositories { } }` block
-    // BEFORE the `plugins { }` block. Declaration order alone does NOT change Gradle's actual resolution search
-    // order — the plugin's own `GitHubPackages` repo is still consulted regardless of where the stub is declared.
-    // `exclusiveContent { forRepository { }; filter { includeGroup(...) } }` is the mechanism that genuinely
-    // restricts `org.eazyportal.gradle` coordinates to the stub repo — the real GitHub host is never queried for them.
-    private fun generatePluginString(): String =
-        """
-        plugins {
-            id("org.eazyportal.gradle.eazy-settings")
+            subprojectNames.forEach {
+                subproject(it)
+            }
+
+            builder()
         }
-        """.trimIndent()
 
     private fun generateEazySettingsString(eazyPortalCoreVersionOverride: String): String =
         """

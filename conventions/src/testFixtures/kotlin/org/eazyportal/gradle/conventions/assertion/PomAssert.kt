@@ -1,12 +1,12 @@
 package org.eazyportal.gradle.conventions.assertion
 
+import org.eazyportal.gradle.conventions.extension.textOf
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_GROUP_ID
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_DESCRIPTION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.AbstractObjectAssert
 import org.assertj.core.api.Assertions
-import org.eazyportal.gradle.conventions.extension.textOf
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.ARTIFACT_ID
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.DESCRIPTION
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.GROUP_ID
-import org.eazyportal.gradle.conventions.project.ExampleProjectFixtures.VERSION
 import org.w3c.dom.Document
 import java.io.File
 import java.nio.file.Path
@@ -59,11 +59,11 @@ class PomAssert(
     }
 
     data class PomAssertValues(
-        var groupId: String = GROUP_ID,
-        var artifactId: String = ARTIFACT_ID,
-        var version: String = VERSION,
-        var name: String = ARTIFACT_ID,
-        var description: String = DESCRIPTION,
+        var groupId: String = EXAMPLE_PROJECT_GROUP_ID,
+        var artifactId: String = EXAMPLE_ROOT_PROJECT_NAME,
+        var version: String = EXAMPLE_PROJECT_VERSION,
+        var name: String = EXAMPLE_ROOT_PROJECT_NAME,
+        var description: String = EXAMPLE_ROOT_PROJECT_DESCRIPTION,
     )
 
     companion object {

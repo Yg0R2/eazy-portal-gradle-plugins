@@ -2,7 +2,7 @@ package org.eazyportal.gradle.conventions
 
 import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
 import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
-import org.eazyportal.gradle.conventions.project.ExampleProjectBuilder
+import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -15,12 +15,8 @@ import java.io.File
 class JavaProjectConventionIntegrationTest {
 
     @Test
-    fun `a javac lint warning fails the build by default`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.java-project-convention")
-            .withJavaSource {
-                JAVA_SOURCE_WITH_COMPILER_WARNING
-            }.build()
+    fun `a javac lint warning fails the build by default`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         val output = runFailingGradleTask(projectDir, "compileJava")
 
@@ -30,15 +26,22 @@ class JavaProjectConventionIntegrationTest {
     }
 
     @Test
-    fun `a javac lint warning passes the build with -PsuppressAllErrors`(@TempDir projectDir: File) {
-        ExampleProjectBuilder(projectDir)
-            .withBuildPlugins("org.eazyportal.gradle.java-project-convention")
-            .withJavaSource {
-                JAVA_SOURCE_WITH_COMPILER_WARNING
-            }.build()
+    fun `a javac lint warning passes the build with -PsuppressAllErrors`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir)
 
         runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors")
     }
+
+    private fun buildExampleProject(workingDir: File): File =
+        exampleProject(workingDir) {
+            rootProject {
+                plugins("org.eazyportal.gradle.java-project-convention")
+
+                javaSource {
+                    JAVA_SOURCE_WITH_COMPILER_WARNING
+                }
+            }
+        }
 
     companion object {
         /** A minimal Java code that emits a `-Xlint:cast` warning (redundant cast). */
