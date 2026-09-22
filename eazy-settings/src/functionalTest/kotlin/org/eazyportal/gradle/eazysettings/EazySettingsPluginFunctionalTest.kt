@@ -7,11 +7,13 @@ import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJEC
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_COMMON_ARTIFACT_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.nio.file.Files
 
 /**
  * Black-box coverage for `org.eazyportal.gradle.eazy-settings` (design §6.3/§6.5, TOOLS-68 acceptance criteria):
@@ -121,9 +123,7 @@ class EazySettingsPluginFunctionalTest {
     fun `the hermetic stub resolves eazyportal-core with no credentials — the real GitHub repo is registered but never hit`(
         @TempDir workingDir: File,
     ) {
-        val exampleRepositoryDir = File(workingDir, "repository")
-            .also { Files.createDirectories(it.toPath()) }
-            .also { writeExampleCoreStubRepo(it) }
+        val exampleRepositoryDir = buildExampleRepository(workingDir)
 
         val projectDir = buildExampleProject(workingDir, "common") {
             settings {
@@ -137,7 +137,7 @@ class EazySettingsPluginFunctionalTest {
                                 }
 
                                 filter {
-                                    includeGroup("org.eazyportal.core")
+                                    includeGroup("$CORE_GROUP_ID")
                                 }
                             }
                         }
@@ -156,7 +156,7 @@ class EazySettingsPluginFunctionalTest {
             environment = hermeticEnvironmentWithFakeCredentials(gradleHomeDir),
         )
 
-        assertThat(output).contains("org.eazyportal.core:eazyportal-core-common:$EXAMPLE_CORE_DEFAULT_VERSION")
+        assertThat(output).contains("$CORE_GROUP_ID:$CORE_COMMON_ARTIFACT_ID:$EXAMPLE_CORE_DEFAULT_VERSION")
     }
 
     @Test
@@ -199,66 +199,8 @@ class EazySettingsPluginFunctionalTest {
             ("ORG_GRADLE_PROJECT_GitHubPackagesPassword" to "stub-token")
 
     /**
-     * Hand-written minimal `org.eazyportal.core:eazyportal-core-{bom,common,test}:[EXAMPLE_CORE_DEFAULT_VERSION]` artifacts in a Maven2-layout
-     * directory — the smallest possible stand-in for the workspace `repository/` stub (design §7.4), just enough for a real
-     * `compileClasspath` to resolve (a `platform()`-only POM for the BOM, POM + an empty-but-valid jar for the two libraries
-     * actually placed on a configuration). Mirrors [org.eazyportal.gradle.eazyproject.EazyProjectPluginFunctionalTest]'s own stub —
-     * duplicated rather than shared, same as that test's private helper.
-     */
-    private fun writeExampleCoreStubRepo(repoDir: File) {
-        writeArtifact(repoDir, "eazyportal-core-bom", "pom", listOf("eazyportal-core-common", "eazyportal-core-test"))
-        writeArtifact(repoDir, "eazyportal-core-common", "jar")
-        writeArtifact(repoDir, "eazyportal-core-test", "jar")
-    }
-
-    private fun writeArtifact(
-        repoDir: File,
-        artifactId: String,
-        packaging: String,
-        managedArtifactIds: List<String> = emptyList(),
-    ) {
-        val artifactDir = File(repoDir, "org/eazyportal/core/$artifactId/$EXAMPLE_CORE_DEFAULT_VERSION").also { it.mkdirs() }
-
-        val dependencies = managedArtifactIds.joinToString("\n") {
-            """
-            <dependency>
-                <groupId>org.eazyportal.core</groupId>
-                <artifactId>$it</artifactId>
-                <version>$EXAMPLE_CORE_DEFAULT_VERSION</version>
-            </dependency>
-            """
-        }
-
-        File(artifactDir, "$artifactId-$EXAMPLE_CORE_DEFAULT_VERSION.pom").writeText(
-            """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <project xmlns="http://maven.apache.org/POM/4.0.0">
-                <modelVersion>4.0.0</modelVersion>
-                <groupId>org.eazyportal.core</groupId>
-                <artifactId>$artifactId</artifactId>
-                <version>$EXAMPLE_CORE_DEFAULT_VERSION</version>
-                <packaging>$packaging</packaging>
-                <dependencyManagement>
-                    <dependencies>
-                        $dependencies
-                    </dependencies>
-                </dependencyManagement>
-            </project>
-            """.trimIndent()
-        )
-
-        if (packaging.equals("jar", ignoreCase = true)) {
-            // The 22-byte "end of central directory" record alone is a valid, empty ZIP/JAR.
-            File(artifactDir, "$artifactId-$EXAMPLE_CORE_DEFAULT_VERSION.jar").writeBytes(
-                byteArrayOf(0x50, 0x4b, 0x05, 0x06) + ByteArray(18),
-            )
-        }
-    }
-
-    /**
      * A synthetic receiver: an empty root applying `org.eazyportal.gradle.eazy-settings` via the settings `plugins { }`
-     * block (the real receiver bootstrap, README Quickstart) + one subproject per [subprojectNames], optionally
-     * overriding `eazyPortalCoreVersion` via the `eazySettings { }` DSL.
+     * block (the real receiver bootstrap, README Quickstart) + one subproject per [subprojectNames].
      */
     private fun buildExampleProject(
         workingDir: File,
@@ -275,6 +217,15 @@ class EazySettingsPluginFunctionalTest {
             }
 
             builder()
+        }
+
+    /**
+     * A synthetic Maven2-layout repository, containing only the minimal artifacts needed to satisfy a Gradle `compileClasspath` resolution of
+     * `org.eazyportal.core:eazyportal-core-{bom,common,test}:[EXAMPLE_CORE_DEFAULT_VERSION]` (design §7.4).
+     */
+    private fun buildExampleRepository(workingDir: File): File =
+        exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
         }
 
     private fun generateEazySettingsString(eazyPortalCoreVersionOverride: String): String =
