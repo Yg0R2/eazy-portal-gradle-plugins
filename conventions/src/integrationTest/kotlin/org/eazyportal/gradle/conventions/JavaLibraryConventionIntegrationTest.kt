@@ -22,10 +22,10 @@ class JavaLibraryConventionIntegrationTest {
     fun `exposes an api configuration`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir) {
             script {
-                """
+                $$"""
                 tasks.register("verifyApiConfiguration") {
                     val hasApi = configurations.findByName("api") != null
-                    doLast { println("api configuration: ${'$'}hasApi") }
+                    doLast { println("api configuration: $hasApi") }
                 }
                 """.trimIndent()
             }

@@ -44,7 +44,7 @@ class KotlinProjectConventionIntegrationTest {
     fun `applying kotlin-project-convention transitively applies java-project-convention`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir) {
             script {
-                """
+                $$"""
                 tasks.register("verifyConventions") {
                     // Capture at configuration time (the doLast receiver is the Task, not the Project).
                     val javaConventionApplied = project.plugins.hasPlugin("org.eazyportal.gradle.java-project-convention")
@@ -54,10 +54,10 @@ class KotlinProjectConventionIntegrationTest {
                     val junitPlatform = project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java).get()
                         .options is org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
                     doLast {
-                        println("java-project-convention applied: ${'$'}javaConventionApplied")
-                        println("java plugin applied: ${'$'}javaPluginApplied")
-                        println("toolchain: ${'$'}toolchainVersion")
-                        println("junit platform: ${'$'}junitPlatform")
+                        println("java-project-convention applied: $javaConventionApplied")
+                        println("java plugin applied: $javaPluginApplied")
+                        println("toolchain: $toolchainVersion")
+                        println("junit platform: $junitPlatform")
                     }
                 }
                 """.trimIndent()

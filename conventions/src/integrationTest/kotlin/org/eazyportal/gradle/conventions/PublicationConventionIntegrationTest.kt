@@ -58,10 +58,10 @@ class PublicationConventionIntegrationTest {
         val projectDir = buildExampleProject(workingDir) {
             rootProject {
                 script {
-                    """
+                    $$"""
                     tasks.register("printRepositories") {
                         val names = publishing.repositories.map { it.name }
-                        doLast { println("repositories: ${'$'}names") }
+                        doLast { println("repositories: $names") }
                     }
                     """.trimIndent()
                 }
