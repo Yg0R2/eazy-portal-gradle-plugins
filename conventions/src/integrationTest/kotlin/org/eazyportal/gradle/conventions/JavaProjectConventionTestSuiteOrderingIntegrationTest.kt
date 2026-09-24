@@ -1,9 +1,8 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.extension.taskDidRun
 import org.eazyportal.gradle.conventions.assertion.extension.taskDidNotRun
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -24,7 +23,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'test' alone executes only the unit tier`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runGradleTask(projectDir, "test")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("test")
 
         assertThat(output)
             .taskDidRun("test")
@@ -36,7 +36,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'functionalTest' alone executes only the functional tier`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runGradleTask(projectDir, "functionalTest")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("functionalTest")
 
         assertThat(output)
             .taskDidRun("functionalTest")
@@ -48,7 +49,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `running 'integrationTest' alone executes only the integration tier`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runGradleTask(projectDir, "integrationTest")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("integrationTest")
 
         assertThat(output)
             .taskDidRun("integrationTest")
@@ -60,7 +62,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing unit test aborts 'check' before the functional or integration test starts`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=test")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("check", "-PfailTestTier=test")
 
         assertThat(output)
             .taskDidRun("test")
@@ -72,7 +75,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing functional test aborts 'check' before the integration test starts, after the unit test ran`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=functionalTest")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("check", "-PfailTestTier=functionalTest")
 
         assertThat(output)
             .taskDidRun("test")
@@ -84,7 +88,8 @@ class JavaProjectConventionTestSuiteOrderingIntegrationTest {
     fun `a failing integration test aborts 'check', after the unit and integration test ran`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runFailingGradleTask(projectDir, "check", "-PfailTestTier=integrationTest")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("check", "-PfailTestTier=integrationTest")
 
         assertThat(output)
             .taskDidRun("test")

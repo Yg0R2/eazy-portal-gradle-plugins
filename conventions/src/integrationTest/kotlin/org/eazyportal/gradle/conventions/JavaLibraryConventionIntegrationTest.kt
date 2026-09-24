@@ -1,7 +1,7 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
@@ -31,7 +31,8 @@ class JavaLibraryConventionIntegrationTest {
             }
         }
 
-        val output = runGradleTask(projectDir, "verifyApiConfiguration")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("verifyApiConfiguration")
 
         assertThat(output).contains("api configuration: true")
     }
@@ -40,7 +41,8 @@ class JavaLibraryConventionIntegrationTest {
     fun `publishes a maven publication with a sources jar and a javadoc jar`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "assemble", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+        gradleRunner(projectDir)
+            .runGradleTask("assemble", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
         assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).exists()
@@ -50,7 +52,8 @@ class JavaLibraryConventionIntegrationTest {
     fun `applies the central non-bare POM to the maven publication`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+        gradleRunner(projectDir)
+            .runGradleTask("generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }

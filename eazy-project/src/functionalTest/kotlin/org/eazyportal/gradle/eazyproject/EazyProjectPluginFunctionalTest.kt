@@ -1,10 +1,9 @@
 package org.eazyportal.gradle.eazyproject
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.ProjectType
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
@@ -51,7 +50,8 @@ class EazyProjectPluginFunctionalTest {
 
         val projectDir = buildExampleProject(workingDir, subprojectName, siblingProjectNames = siblings)
 
-        val output = runGradleTask(projectDir, ":$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val output = gradleRunner(projectDir)
+            .runGradleTask(":$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         val expectedArchetype = ProjectType.fromProjectName(subprojectName).toString()
         val expectedSiblings = siblings.joinToString(", ", "[", "]") {
@@ -80,7 +80,8 @@ class EazyProjectPluginFunctionalTest {
             }
         }
 
-        val output = runFailingGradleTask(projectDir, "help")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("help")
 
         assertThat(output)
             .contains("org.eazyportal.gradle.eazy-project plugin must not be applied to the root project — it is only for subprojects.")
@@ -88,7 +89,9 @@ class EazyProjectPluginFunctionalTest {
 
     @Test
     fun `the transitively-applied convention takes effect, not just its id`(@TempDir workingDir: File) {
-        val exampleRepositoryDir = buildExampleRepository(workingDir)
+        val exampleRepositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
+        }
 
         val projectDir = buildExampleProject(
             workingDir = workingDir,
@@ -106,7 +109,8 @@ class EazyProjectPluginFunctionalTest {
             }
         }
 
-        val output = runFailingGradleTask(projectDir, ":common:compileKotlin")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask(":common:compileKotlin")
 
         assertThat(output).contains("Visibility must be specified in explicit API mode.")
     }
@@ -119,7 +123,8 @@ class EazyProjectPluginFunctionalTest {
             extraPluginIds = listOf("org.eazyportal.gradle.kotlin-library-convention"),
         )
 
-        runGradleTask(projectDir, ":extras:publishToMavenLocal", "-Pversion=1.0.0-SNAPSHOT")
+        gradleRunner(projectDir)
+            .runGradleTask(":extras:publishToMavenLocal", "-Pversion=1.0.0-SNAPSHOT")
     }
 
     /**
@@ -128,7 +133,7 @@ class EazyProjectPluginFunctionalTest {
      * (e.g. `application`'s, which depends on every other layer) resolves; they are never built themselves.
      * The root always carries `allprojects { repositories { mavenCentral() [+ exampleRepositoryDir] } }` — needed once
      * real compilation/publishing is exercised. [exampleRepositoryDir], when given, is the `file://`-published sample
-     * (see [buildExampleRepository]) so a real `compileClasspath` resolution of `org.eazyportal.core:eazyportal-core-*`
+     * so a real `compileClasspath` resolution of `org.eazyportal.core:eazyportal-core-*`
      * (added unconditionally by every [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer]) succeeds —
      * those coordinates are design placeholders for a real internal registry, not anything mavenCentral() has.
      */
@@ -165,13 +170,5 @@ class EazyProjectPluginFunctionalTest {
             }
         }
 
-    /**
-     * A synthetic Maven2-layout repository, containing only the minimal artifacts needed to satisfy a Gradle `compileClasspath` resolution of
-     * `org.eazyportal.core:eazyportal-core-{bom,common,test}:[EXAMPLE_CORE_DEFAULT_VERSION]` (design §7.4).
-     */
-    private fun buildExampleRepository(workingDir: File): File =
-        exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
-            eazyportalArtifacts()
-        }
 
 }

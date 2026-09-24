@@ -1,6 +1,6 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
@@ -36,7 +36,8 @@ class KotlinLibraryConventionFunctionalTest {
             }
         }
 
-        runGradleTask(projectDir, "build", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+        gradleRunner(projectDir)
+            .runGradleTask("build", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         val jar = File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION.jar")
         assertThat(jar).exists()

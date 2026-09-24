@@ -1,7 +1,6 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -18,7 +17,8 @@ class JavaProjectConventionIntegrationTest {
     fun `a javac lint warning fails the build by default`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runFailingGradleTask(projectDir, "compileJava")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("compileJava")
 
         assertThat(output)
             .contains("[cast] redundant cast")
@@ -29,7 +29,8 @@ class JavaProjectConventionIntegrationTest {
     fun `a javac lint warning passes the build with -PsuppressAllErrors`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(projectDir, "compileJava", "-PsuppressAllErrors")
+        gradleRunner(projectDir)
+            .runGradleTask("compileJava", "-PsuppressAllErrors")
     }
 
     private fun buildExampleProject(workingDir: File): File =

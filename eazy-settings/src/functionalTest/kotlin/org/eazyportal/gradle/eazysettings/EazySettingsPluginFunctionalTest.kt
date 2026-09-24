@@ -1,10 +1,9 @@
 package org.eazyportal.gradle.eazysettings
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
@@ -31,18 +30,18 @@ class EazySettingsPluginFunctionalTest {
     @Test
     fun `every subproject gets eazy-project auto-applied, the root does not`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras-a", "extras-b")
+        val gradleRunner = gradleRunner(projectDir)
 
-        val output = runGradleTask(
-            projectDir,
+        val output = gradleRunner.runGradleTask(
             ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
-            ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
+            ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME"
         )
 
         assertThat(output)
             .contains("eazy-project diagnostics — :extras-a")
             .contains("eazy-project diagnostics — :extras-b")
 
-        val rootOutput = runFailingGradleTask(projectDir, ":$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val rootOutput = gradleRunner.runFailingGradleTask(":$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(rootOutput).contains("not found in root project")
     }
@@ -51,7 +50,8 @@ class EazySettingsPluginFunctionalTest {
     fun `eazy-project's own default applies when the DSL override is absent`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras")
 
-        val output = runGradleTask(projectDir, ":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val output = gradleRunner(projectDir)
+            .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output).contains("eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION")
     }
@@ -66,23 +66,23 @@ class EazySettingsPluginFunctionalTest {
             }
         }
 
-        val output = runGradleTask(projectDir, ":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val output = gradleRunner(projectDir)
+            .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output).contains("eazyPortalCoreVersion  : 9.9.9")
     }
 
     @Test
     fun `CC double-run - override wins, the 2nd run reuses the CC entry, and zero CC problems occur`(@TempDir workingDir: File) {
-        val projectDir = buildExampleProject(workingDir, "extras-a", "extras-b") {
+        val gradleRunner = buildExampleProject(workingDir, "extras-a", "extras-b") {
             settings {
                 script {
                     generateEazySettingsString("9.9.9")
                 }
             }
-        }
+        }.let(::gradleRunner)
 
-        val firstRun = runGradleTask(
-            projectDir,
+        val firstRun = gradleRunner.runGradleTask(
             ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "--configuration-cache",
@@ -93,8 +93,7 @@ class EazySettingsPluginFunctionalTest {
             .contains("eazyPortalCoreVersion  : 9.9.9")
             .doesNotContain("problem was found", "problems were found")
 
-        val secondRun = runGradleTask(
-            projectDir,
+        val secondRun = gradleRunner.runGradleTask(
             ":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             ":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "--configuration-cache",
@@ -114,7 +113,8 @@ class EazySettingsPluginFunctionalTest {
             }
         }
 
-        val output = runFailingGradleTask(projectDir, "help")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("help")
 
         assertThat(output).contains("Build was configured to prefer settings repositories over project repositories")
     }
@@ -123,7 +123,9 @@ class EazySettingsPluginFunctionalTest {
     fun `the hermetic stub resolves eazyportal-core with no credentials — the real GitHub repo is registered but never hit`(
         @TempDir workingDir: File,
     ) {
-        val exampleRepositoryDir = buildExampleRepository(workingDir)
+        val exampleRepositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
+        }
 
         val projectDir = buildExampleProject(workingDir, "common") {
             settings {
@@ -150,11 +152,9 @@ class EazySettingsPluginFunctionalTest {
         val gradleHomeDir = File(workingDir, "gradle-home")
             .also { it.mkdirs() }
 
-        val output = runGradleTask(
-            projectDir,
-            ":common:dependencies", "--configuration", "compileClasspath",
-            environment = hermeticEnvironmentWithFakeCredentials(gradleHomeDir),
-        )
+        val output = gradleRunner(projectDir) {
+            stubEnvironment(gradleHomeDir)
+        }.runGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
         assertThat(output).contains("$CORE_GROUP_ID:$CORE_COMMON_ARTIFACT_ID:$EXAMPLE_CORE_DEFAULT_VERSION")
     }
@@ -168,35 +168,14 @@ class EazySettingsPluginFunctionalTest {
 
         val projectDir = buildExampleProject(workingDir, "common")
 
-        val output = runFailingGradleTask(
-            projectDir,
-            ":common:dependencies", "--configuration", "compileClasspath",
-            environment = hermeticEnvironment(gradleHomeDir),
-        )
+        val output = gradleRunner(projectDir) {
+            hermeticEnvironment(gradleHomeDir)
+        }.runFailingGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
         assertThat(output)
             .contains("The following Gradle properties are missing for 'GitHubPackages' credentials")
             .doesNotContain("BUILD SUCCESSFUL")
     }
-
-    /** Redirects `GRADLE_USER_HOME` into an isolated, empty [gradleUserHome] and strips ambient `GitHubPackages` credential env vars — so the build never sees the real machine's `~/.gradle` state (creds, caches). */
-    private fun hermeticEnvironment(gradleUserHome: File): Map<String, String> =
-        System.getenv() -
-                "ORG_GRADLE_PROJECT_GitHubPackagesUsername" -
-                "ORG_GRADLE_PROJECT_GitHubPackagesPassword" +
-                ("GRADLE_USER_HOME" to gradleUserHome.absolutePath)
-
-    /**
-     * [hermeticEnvironment] plus FAKE, non-functional `GitHubPackages` credentials.
-     * Gradle validates that `credentials(PasswordCredentials::class)` values are *present* for every registered
-     * repository requiring them eagerly, for the whole resolution session — regardless of whether that repository
-     * is ever actually queried. The stub repo is scoped with `exclusiveContent { }` (see [generatePluginString])
-     * so the real GitHub host is never contacted; these fake values exist purely to satisfy that eager presence check.
-     */
-    private fun hermeticEnvironmentWithFakeCredentials(gradleUserHome: File): Map<String, String> =
-        hermeticEnvironment(gradleUserHome) +
-            ("ORG_GRADLE_PROJECT_GitHubPackagesUsername" to "stub-user") +
-            ("ORG_GRADLE_PROJECT_GitHubPackagesPassword" to "stub-token")
 
     /**
      * A synthetic receiver: an empty root applying `org.eazyportal.gradle.eazy-settings` via the settings `plugins { }`
@@ -217,15 +196,6 @@ class EazySettingsPluginFunctionalTest {
             }
 
             builder()
-        }
-
-    /**
-     * A synthetic Maven2-layout repository, containing only the minimal artifacts needed to satisfy a Gradle `compileClasspath` resolution of
-     * `org.eazyportal.core:eazyportal-core-{bom,common,test}:[EXAMPLE_CORE_DEFAULT_VERSION]` (design §7.4).
-     */
-    private fun buildExampleRepository(workingDir: File): File =
-        exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
-            eazyportalArtifacts()
         }
 
     private fun generateEazySettingsString(eazyPortalCoreVersionOverride: String): String =

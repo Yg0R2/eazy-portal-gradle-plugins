@@ -1,7 +1,6 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
@@ -24,7 +23,8 @@ class KotlinProjectConventionIntegrationTest {
             }
         }
 
-        val output = runFailingGradleTask(projectDir, "compileKotlin")
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("compileKotlin")
 
         assertThat(output).contains("is deprecated")
     }
@@ -37,7 +37,8 @@ class KotlinProjectConventionIntegrationTest {
             }
         }
 
-        runGradleTask(projectDir, "compileKotlin", "-PsuppressAllErrors")
+        gradleRunner(projectDir)
+            .runGradleTask("compileKotlin", "-PsuppressAllErrors")
     }
 
     @Test
@@ -66,7 +67,8 @@ class KotlinProjectConventionIntegrationTest {
             kotlinSource()
         }
 
-        val output = runGradleTask(projectDir, "verifyConventions")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("verifyConventions")
 
         assertThat(output)
             .contains("java-project-convention applied: true")

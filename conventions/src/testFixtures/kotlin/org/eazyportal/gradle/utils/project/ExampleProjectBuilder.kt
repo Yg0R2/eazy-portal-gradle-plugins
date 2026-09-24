@@ -7,7 +7,7 @@ import java.io.File
 
 /**
  * Kotlin DSL for a synthetic Gradle project scaffolded into a working directory and driven by the
- * TestKit helpers in [org.eazyportal.gradle.conventions.GradleUtils].
+ * TestKit helpers in [org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder].
  *
  * Only the parts that differ between tests need to be declared — everything else has a sensible default
  * for a minimal Gradle project. The files are written as soon as the configure block returns.

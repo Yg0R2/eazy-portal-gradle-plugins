@@ -1,9 +1,8 @@
 package org.eazyportal.gradle.internal
 
-import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -16,7 +15,9 @@ class CoordinatesAndPublishingIntegrationTest {
 
     @Test
     fun `group and version originate from root gradle properties`() {
-        val actual = runGradleTask(PROJECT_DIR, "properties", withPluginClasspath = false)
+        val actual = gradleRunner(PROJECT_DIR) {
+            propagateClasspath = false
+        }.runGradleTask("properties")
 
         // conventions/settings.gradle.kts keeps the root group and appends ".conventions" (decided
         // in TOOLS-59; the design's substitution coordinates are adjusted accordingly later).
@@ -29,7 +30,9 @@ class CoordinatesAndPublishingIntegrationTest {
     fun `command-line version property overrides gradle properties`() {
         val version = "2.3.4-DUMMY"
 
-        val actual = runGradleTask(PROJECT_DIR,  "properties", "-Pversion=$version", withPluginClasspath = false)
+        val actual = gradleRunner(PROJECT_DIR) {
+            propagateClasspath = false
+        }.runGradleTask("properties", "-Pversion=$version")
 
         assertThat(actual)
             .contains("group: $CONVENTIONS_PLUGIN_GROUP_ID")
@@ -38,11 +41,11 @@ class CoordinatesAndPublishingIntegrationTest {
 
     @Test
     fun `publishing release version should fail without credentials`() {
-        val actual = runFailingGradleTask(
-            PROJECT_DIR,
+        val actual = gradleRunner(PROJECT_DIR) {
+            propagateClasspath = false
+        }.runFailingGradleTask(
             "publish",
             "-Pversion=0.0.1",
-            withPluginClasspath = false,
         )
 
         assertThat(actual)
@@ -53,11 +56,11 @@ class CoordinatesAndPublishingIntegrationTest {
 
     @Test
     fun `publishing SNAPSHOT to a file repository produces a non-bare POM`(@TempDir workingDir: Path) {
-        runGradleTask(
-            PROJECT_DIR,
+        gradleRunner(PROJECT_DIR) {
+            propagateClasspath = false
+        }.runGradleTask(
             "publish",
             "-Dmaven.repo.local=${workingDir.absolutePathString()}",
-            withPluginClasspath = false,
         )
 
         // Non-bare POM, precisely: license + scm fields and coordinates (design §4.1).

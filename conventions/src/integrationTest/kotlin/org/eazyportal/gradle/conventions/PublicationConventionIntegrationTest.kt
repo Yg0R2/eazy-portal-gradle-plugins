@@ -1,8 +1,7 @@
 package org.eazyportal.gradle.conventions
 
-import org.eazyportal.gradle.conventions.GradleUtils.runFailingGradleTask
-import org.eazyportal.gradle.conventions.GradleUtils.runGradleTask
 import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertThatHasEazyPortalValues
+import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
@@ -22,12 +21,12 @@ class PublicationConventionIntegrationTest {
     fun `applies the central POM to a maven publication and a plugin-marker publication`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        runGradleTask(
-            projectDir,
-            "generatePomFileForMavenPublication",
-            "generatePomFileForExampleEazyPortalPluginPluginMarkerMavenPublication",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION",
-        )
+        gradleRunner(projectDir)
+            .runGradleTask(
+                "generatePomFileForMavenPublication",
+                "generatePomFileForExampleEazyPortalPluginPluginMarkerMavenPublication",
+                "-Pversion=$EXAMPLE_PROJECT_VERSION",
+            )
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml")) {
             groupId = "org.eazyportal.example.plugin"
@@ -48,7 +47,8 @@ class PublicationConventionIntegrationTest {
     fun `a SNAPSHOT version routes publish to publishToMavenLocal`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runGradleTask(projectDir, "publish", "-Pversion=$EXAMPLE_PROJECT_VERSION-SNAPSHOT", "-m")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("publish", "-Pversion=$EXAMPLE_PROJECT_VERSION-SNAPSHOT", "-m")
 
         assertThat(output).contains(":publishToMavenLocal").contains(":publish")
     }
@@ -68,7 +68,8 @@ class PublicationConventionIntegrationTest {
             }
         }
 
-        val output = runGradleTask(projectDir, "printRepositories", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+        val output = gradleRunner(projectDir)
+            .runGradleTask("printRepositories", "-Pversion=$EXAMPLE_PROJECT_VERSION")
 
         assertThat(output).contains("repositories: [GitHubPackages]")
     }
@@ -77,11 +78,11 @@ class PublicationConventionIntegrationTest {
     fun `publishing a release without credentials fails with the typed credentials error`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir)
 
-        val output = runFailingGradleTask(
-            projectDir,
-            "publishMavenPublicationToGitHubPackagesRepository",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION",
-        )
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask(
+                "publishMavenPublicationToGitHubPackagesRepository",
+                "-Pversion=$EXAMPLE_PROJECT_VERSION",
+            )
 
         assertThat(output)
             .contains("The following Gradle properties are missing for 'GitHubPackages' credentials:")
