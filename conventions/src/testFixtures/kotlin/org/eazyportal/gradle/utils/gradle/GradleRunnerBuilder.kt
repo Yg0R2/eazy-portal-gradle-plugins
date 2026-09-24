@@ -48,35 +48,32 @@ class GradleRunnerBuilder private constructor(
     @GradleRunnerDsl
     class ConfigBuilder {
 
-        internal var environment: MutableMap<String, String> = System.getenv().toMutableMap()
+        internal var environment: MutableMap<String, String> = mutableMapOf()
+
+        /**
+         * Sets the `GRADLE_USER_HOME`.
+         */
+        var gradleUserHome: File? = null
 
         /**
          * Set [withPluginClasspath] to inject the plugin-under-test classpath (needed when a synthetic project applies our convention plugins).
-         * */
+         */
         var propagateClasspath: Boolean = true
 
         /**
-         * Configures the GitHub Packages credentials from the environment and optionally redirects `GRADLE_USER_HOME` into an isolated, empty [gradleUserHome].
+         * Sets or overwrites environment variables for the GradleRunner
          */
-        fun hermeticEnvironment(
-            gradleUserHome: File? = null,
+        fun environment(
+            key: String,
+            value: String,
         ) {
-            environment.remove("ORG_GRADLE_PROJECT_GitHubPackagesUsername")
-            environment.remove("ORG_GRADLE_PROJECT_GitHubPackagesPassword")
-
-            if (gradleUserHome != null) {
-                environment["GRADLE_USER_HOME"] = gradleUserHome.absolutePath
-            }
+            environment[key] = value
         }
 
         /**
-         * Configures a stubbed environment with fake GitHub Packages credentials and optionally redirects `GRADLE_USER_HOME` into an isolated, empty [gradleUserHome].
+         * Sets fake GitHub Packages credentials environment variables.
          */
-        fun stubEnvironment(
-            gradleUserHome: File? = null,
-        ) {
-            hermeticEnvironment(gradleUserHome)
-
+        fun stubGithubCredentials() {
             environment["ORG_GRADLE_PROJECT_GitHubPackagesUsername"] = "stub-user"
             environment["ORG_GRADLE_PROJECT_GitHubPackagesPassword"] = "stub-token"
         }
@@ -90,9 +87,15 @@ class GradleRunnerBuilder private constructor(
         ): GradleRunnerBuilder {
             val config = ConfigBuilder().apply(configure)
 
+            val environment = config.environment.apply {
+                config.gradleUserHome?.run {
+                    put("GRADLE_USER_HOME", this.absolutePath)
+                }
+            }
+
             val gradleRunner = GradleRunner.create()
                 .withProjectDir(projectDir)
-                .withEnvironment(config.environment)
+                .withEnvironment(environment)
                 .forwardOutput()
                 .apply {
                     if (config.propagateClasspath) {

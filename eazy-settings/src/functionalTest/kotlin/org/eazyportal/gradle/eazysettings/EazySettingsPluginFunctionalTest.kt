@@ -153,7 +153,9 @@ class EazySettingsPluginFunctionalTest {
             .also { it.mkdirs() }
 
         val output = gradleRunner(projectDir) {
-            stubEnvironment(gradleHomeDir)
+            gradleUserHome = gradleHomeDir
+
+            stubGithubCredentials()
         }.runGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
         assertThat(output).contains("$CORE_GROUP_ID:$CORE_COMMON_ARTIFACT_ID:$EXAMPLE_CORE_DEFAULT_VERSION")
@@ -169,7 +171,7 @@ class EazySettingsPluginFunctionalTest {
         val projectDir = buildExampleProject(workingDir, "common")
 
         val output = gradleRunner(projectDir) {
-            hermeticEnvironment(gradleHomeDir)
+            gradleUserHome = gradleHomeDir
         }.runFailingGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
         assertThat(output)

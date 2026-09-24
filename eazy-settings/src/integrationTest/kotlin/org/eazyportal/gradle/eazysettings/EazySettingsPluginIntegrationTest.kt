@@ -56,7 +56,7 @@ class EazySettingsPluginIntegrationTest {
         }
 
         val output = gradleRunner(projectDir) {
-            stubEnvironment()
+            stubGithubCredentials()
         }.runGradleTask("compileJava")
 
         assertThat(output)
