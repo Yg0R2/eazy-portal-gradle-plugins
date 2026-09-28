@@ -7,6 +7,8 @@ import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRu
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
+ import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_PROJECT_ARTIFACT_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -59,7 +61,7 @@ class EazyProjectPluginFunctionalTest {
         }
         val expectedExampleCoreDependency = subprojectName
             .takeIf { expectedArchetype == it }
-            ?.let { "eazyportal-core-$subprojectName (implementation), " }
+            ?.let { "${createCoreArtifactId(subprojectName)} (implementation), " }
             .orEmpty()
         assertThat(output).containsSubsequence(
             "> Task :$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
@@ -67,7 +69,7 @@ class EazyProjectPluginFunctionalTest {
             "  archetype              : $expectedArchetype",
             "  convention             : [$expectedConvention]",
             "  siblings               : $expectedSiblings",
-            "  eazyportal-core        : [${expectedExampleCoreDependency}eazyportal-core-test (testImplementation)]   (versions via the eazyportal-core BOM)",
+            "  eazyportal-core        : [${expectedExampleCoreDependency}$CORE_TEST_PROJECT_ARTIFACT_ID (testImplementation)]   (versions via the eazyportal-core BOM)",
             "  eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
         )
     }

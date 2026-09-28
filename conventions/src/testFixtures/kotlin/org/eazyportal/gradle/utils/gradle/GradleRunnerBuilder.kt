@@ -1,5 +1,7 @@
 package org.eazyportal.gradle.utils.gradle
 
+import org.eazyportal.gradle.utils.signing.SigningKeyFixtures.TEST_SIGNING_KEY
+import org.eazyportal.gradle.utils.signing.SigningKeyFixtures.TEST_SIGNING_PASSWORD
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
@@ -73,9 +75,17 @@ class GradleRunnerBuilder private constructor(
         /**
          * Sets fake GitHub Packages credentials environment variables.
          */
-        fun stubGithubCredentials() {
+        fun stubGitHubCredentials() {
             environment["ORG_GRADLE_PROJECT_GitHubPackagesUsername"] = "stub-user"
             environment["ORG_GRADLE_PROJECT_GitHubPackagesPassword"] = "stub-token"
+        }
+
+        /**
+         * Sets fake signing credentials environment variables.
+         */
+        fun stubSigningCredentials() {
+            environment["SIGNING_KEY"] = TEST_SIGNING_KEY
+            environment["SIGNING_PASSWORD"] = TEST_SIGNING_PASSWORD
         }
 
     }

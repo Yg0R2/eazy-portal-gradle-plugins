@@ -4,10 +4,9 @@ import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertTha
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
-import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_RELEASE_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
-import org.eazyportal.gradle.utils.signing.SigningKeyFixtures.TEST_SIGNING_KEY
-import org.eazyportal.gradle.utils.signing.SigningKeyFixtures.TEST_SIGNING_PASSWORD
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -31,7 +30,7 @@ class PublicationConventionIntegrationTest {
         gradleRunner(projectDir)
             .runGradleTask(
                 "generatePomFileForMavenPublication",
-                "-Pversion=$EXAMPLE_PROJECT_VERSION",
+                "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION",
             )
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
@@ -45,7 +44,7 @@ class PublicationConventionIntegrationTest {
             .runGradleTask(
                 "generatePomFileForPluginMavenPublication",
                 "generatePomFileForExampleEazyPortalPluginPluginMarkerMavenPublication",
-                "-Pversion=$EXAMPLE_PROJECT_VERSION",
+                "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION",
             )
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/pluginMaven/pom-default.xml")) {
@@ -68,7 +67,7 @@ class PublicationConventionIntegrationTest {
         val projectDir = buildExampleProject(workingDir)
 
         val output = gradleRunner(projectDir)
-            .runGradleTask("publish", "-Pversion=$EXAMPLE_PROJECT_VERSION-SNAPSHOT", "-m")
+            .runGradleTask("publish", "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION-SNAPSHOT", "-m")
 
         assertThat(output).contains(":publishToMavenLocal").contains(":publish")
     }
@@ -89,7 +88,7 @@ class PublicationConventionIntegrationTest {
         }
 
         val output = gradleRunner(projectDir)
-            .runGradleTask("printRepositories", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+            .runGradleTask("printRepositories", "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION")
 
         assertThat(output).contains("repositories: [GitHubPackages]")
     }
@@ -101,7 +100,7 @@ class PublicationConventionIntegrationTest {
         val output = gradleRunner(projectDir)
             .runFailingGradleTask(
                 "publishMavenPublicationToGitHubPackagesRepository",
-                "-Pversion=$EXAMPLE_PROJECT_VERSION",
+                "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION",
             )
 
         assertThat(output)
@@ -118,16 +117,15 @@ class PublicationConventionIntegrationTest {
         val repositoryDir = File(workingDir, "repo")
 
         gradleRunner(projectDir) {
-            environment("SIGNING_KEY", TEST_SIGNING_KEY)
-            environment("SIGNING_PASSWORD", TEST_SIGNING_PASSWORD)
+            stubSigningCredentials()
         }.runGradleTask(
             "publishToMavenLocal",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION",
+            "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION",
             "-Dmaven.repo.local=${repositoryDir.absolutePath}",
         )
 
         assertThatEveryPublishedFileIsSigned(
-            File(repositoryDir, "org/eazyportal/example/$EXAMPLE_ROOT_PROJECT_NAME/$EXAMPLE_PROJECT_VERSION"),
+            File(repositoryDir, "org/eazyportal/example/$EXAMPLE_ROOT_PROJECT_NAME/$EXAMPLE_PROJECT_RELEASE_VERSION"),
         )
     }
 
@@ -139,19 +137,18 @@ class PublicationConventionIntegrationTest {
         val repositoryDir = File(workingDir, "repo")
 
         gradleRunner(projectDir) {
-            environment("SIGNING_KEY", TEST_SIGNING_KEY)
-            environment("SIGNING_PASSWORD", TEST_SIGNING_PASSWORD)
+            stubSigningCredentials()
         }.runGradleTask(
             "publishToMavenLocal",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION",
+            "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION",
             "-Dmaven.repo.local=${repositoryDir.absolutePath}",
         )
 
         assertThatEveryPublishedFileIsSigned(
-            File(repositoryDir, "org/eazyportal/example/plugin/$EXAMPLE_PLUGIN_PROJECT_NAME/$EXAMPLE_PROJECT_VERSION"),
+            File(repositoryDir, "org/eazyportal/example/plugin/$EXAMPLE_PLUGIN_PROJECT_NAME/$EXAMPLE_PROJECT_RELEASE_VERSION"),
         )
         assertThatEveryPublishedFileIsSigned(
-            File(repositoryDir, "org/eazyportal/example/plugin/$EXAMPLE_PLUGIN_ARTIFACT_ID/$EXAMPLE_PROJECT_VERSION"),
+            File(repositoryDir, "org/eazyportal/example/plugin/$EXAMPLE_PLUGIN_ARTIFACT_ID/$EXAMPLE_PROJECT_RELEASE_VERSION"),
         )
     }
 
@@ -163,11 +160,10 @@ class PublicationConventionIntegrationTest {
         val repositoryDir = File(workingDir, "repo")
 
         gradleRunner(projectDir) {
-            environment("SIGNING_KEY", TEST_SIGNING_KEY)
-            environment("SIGNING_PASSWORD", TEST_SIGNING_PASSWORD)
+            stubSigningCredentials()
         }.runGradleTask(
             "publishToMavenLocal",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION-SNAPSHOT",
+            "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION-SNAPSHOT",
             "-Dmaven.repo.local=${repositoryDir.absolutePath}",
         )
 
@@ -182,11 +178,10 @@ class PublicationConventionIntegrationTest {
         val repositoryDir = File(workingDir, "repo")
 
         gradleRunner(projectDir) {
-            environment("SIGNING_KEY", TEST_SIGNING_KEY)
-            environment("SIGNING_PASSWORD", TEST_SIGNING_PASSWORD)
+            stubSigningCredentials()
         }.runGradleTask(
             "publishToMavenLocal",
-            "-Pversion=$EXAMPLE_PROJECT_VERSION-SNAPSHOT",
+            "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION-SNAPSHOT",
             "-Dmaven.repo.local=${repositoryDir.absolutePath}",
         )
 

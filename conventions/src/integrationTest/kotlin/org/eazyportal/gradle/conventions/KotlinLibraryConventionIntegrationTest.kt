@@ -4,7 +4,7 @@ import org.eazyportal.gradle.conventions.assertion.PomAssert.Companion.assertTha
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
-import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -83,10 +83,10 @@ class KotlinLibraryConventionIntegrationTest {
         val projectDir = buildExampleProject(workingDir)
 
         gradleRunner(projectDir)
-            .runGradleTask("assemble", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+            .runGradleTask("assemble", "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION")
 
-        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
-        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).doesNotExist()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_SNAPSHOT_VERSION-sources.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_SNAPSHOT_VERSION-javadoc.jar")).doesNotExist()
     }
 
     @Test
@@ -94,7 +94,7 @@ class KotlinLibraryConventionIntegrationTest {
         val projectDir = buildExampleProject(workingDir)
 
         gradleRunner(projectDir)
-            .runGradleTask("generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+            .runGradleTask("generatePomFileForMavenPublication", "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION")
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/maven/pom-default.xml"))
     }

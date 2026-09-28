@@ -2,7 +2,7 @@ package org.eazyportal.gradle.conventions
 
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
-import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -37,14 +37,14 @@ class KotlinLibraryConventionFunctionalTest {
         }
 
         gradleRunner(projectDir)
-            .runGradleTask("build", "-Pversion=$EXAMPLE_PROJECT_VERSION")
+            .runGradleTask("build", "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION")
 
-        val jar = File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION.jar")
+        val jar = File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_SNAPSHOT_VERSION.jar")
         assertThat(jar).exists()
         assertThat(classEntriesOf(jar)).contains("org/eazyportal/example/ExampleKt.class")
 
-        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-sources.jar")).exists()
-        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_VERSION-javadoc.jar")).doesNotExist()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_SNAPSHOT_VERSION-sources.jar")).exists()
+        assertThat(File(projectDir, "build/libs/$EXAMPLE_ROOT_PROJECT_NAME-$EXAMPLE_PROJECT_SNAPSHOT_VERSION-javadoc.jar")).doesNotExist()
     }
 
     /** The `.class` entries in [jar] — proof the jar is a real, loadable artifact and not just a file that happens to exist. */

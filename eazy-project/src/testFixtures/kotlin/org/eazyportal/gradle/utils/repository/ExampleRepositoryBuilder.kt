@@ -1,9 +1,8 @@
 package org.eazyportal.gradle.utils.repository
 
+import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_BOM_ARTIFACT_ID
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_COMMON_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
 import java.io.File
 
@@ -17,22 +16,22 @@ import java.io.File
  * ```
  * val repositoryDir = exampleRepository(workingDir) {
 *    artifact {
- *         artifactId = "core-bom"
+ *         artifactId = "eazyportal-core-bom"
  *         packaging = "pom"
  *         version = "1.0.0"
  *         managedArtifactIds = listOf(
- *             "core-common",
- *             "core-test",
+ *             "eazyportal-core-common",
+ *             "eazyportal-core-test",
  *         )
  *     }
  *
  *     artifact {
- *         artifactId = "core-common"
+ *         artifactId = "eazyportal-core-common"
  *         version = "1.0.0"
  *     }
  *
  *     artifact {
- *         artifactId = "core-test"
+ *         artifactId = "eazyportal-core-test"
  *         version = "1.0.0"
  *     }
  * }
@@ -54,22 +53,24 @@ class ExampleRepositoryBuilder(
 
     /** Declares EazyPortal artifacts. */
     fun eazyportalArtifacts() {
+        val coreArtifactIds = (ProjectType.entries - ProjectType.DEFAULT)
+            .asSequence()
+            .map(ProjectType::toString)
+            .plus("test")
+            .map(ExampleRepositoryFixtures::createCoreArtifactId)
+            .toList()
+
         artifact {
             artifactId = CORE_BOM_ARTIFACT_ID
             packaging = "pom"
-            managedArtifactIds = listOf(
-                CORE_COMMON_ARTIFACT_ID,
-                CORE_TEST_ARTIFACT_ID,
-            )
+            managedArtifactIds = coreArtifactIds
         }
 
-        artifact {
-            artifactId = CORE_COMMON_ARTIFACT_ID
-        }
-
-        artifact {
-            artifactId = CORE_TEST_ARTIFACT_ID
-        }
+        coreArtifactIds.forEach {
+                artifact {
+                    artifactId = it
+                }
+            }
     }
 
     /**

@@ -37,6 +37,7 @@ dependencies {
     // Functional tests run real Gradle builds via TestKit (GradleRunner.withPluginClasspath()) applying
     // "org.eazyportal.gradle.eazy-settings" by bare id in synthetic receivers' settings.gradle.kts `plugins { }` block.
     functionalTestImplementation(project(":eazy-project"))
+    functionalTestImplementation(testFixtures(project(":eazy-project")))
     functionalTestImplementation(testFixtures("org.eazyportal.gradle.conventions:conventions:${version}"))
 
     functionalTestImplementation(platform(libs.junit.bom))
@@ -50,6 +51,7 @@ dependencies {
     // exercising the real foojay-resolver-convention end-to-end — including its real network call
     // to api.foojay.io (design §9.4 extension, not the original lightweight wiring check).
     integrationTestImplementation(project(":eazy-project"))
+    integrationTestImplementation(testFixtures(project(":eazy-project")))
     integrationTestImplementation(testFixtures("org.eazyportal.gradle.conventions:conventions:${version}"))
 
     integrationTestImplementation(platform(libs.junit.bom))

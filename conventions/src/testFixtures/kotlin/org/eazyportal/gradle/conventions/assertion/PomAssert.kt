@@ -2,7 +2,7 @@ package org.eazyportal.gradle.conventions.assertion
 
 import org.eazyportal.gradle.conventions.extension.textOf
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_GROUP_ID
-import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_VERSION
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_DESCRIPTION
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_ROOT_PROJECT_NAME
 import org.assertj.core.api.AbstractObjectAssert
@@ -61,7 +61,7 @@ class PomAssert(
     data class PomAssertValues(
         var groupId: String = EXAMPLE_PROJECT_GROUP_ID,
         var artifactId: String = EXAMPLE_ROOT_PROJECT_NAME,
-        var version: String = EXAMPLE_PROJECT_VERSION,
+        var version: String = EXAMPLE_PROJECT_SNAPSHOT_VERSION,
         var name: String = EXAMPLE_ROOT_PROJECT_NAME,
         var description: String = EXAMPLE_ROOT_PROJECT_DESCRIPTION,
     )

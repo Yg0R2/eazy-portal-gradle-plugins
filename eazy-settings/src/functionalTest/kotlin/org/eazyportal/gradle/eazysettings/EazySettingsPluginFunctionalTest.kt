@@ -7,8 +7,8 @@ import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRu
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_COMMON_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -155,10 +155,10 @@ class EazySettingsPluginFunctionalTest {
         val output = gradleRunner(projectDir) {
             gradleUserHome = gradleHomeDir
 
-            stubGithubCredentials()
+            stubGitHubCredentials()
         }.runGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
-        assertThat(output).contains("$CORE_GROUP_ID:$CORE_COMMON_ARTIFACT_ID:$EXAMPLE_CORE_DEFAULT_VERSION")
+        assertThat(output).contains("$CORE_GROUP_ID:${createCoreArtifactId("common")}:$EXAMPLE_CORE_DEFAULT_VERSION")
     }
 
     @Test

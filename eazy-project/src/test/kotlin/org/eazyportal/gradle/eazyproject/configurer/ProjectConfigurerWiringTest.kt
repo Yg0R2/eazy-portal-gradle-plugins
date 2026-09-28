@@ -12,6 +12,9 @@ import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.K
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.wiringSummary
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_BOM_ARTIFACT_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_PROJECT_ARTIFACT_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
@@ -146,15 +149,15 @@ class ProjectConfigurerWiringTest {
         // catches a leaked level (an `implementation` layer declared on `api`, or vice versa).
         assertThat(project.eazyPortalCoreMainModules(API))
             .describedAs("%s eazyportal-core on api", expectation.projectType)
-            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreApi?.let { "eazyportal-core-$it" }))
+            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreApi?.let { createCoreArtifactId(it) }))
 
         assertThat(project.eazyPortalCoreMainModules(IMPLEMENTATION))
             .describedAs("%s eazyportal-core on implementation", expectation.projectType)
-            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreImplementation?.let { "eazyportal-core-$it" }))
+            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreImplementation?.let { createCoreArtifactId(it) }))
 
         // Every eazyportal-core main dependency is versionless (the BOM pins it).
         (project.eazyPortalCoreExternalDependencies(API) + project.eazyPortalCoreExternalDependencies(IMPLEMENTATION))
-            .filter { it.name != EXAMPLE_CORE_BOM }
+            .filter { it.name != CORE_BOM_ARTIFACT_ID }
             .forEach { dependency ->
                 assertThat(dependency.version)
                     .describedAs("%s: %s must be versionless (BOM-pinned)", expectation.projectType, dependency.name)
@@ -164,13 +167,13 @@ class ProjectConfigurerWiringTest {
 
     private fun assertEazyPortalCoreTest(project: Project) {
         val testDependency = project.eazyPortalCoreExternalDependencies(TEST_IMPLEMENTATION)
-            .singleOrNull { it.name == "eazyportal-core-test" }
+            .singleOrNull { it.name == CORE_TEST_PROJECT_ARTIFACT_ID }
 
         assertThat(testDependency)
-            .describedAs("eazyportal-core-test must be on testImplementation")
+            .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must be on testImplementation")
             .isNotNull()
         assertThat(testDependency!!.version)
-            .describedAs("eazyportal-core-test must be versionless (BOM-pinned)")
+            .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must be versionless (BOM-pinned)")
             .isNull()
     }
 
@@ -199,12 +202,11 @@ class ProjectConfigurerWiringTest {
                 (expectation.apiSiblings + expectation.implementationSiblings).map { ":$it" },
             )
         assertThat(summary.eazyPortalCore.map { it.notation })
-            .contains("eazyportal-core-test")
+            .contains(CORE_TEST_PROJECT_ARTIFACT_ID)
     }
 
     private companion object {
         const val EXAMPLE_CORE_VERSION = DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
-        const val EXAMPLE_CORE_BOM = "eazyportal-core-bom"
 
         val STANDARD_MODULES = ProjectType.entries.map { it.toString() } + "unknown"
 
@@ -226,11 +228,11 @@ class ProjectConfigurerWiringTest {
         fun Project.eazyPortalCoreMainModules(dependencyConfiguration: DependencyConfiguration): List<String> =
             eazyPortalCoreExternalDependencies(dependencyConfiguration)
                 .map { it.name }
-                .filter { it != EXAMPLE_CORE_BOM && it != "eazyportal-core-test" }
+                .filter { it != CORE_BOM_ARTIFACT_ID && it != CORE_TEST_PROJECT_ARTIFACT_ID }
 
         fun Project.bomVersions(dependencyConfiguration: DependencyConfiguration): List<String?> =
             eazyPortalCoreExternalDependencies(dependencyConfiguration)
-                .filter { it.name == EXAMPLE_CORE_BOM }
+                .filter { it.name == CORE_BOM_ARTIFACT_ID }
                 .map { it.version }
     }
 
