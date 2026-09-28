@@ -10,6 +10,7 @@ import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion
  import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_PROJECT_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
+import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
@@ -98,7 +99,7 @@ class EazyProjectPluginFunctionalTest {
         val projectDir = buildExampleProject(
             workingDir = workingDir,
             subprojectName = "common",
-            exampleRepositoryDir = exampleRepositoryDir,
+            repositoryDir = exampleRepositoryDir,
         ) {
             kotlinSource {
                 """
@@ -119,6 +120,8 @@ class EazyProjectPluginFunctionalTest {
 
     @Test
     fun `a default module applies kotlin-library-convention by bare id and publishes`(@TempDir workingDir: File) {
+        val repositoryDir = exampleRepository(workingDir)
+
         val projectDir = buildExampleProject(
             workingDir = workingDir,
             subprojectName = "extras",
@@ -126,7 +129,11 @@ class EazyProjectPluginFunctionalTest {
         )
 
         gradleRunner(projectDir)
-            .runGradleTask(":extras:publishToMavenLocal", "-Pversion=1.0.0-SNAPSHOT")
+            .runGradleTask(
+                ":extras:publishToMavenLocal",
+                "-Pversion=$EXAMPLE_PROJECT_SNAPSHOT_VERSION",
+                "-Dmaven.repo.local=${repositoryDir.absolutePath}"
+            )
     }
 
     /**
@@ -134,7 +141,7 @@ class EazyProjectPluginFunctionalTest {
      * plus an empty subproject per [siblingProjectNames] — needed only so a `project.project(":x")` sibling reference
      * (e.g. `application`'s, which depends on every other layer) resolves; they are never built themselves.
      * The root always carries `allprojects { repositories { mavenCentral() [+ exampleRepositoryDir] } }` — needed once
-     * real compilation/publishing is exercised. [exampleRepositoryDir], when given, is the `file://`-published sample
+     * real compilation/publishing is exercised. [repositoryDir], when given, is the `file://`-published sample
      * so a real `compileClasspath` resolution of `org.eazyportal.core:eazyportal-core-*`
      * (added unconditionally by every [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer]) succeeds —
      * those coordinates are design placeholders for a real internal registry, not anything mavenCentral() has.
@@ -144,7 +151,7 @@ class EazyProjectPluginFunctionalTest {
         subprojectName: String,
         extraPluginIds: List<String> = emptyList(),
         siblingProjectNames: List<String> = emptyList(),
-        exampleRepositoryDir: File? = null,
+        repositoryDir: File? = null,
         configureSubproject: ExampleProjectBuilder.SubprojectBuilder.() -> Unit = {},
     ): File =
         exampleProject(workingDir) {
@@ -154,7 +161,7 @@ class EazyProjectPluginFunctionalTest {
                     allprojects {
                         repositories {
                             mavenCentral()
-                            ${exampleRepositoryDir?.let { "maven { url = uri(\"${it.toURI()}\") }" }.orEmpty()}
+                            ${repositoryDir?.let { "maven { url = uri(\"${it.toURI()}\") }" }.orEmpty()}
                         }
                     }
                     """.trimIndent()
