@@ -1,3 +1,453 @@
-= EazyPortal - gradle plugins project
+= EazyPortal - Gradle Plugins
+:toc: macro
+:toclevels: 2
+:icons: font
+:source-highlighter: highlight.js
 
-This project contains various EazyPortal plugins.
+The organization's backbone Gradle plugins.
+A repository opts into *one* settings plugin (`org.eazyportal.gradle.eazy-settings`) and everything else - Java/Kotlin conventions, dependency wiring, publishing, JDK provisioning - cascades automatically.
+All repositories share the same module structure, so there is almost nothing to configure per repository.
+
+toc::[]
+
+== Requirements
+
+[cols="1,4"]
+|===
+|JDK |*25* - the Gradle *daemon* must run on JDK 25+ (not just a toolchain).
+The plugins are compiled to bytecode 25; on an older daemon they fail to load with `UnsupportedClassVersionError` (there is deliberately no softer version check).
+|Gradle |9.7.1 (use the wrapper).
+|Auth |A GitHub token with `read:packages` (the plugins and `eazyportal-core` are hosted on GitHub Packages, which requires auth even to read).
+|===
+
+== Credentials (one-time, per machine)
+
+GitHub Packages requires auth even to _read_.
+Use a *fine-grained PAT* (not a classic token) scoped to *`read:packages` only*, on *just* the plugins repository and the `eazyportal-core` repository.
+Developers never need write access - `write:packages` lives only on the CI/release token.
+
+Credentials use Gradle's standard repository-credential properties, keyed by the repository identity *`GitHubPackages`*
+(every GitHub Packages repository - plugins _and_ `eazyportal-core` - shares this identity, so you set *one* pair).
+Put them in your *user-level* `~/.gradle/gradle.properties` (never a project file, never committed):
+
+[source,properties]
+----
+GitHubPackagesUsername=<your-github-username>
+GitHubPackagesPassword=<fine-grained PAT - read:packages only>
+----
+
+Or as environment variables (fallback, and what CI uses) - Gradle's `ORG_GRADLE_PROJECT_` convention:
+
+[source,bash]
+----
+export ORG_GRADLE_PROJECT_GitHubPackagesUsername=<your-github-username>
+export ORG_GRADLE_PROJECT_GitHubPackagesPassword=<fine-grained PAT - read:packages only>
+----
+
+Credentials are resolved *lazily* - required only when a GitHub Packages repository is actually hit, and a missing credential fails with a *clear Gradle error* (never a silent anonymous request).
+
+IMPORTANT: Credentials are governed by an *org-wide credential policy*, not by this repository.
+Token *scoping (fine-grained, least-privilege), expiry, rotation, revocation, and storage* (prefer an OS keychain / credential helper / short-lived tokens over on-disk secrets) are applied consistently across all ~100 repositories.
+This section states only the _minimum_ these plugins require.
+
+== Environment variables
+
+Everything the build reads, in one place.
+Local development typically needs only the *read* credentials.
+
+[cols="2,3,1",options="header"]
+|===
+|Variable |Used for |Who sets it
+
+|`ORG_GRADLE_PROJECT_GitHubPackagesUsername`
+|GitHub Packages username (resolve; publish in CI)
+|devs + CI
+
+|`ORG_GRADLE_PROJECT_GitHubPackagesPassword`
+|GitHub Packages token - *`read:packages`* for devs; *`read` + `write:packages`* for the CI/release job
+|devs (read) + CI (read+write)
+
+|`SIGNING_KEY`
+|ASCII-armored PGP private key used to *sign release artifacts*
+|CI/release only
+
+|`SIGNING_PASSWORD`
+|Passphrase for `SIGNING_KEY`
+|CI/release only
+|===
+
+* The `ORG_GRADLE_PROJECT_*` variables are Gradle's convention for the `GitHubPackages`-identity repository credentials; equivalently, set `GitHubPackagesUsername` / `GitHubPackagesPassword` in `~/.gradle/gradle.properties`.
+* `SIGNING_*` are consulted *only* for release builds; SNAPSHOT/local builds neither sign nor need them.
+* Scoping / rotation / storage follow the org-wide credential policy (see <<Credentials (one-time, per machine)>>).
+
+== Quickstart
+
+Add the bootstrap to your repository's *`settings.gradle.kts`*.
+This is the _only_ build wiring you write by hand:
+
+[source,kotlin]
+----
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = "GitHubPackages"   // identity -> GitHubPackagesUsername / GitHubPackagesPassword
+            url = uri("https://maven.pkg.github.com/«github-owner»/«github-repo»")
+            credentials(PasswordCredentials::class)
+        }
+    }
+}
+
+plugins {
+    id("org.eazyportal.gradle.eazy-settings") version "«plugins-version»"
+}
+
+// Optional - pin the eazyportal-core version (otherwise the default from "Default versions" below applies):
+eazySettings {
+    eazyPortalCoreVersion = "«x.y.z»"
+}
+
+rootProject.name = "«receiver-repo»"
+include("common", "api", "persistence", "service", "client", "web", "application")
+----
+
+That's it.
+*Do not* add repositories, apply Kotlin/Java plugins, set the toolchain, or declare JUnit in your module `build.gradle.kts` files - the plugins do all of it.
+`eazy-settings` also registers the Foojay toolchain resolver, so a fresh checkout auto-provisions JDK 25 with no local setup.
+
+NOTE: The plugins configure the *subprojects only*.
+The root project is deliberately left untouched: it gets no conventions, no test suites and no publishing.
+If the root project needs a plugin or a task, add it in the root `build.gradle.kts` yourself.
+
+WARNING: Declaring your own `repositories { }` in a module *fails the build*.
+Repositories are centralized to a *vetted* set (Maven Central + the `eazyportal-core` GitHub Packages repository) for supply-chain security, so modules cannot pull from ad-hoc or untrusted sources.
+A genuinely needed, already-vetted repository goes in your `settings.gradle.kts` `dependencyResolutionManagement { }` block - a deliberate, reviewed change - never in a module.
+`mavenLocal()` is intentionally not a resolution source; add it to your own `settings.gradle.kts` only to test `eazyportal-core` SNAPSHOTs locally, never in CI.
+
+== Module structure and what each module gets
+
+Module names are *lowercase kebab-case* (org convention).
+The archetype is derived from the module name (case-insensitive); keep the standard names below - anything else is treated as `default`.
+
+[cols="1,1,1,2,2",options="header"]
+|===
+|Module |Type |Published? |Depends on (in-repo) |Gets `eazyportal-core-*`
+
+|`common`      |library |yes |-                              |`eazyportal-core-common` (impl)
+|`api`         |library |yes |`common` (api)                 |`eazyportal-core-api` (api)
+|`persistence` |library |yes |`common`                       |`eazyportal-core-persistence` (impl)
+|`service`     |library |yes |`common`, `api`, `persistence` |`eazyportal-core-service` (impl)
+|`client`      |library |yes |`common`, `api` (both api)     |`eazyportal-core-client` (api)
+|`web`         |library |yes |`common`, `api`, `service`     |`eazyportal-core-web` (impl)
+|`application` |project |no  |all siblings                   |`eazyportal-core-application` (impl)
+|`default`     |project |no  |-                              |_(none - your custom module)_
+|===
+
+Dependencies without an annotation use the `implementation` configuration.
+Library modules apply `org.eazyportal.gradle.kotlin-library-convention`; `application` and `default` apply `org.eazyportal.gradle.kotlin-project-convention`.
+
+Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on `testImplementation`, and has JUnit Platform enabled.
+
+NOTE: The `eazyportal-core-*` dependencies are declared _versionless_; see <<Versions and overriding>>.
+A module sees another `eazyportal-core` layer only if its own `eazyportal-core-<type>` artifact re-exposes it via `api`.
+
+Need a module that doesn't fit the standard shape?
+Name it anything not in the list - it becomes a `default` module (Kotlin, non-publishing, no `eazyportal-core` wiring) that you configure yourself.
+
+A `default` module can still opt into any convention by applying it *by bare ID* - no `version` needed, because the conventions are already on the build classpath (they arrive transitively through `eazy-settings`).
+For example, to turn a custom module into a published Kotlin library:
+
+[source,kotlin]
+----
+// my-extra-module/build.gradle.kts
+plugins {
+    id("org.eazyportal.gradle.kotlin-library-convention")   // adds java-library (api) + publication + explicitApi
+}
+----
+
+Available conventions:
+
+[cols="2,3",options="header"]
+|===
+|Plugin ID |Purpose
+
+|`org.eazyportal.gradle.java-project-convention`
+|Java 25 toolchain, `release=25`, `-Xlint:all,-preview -Werror`, JUnit Platform. Non-publishing.
+
+|`org.eazyportal.gradle.kotlin-project-convention`
+|Java project + Kotlin/JVM (`jvmTarget=25`, `allWarningsAsErrors`, language and API version pinned to the Kotlin embedded in Gradle - see <<Java and Kotlin versions>>). Non-publishing.
+
+|`org.eazyportal.gradle.java-library-convention`
+|Java project + `java-library` + publication (sources and Javadoc jars).
+
+|`org.eazyportal.gradle.kotlin-library-convention`
+|Kotlin project + `java-library` + publication (sources jar) + `explicitApi()`.
+
+|`org.eazyportal.gradle.publication-convention`
+|Repository routing, POM metadata and release signing (see <<Publishing your modules>>).
+
+|`org.eazyportal.gradle.gradle-plugin-convention`
+|For binary Gradle plugins: Kotlin project + `java-gradle-plugin` (plugin marker publications) + publication, with sources and Javadoc jars.
+Registers the functional and integration test suites as plugin-under-test source sets, so TestKit tests can apply the plugin by ID.
+|===
+
+=== Seeing what was applied
+
+A module's `build.gradle.kts` is usually empty, so everything is implicit.
+To see exactly what the plugins did to a module:
+
+[source,bash]
+----
+./gradlew :service:eazyDiagnostics
+----
+
+It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override).
+
+== Versions and overriding
+
+`eazyportal-core-*` versions are aligned by the *`eazyportal-core` BOM* (`org.eazyportal.core:eazyportal-core-bom`), and `eazyPortalCoreVersion` sets that BOM version.
+It uses a built-in default unless you override it in `settings.gradle.kts`:
+
+[source,kotlin]
+----
+eazySettings {
+    eazyPortalCoreVersion = "«x.y.z»"
+}
+----
+
+The same BOM also supplies *third-party* dependency versions (Spring `spring-boot-dependencies` style), so you declare common libraries *without a version*.
+Need a library the BOM doesn't cover?
+Add it in that module *with* an explicit version.
+
+The effective version is resolved in this order: the `eazySettings { eazyPortalCoreVersion }` override if set, otherwise the plugin's default from the table below.
+
+=== Default versions
+
+[cols="2,1,3",options="header"]
+|===
+|Key |Default |Override
+
+|`DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION`
+|`1.2.3`
+|`eazySettings { eazyPortalCoreVersion = "..." }`
+|===
+
+_This table grows as more defaults are added to `DefaultVersions`._
+
+=== Compatibility matrix
+
+Each plugin release is built and tested against one `eazyportal-core` BOM version, which is also that release's default.
+Use a different BOM version only if you know it is compatible with your plugin version.
+
+[cols="1,1",options="header"]
+|===
+|Plugin version |Compatible `eazyportal-core` BOM
+
+|`«plugins-version»`
+|`1.2.3`
+|===
+
+_A new row is added with every plugin release (see <<Contributing>>)._
+
+== Java and Kotlin versions
+
+* *Java:* the Java 25 toolchain (`release=25`) is fixed for every module.
+* *Kotlin:* you do not choose a Kotlin version.
+The Kotlin compiler is the one embedded in the Gradle version you run, and the Kotlin *language* and *API* versions are pinned to that same version.
+A newer Kotlin therefore arrives only with a newer Gradle and a new release of these plugins.
+
+== Strict compilation and the emergency escape hatch
+
+All modules compile with warnings-as-errors (`-Werror` for Java, `allWarningsAsErrors` for Kotlin) plus `-Xlint:all` (excluding `preview`).
+This is deliberate org policy.
+Library modules additionally use Kotlin `explicitApi()`: public declarations must declare visibility and return types.
+
+When you're blocked by a warning you can't fix immediately (e.g. a new deprecation after a toolchain bump), demote errors back to warnings for a single run:
+
+[source,bash]
+----
+./gradlew build -PsuppressAllErrors
+----
+
+CAUTION: This is an *emergency valve, not a default* - CI stays strict.
+Fix the underlying warning and drop the flag.
+
+== Tests in your modules
+
+Every module (library or project, Java or Kotlin) gets three JUnit Jupiter test suites and a test-fixtures source set.
+You only create the source directories; the suites, JUnit Platform and task wiring are already in place.
+
+[cols="1,2,2",options="header"]
+|===
+|Tier |Source directory |Run with
+
+|Unit
+|`src/test/kotlin` (or `java`)
+|`./gradlew :<module>:test`
+
+|Functional
+|`src/functionalTest/kotlin` (or `java`)
+|`./gradlew :<module>:functionalTest`
+
+|Integration
+|`src/integrationTest/kotlin` (or `java`)
+|`./gradlew :<module>:integrationTest`
+
+|Test fixtures
+|`src/testFixtures/kotlin` (or `java`)
+|compiled with the module; no task of its own
+|===
+
+* *Each tier runs independently.* Running one tier never pulls in the others.
+* *`./gradlew check` runs all three, in order:* unit, then functional, then integration.
+Without `--continue` (the default), the first failing tier stops the build, so the later tiers are skipped.
+Inside a tier every test still runs, and failures are reported together at the end of that tier.
+* *CI* may run the tiers as separate steps (`test`, `functionalTest`, `integrationTest`, then a final `check`) for per-tier reporting.
+* *Test fixtures* (`java-test-fixtures`) hold helpers shared between tiers or modules.
+The functional and integration tiers automatically depend on the module's own main output and its test fixtures.
+Other modules can consume them with `testImplementation(testFixtures(project(":<module>")))`.
+
+NOTE: `eazyportal-core-test` (JUnit and the common test libraries) is added to `testImplementation`, i.e. the *unit* tier, in every module.
+The plugins add neither `eazyportal-core-test` nor the `eazyportal-core` BOM to the other tiers, so declare what the functional and integration tiers need in the module's `build.gradle.kts` (with explicit versions, since the BOM is not applied to those tiers):
+
+[source,kotlin]
+----
+// service/build.gradle.kts
+dependencies {
+    functionalTestImplementation("org.assertj:assertj-core:«x.y.z»")
+    integrationTestImplementation("org.assertj:assertj-core:«x.y.z»")
+}
+----
+
+Warnings are errors in tests too (see <<Strict compilation and the emergency escape hatch>>), and `-PsuppressAllErrors` demotes them for every tier.
+
+== Publishing your modules
+
+Library modules publish automatically with the org policy.
+Your repository must set the Maven `group` and the `version` of its modules, for example in the root `gradle.properties`:
+
+[source,properties]
+----
+group=org.eazyportal.orders
+version=1.4.0-SNAPSHOT
+----
+
+The published coordinates are `<group>:<module name>:<version>`.
+The release or SNAPSHOT routing below is decided by that `version`.
+
+[cols="2,3",options="header"]
+|===
+|Command |Result
+
+|`./gradlew publishToMavenLocal`
+|Local `~/.m2` (dev/SNAPSHOT).
+
+|`./gradlew publish`
+|*SNAPSHOT* version -> `mavenLocal`; *release* version -> GitHub Packages.
+
+|`./gradlew publish -Pversion=X.Y.Z`
+|Release (SemVer) -> GitHub Packages.
+|===
+
+* Non-release versions must end in `-SNAPSHOT`.
+* Each library module publishes:
+** the main jar, a sources jar and a POM (with license and SCM metadata) plus the Gradle module metadata (`.module`);
+** a Javadoc jar, for Java libraries only (Kotlin libraries have none);
+** a *test-fixtures jar* (`-test-fixtures`), containing whatever you put in `src/testFixtures`, so other repositories can reuse your test helpers.
+* Release artifacts are GPG-signed, which requires `SIGNING_KEY` / `SIGNING_PASSWORD` (see <<Environment variables>>); a release without keys fails. SNAPSHOT builds are not signed.
+* Publishing to GitHub Packages reuses the same `GitHubPackages` credentials, with `write:packages` (CI/release only).
+
+== Troubleshooting
+
+[cols="2,3",options="header"]
+|===
+|Symptom |Cause / fix
+
+|`UnsupportedClassVersionError` / `class file version 69.0` at startup
+|The daemon is on an older JDK. These plugins require a *JDK 25+ daemon* - run Gradle on JDK 25 (`java-version: '25'` in CI, set `JAVA_HOME`, or configure a daemon JVM).
+
+|`The following Gradle properties are missing for 'GitHubPackages' credentials: - GitHubPackagesUsername - GitHubPackagesPassword`
+|The `GitHubPackages` credentials are not set. Set `GitHubPackagesUsername` / `GitHubPackagesPassword` in `~/.gradle/gradle.properties`, or the `ORG_GRADLE_PROJECT_*` environment variables (see <<Credentials (one-time, per machine)>>).
+
+|`401 Unauthorized` resolving plugins / `eazyportal-core`
+|The `GitHubPackages` credentials are set but invalid or expired; the PAT needs `read:packages` on the plugins and `eazyportal-core` repositories.
+
+|`No configured signatory` / `Cannot perform signing task ':signMavenPublication'`
+|You published a *release* version without `SIGNING_KEY` / `SIGNING_PASSWORD`. Release artifacts must be signed; for a local test publish use a `-SNAPSHOT` version, which is not signed (see <<Publishing your modules>>).
+
+|`Build was configured to prefer settings repositories...`
+|You declared repositories in a module - remove them. Repositories are centralized to a *vetted* set for supply-chain security; a genuinely needed vetted repository goes in your `settings.gradle.kts` `dependencyResolutionManagement { }`, never in a module.
+
+|A module didn't get the expected conventions
+|Its name isn't a standard archetype, so it is treated as `default`. Rename it or configure it yourself (see <<Module structure and what each module gets>>).
+
+|A build fails on a compiler *warning*
+|Warnings are errors by org policy. Fix it, or run once with `-PsuppressAllErrors` (emergency only).
+
+|`org.eazyportal.gradle.eazy-project plugin must not be applied to the root project`
+|`eazy-project` is only for subprojects. Don't apply it to the root project; `eazy-settings` already applies it to every subproject for you.
+
+|Version override in `eazySettings { }` seems ignored
+|Run `./gradlew :<module>:eazyDiagnostics` and check the `source` of `eazyPortalCoreVersion`. A value equal to the default is reported as "default".
+|===
+
+== Contributing
+
+This section is for people working on the plugins themselves, not for receiver repositories.
+
+=== Repository layout
+
+[cols="1,3",options="header"]
+|===
+|Path |Content
+
+|`conventions/`
+|An *included build* with the convention plugins (precompiled script plugins in `src/main/kotlin`, plain Kotlin helpers next to them).
+It is published like any other module, and `eazy-project` depends on it.
+It is not independently buildable: it reads `../gradle/libs.versions.toml` and `../gradle.properties`.
+
+|`eazy-project/`
+|The `org.eazyportal.gradle.eazy-project` plugin: archetype resolution, per-archetype configurers, `eazyportal-core` wiring, `eazyDiagnostics`.
+
+|`eazy-settings/`
+|The `org.eazyportal.gradle.eazy-settings` plugin: settings DSL, Foojay resolver, centralized repositories, auto-applies `eazy-project`.
+
+|`gradle/libs.versions.toml`
+|The single version catalog, shared with the `conventions` build.
+
+|`gradle.properties`
+|`group` and `version` of all artifacts of this repository (the `conventions` build reads them too), plus build and configuration caching.
+|===
+
+=== Building and testing
+
+Run Gradle on JDK 25 and use the wrapper.
+
+[source,bash]
+----
+./gradlew check                                 # every test tier of every build (conventions, eazy-project, eazy-settings)
+./gradlew :eazy-project:test                   # one module, one tier
+./gradlew :eazy-project:functionalTest
+./gradlew :eazy-settings:integrationTest
+./gradlew :conventions:integrationTest --tests '*PublicationConventionIntegrationTest*'
+----
+
+* The tiers are the same as for receivers (see <<Tests in your modules>>): *unit* tests are plain JUnit, *functional* and *integration* tests drive real Gradle builds through TestKit.
+* Functional and integration tests are *hermetic*: each test builds in a temporary workspace with a stubbed `eazyportal-core` repository, an isolated `GRADLE_USER_HOME` and `-Dmaven.repo.local`, so they need no GitHub credentials and never touch `~/.m2`.
+The shared helpers for this live in the `testFixtures` source sets of `conventions` and `eazy-project`.
+* The one exception is the `eazy-settings` integration tests, which use the real Foojay resolver and therefore need network access to `api.foojay.io`.
+* Write file-system code in tests with `java.nio.file.Path` or `File` APIs, without hard-coded `/` or `\`, so the tests run on every operating system.
+
+=== Publishing
+
+`./gradlew publish` publishes every module of this repository, including the `conventions` build.
+A `-SNAPSHOT` version goes to `mavenLocal`, which is how you try a change in a receiver repository locally.
+Release versions (`-Pversion=X.Y.Z`) go to GitHub Packages, are signed, and are published by the CI/release job only, which holds the write token and the signing key (see <<Environment variables>>).
+
+=== Keeping this README in sync
+
+When you change behavior, update the matching README section in the same change.
+In particular, with every plugin release:
+
+* update `DefaultVersions` and the *Default versions* table together;
+* add a row to the *Compatibility matrix* with the new plugin version and the `eazyportal-core` BOM it was tested against.
