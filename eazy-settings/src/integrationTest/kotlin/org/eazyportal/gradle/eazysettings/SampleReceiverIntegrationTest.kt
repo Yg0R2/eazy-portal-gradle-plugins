@@ -4,6 +4,7 @@ import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VE
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
@@ -120,6 +121,43 @@ class SampleReceiverIntegrationTest {
         }
     }
 
+    @Test
+    fun `eazyportal-core-test resolves versionless from the BOM on every test tier and on the test fixtures`(
+        @TempDir workingDir: File,
+    ) {
+        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
+        }
+
+        val projectDir = buildExampleProject(workingDir, repositoryDir)
+
+        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
+
+        listOf(
+            "testCompileClasspath",
+            "functionalTestCompileClasspath",
+            "integrationTestCompileClasspath",
+            "testFixturesCompileClasspath",
+        ).forEach { classpath ->
+            val output = gradleRunner(projectDir) {
+                gradleUserHome = gradleHomeDir
+
+                stubGitHubCredentials()
+            }.runGradleTask(
+                ":common:dependencyInsight",
+                "--configuration",
+                classpath,
+                "--dependency",
+                createCoreArtifactId("test"),
+            )
+
+            assertThat(output)
+                .describedAs("eazyportal-core-test on $classpath")
+                .contains("$CORE_GROUP_ID:${createCoreArtifactId("test")}:$EXAMPLE_CORE_DEFAULT_VERSION")
+                .doesNotContain("FAILED")
+        }
+    }
+
     private fun buildExampleProject(
         workingDir: File,
         repositoryDir: File,
@@ -177,7 +215,9 @@ class SampleReceiverIntegrationTest {
                     add("${createCoreArtifactId(coreProjectType.toString())} ($coreConfiguration)")
                 }
 
-                add("${createCoreArtifactId("test")} (testImplementation)")
+                TEST_CONFIGURATIONS.forEach {
+                    add("${createCoreArtifactId("test")} ($it)")
+                }
             }.joinToString(", ", "[", "]")
 
             return arrayOf(

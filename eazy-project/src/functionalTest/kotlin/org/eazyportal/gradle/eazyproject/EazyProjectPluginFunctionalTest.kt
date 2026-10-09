@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
@@ -64,13 +65,16 @@ class EazyProjectPluginFunctionalTest {
             .takeIf { expectedArchetype == it }
             ?.let { "${createCoreArtifactId(subprojectName)} (implementation), " }
             .orEmpty()
+        val expectedTestDependencies = TEST_CONFIGURATIONS.joinToString(", ") {
+            "$CORE_TEST_PROJECT_ARTIFACT_ID ($it)"
+        }
         assertThat(output).containsSubsequence(
             "> Task :$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "eazy-project diagnostics — :$subprojectName",
             "  archetype              : $expectedArchetype",
             "  convention             : [$expectedConvention]",
             "  siblings               : $expectedSiblings",
-            "  eazyportal-core        : [${expectedExampleCoreDependency}$CORE_TEST_PROJECT_ARTIFACT_ID (testImplementation)]   (versions via the eazyportal-core BOM)",
+            "  eazyportal-core        : [${expectedExampleCoreDependency}$expectedTestDependencies]   (versions via the eazyportal-core BOM)",
             "  eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
         )
     }

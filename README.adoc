@@ -146,7 +146,7 @@ The archetype is derived from the module name (case-insensitive); keep the stand
 Dependencies without an annotation use the `implementation` configuration.
 Library modules apply `org.eazyportal.gradle.kotlin-library-convention`; `application` and `default` apply `org.eazyportal.gradle.kotlin-project-convention`.
 
-Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on `testImplementation`, and has JUnit Platform enabled.
+Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on all its test configurations (unit, functional and integration tests, and test fixtures; see <<Tests in your modules>>), and has JUnit Platform enabled.
 
 NOTE: The `eazyportal-core-*` dependencies are declared _versionless_; see <<Versions and overriding>>.
 A module sees another `eazyportal-core` layer only if its own `eazyportal-core-<type>` artifact re-exposes it via `api`.
@@ -307,15 +307,17 @@ Inside a tier every test still runs, and failures are reported together at the e
 The functional and integration tiers automatically depend on the module's own main output and its test fixtures.
 Other modules can consume them with `testImplementation(testFixtures(project(":<module>")))`.
 
-NOTE: `eazyportal-core-test` (JUnit and the common test libraries) is added to `testImplementation`, i.e. the *unit* tier, in every module.
-The plugins add neither `eazyportal-core-test` nor the `eazyportal-core` BOM to the other tiers, so declare what the functional and integration tiers need in the module's `build.gradle.kts` (with explicit versions, since the BOM is not applied to those tiers):
+`eazyportal-core-test` (JUnit and the common test libraries) and the `eazyportal-core` BOM are applied automatically to *every* test configuration:
+`testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation`.
+So all tiers and the test fixtures share the same test libraries, and any library managed by the BOM can be declared *without a version* in any of them.
+A library the BOM does not manage needs an explicit version, as everywhere else.
 
 [source,kotlin]
 ----
 // service/build.gradle.kts
+// The plugins are applied for you, so Gradle generates no type-safe accessors for them - use the string notation.
 dependencies {
-    functionalTestImplementation("org.assertj:assertj-core:«x.y.z»")
-    integrationTestImplementation("org.assertj:assertj-core:«x.y.z»")
+    "functionalTestImplementation"("org.assertj:assertj-core")   // version from the eazyportal-core BOM
 }
 ----
 

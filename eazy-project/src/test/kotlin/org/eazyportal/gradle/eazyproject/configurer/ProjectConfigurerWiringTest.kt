@@ -6,7 +6,7 @@ import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJEC
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
-import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.TEST_IMPLEMENTATION
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
@@ -26,8 +26,8 @@ import org.junit.jupiter.api.TestFactory
  * The acceptance test for the Configurer hierarchy (design §9.3 / review D3): for **every** archetype it applies the
  * real Configurer to a `ProjectBuilder` module and asserts the §5.3 wiring table **exactly** — the applied
  * convention, each sibling dependency's configuration (`api` vs `implementation`), each versionless
- * `eazyportal-core-<type>` dependency's configuration, `eazyportal-core-test` on `testImplementation`, and the eazyportal-core
- * BOM platform on `implementation` + `testImplementation` (and on `api` for the archetypes that expose eazyportal-core
+ * `eazyportal-core-<type>` dependency's configuration, `eazyportal-core-test` on every test configuration (unit, functional,
+ * integration, test fixtures), and the eazyportal-core BOM platform on `implementation` + every test configuration (and on `api` for the archetypes that expose eazyportal-core
  * transitively). Because the assertions pin the *exact* configuration each dependency lands on, a leaked level (e.g.
  * an `implementation` dependency declared on `api`) fails the test.
  *
@@ -166,15 +166,24 @@ class ProjectConfigurerWiringTest {
     }
 
     private fun assertEazyPortalCoreTest(project: Project) {
-        val testDependency = project.eazyPortalCoreExternalDependencies(TEST_IMPLEMENTATION)
-            .singleOrNull { it.name == CORE_TEST_PROJECT_ARTIFACT_ID }
+        TEST_CONFIGURATIONS.forEach { configuration ->
+            val testDependency = project.eazyPortalCoreExternalDependencies(configuration)
+                .singleOrNull { it.name == CORE_TEST_PROJECT_ARTIFACT_ID }
 
-        assertThat(testDependency)
-            .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must be on testImplementation")
-            .isNotNull()
-        assertThat(testDependency!!.version)
-            .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must be versionless (BOM-pinned)")
-            .isNull()
+            assertThat(testDependency)
+                .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must be on $configuration")
+                .isNotNull()
+            assertThat(testDependency!!.version)
+                .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID on $configuration must be versionless (BOM-pinned)")
+                .isNull()
+        }
+
+        // eazyportal-core-test is a test-only dependency: it must never leak onto a production configuration.
+        listOf(API, IMPLEMENTATION).forEach { configuration ->
+            assertThat(project.eazyPortalCoreExternalDependencies(configuration).map { it.name })
+                .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must not be on $configuration")
+                .doesNotContain(CORE_TEST_PROJECT_ARTIFACT_ID)
+        }
     }
 
     private fun assertBom(project: Project, expectation: Expectation) {
@@ -182,9 +191,11 @@ class ProjectConfigurerWiringTest {
             .describedAs("%s BOM on implementation", expectation.projectType)
             .containsExactly(EXAMPLE_CORE_VERSION)
 
-        assertThat(project.bomVersions(TEST_IMPLEMENTATION))
-            .describedAs("%s BOM on testImplementation", expectation.projectType)
-            .containsExactly(EXAMPLE_CORE_VERSION)
+        TEST_CONFIGURATIONS.forEach { configuration ->
+            assertThat(project.bomVersions(configuration))
+                .describedAs("%s BOM on %s", expectation.projectType, configuration)
+                .containsExactly(EXAMPLE_CORE_VERSION)
+        }
 
 //        assertThat(project.bomVersions(API))
 //            .describedAs("%s BOM on api (only when it exposes eazyportal-core transitively)", expectation.type)
@@ -201,8 +212,8 @@ class ProjectConfigurerWiringTest {
             .containsExactlyInAnyOrderElementsOf(
                 (expectation.apiSiblings + expectation.implementationSiblings).map { ":$it" },
             )
-        assertThat(summary.eazyPortalCore.map { it.notation })
-            .contains(CORE_TEST_PROJECT_ARTIFACT_ID)
+        assertThat(summary.eazyPortalCore.filter { it.notation == CORE_TEST_PROJECT_ARTIFACT_ID }.map { it.configuration })
+            .containsExactlyElementsOf(TEST_CONFIGURATIONS)
     }
 
     private companion object {

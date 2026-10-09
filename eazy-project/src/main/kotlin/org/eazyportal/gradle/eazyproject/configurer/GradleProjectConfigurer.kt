@@ -4,7 +4,7 @@ import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.eazyportal.gradle.eazyproject.WiredDependency
 import org.eazyportal.gradle.eazyproject.WiringSummary
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
-import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.TEST_IMPLEMENTATION
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.recordWiringSummary
@@ -18,7 +18,7 @@ import org.gradle.api.provider.Provider
  * 1. apply the matching convention ([configurePlugins]),
  * 2. import the eazyportal-core BOM so every eazyportal-core-* dependency resolves to one aligned version,
  * 3. wire sibling + eazyportal-core dependencies ([configureDependencies]),
- * 4. add `eazyportal-core-test` on `testImplementation` (every module gets it, §5.3).
+ * 4. add `eazyportal-core-test` on every test configuration — `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation` (every module gets it, §5.3).
  *
  * Subclasses fill only the archetype-specific blanks and wire dependencies through [applySiblingProject] / [applyEazyPortalCore],
  * which both add the dependency **and** record it into the [org.eazyportal.gradle.eazyproject.WiringSummary] —
@@ -40,7 +40,9 @@ internal abstract class GradleProjectConfigurer(
 
         importEazyPortalCoreBom()
         configureDependencies()
-        applyEazyPortalCore(TEST_IMPLEMENTATION, "test")
+        TEST_CONFIGURATIONS.forEach {
+            applyEazyPortalCore(it, "test")
+        }
 
         project.recordWiringSummary(
             WiringSummary(appliedPlugins.toList(), siblingProjectDependencies.toList(), eazyPortalCoreDependencies.toList()),
@@ -100,7 +102,11 @@ internal abstract class GradleProjectConfigurer(
             }
 
             addProvider(IMPLEMENTATION.toString(), eazyPortalCoreBomNotation)
-            addProvider(TEST_IMPLEMENTATION.toString(), eazyPortalCoreBomNotation)
+
+            TEST_CONFIGURATIONS.forEach {
+                addProvider(it.toString(), eazyPortalCoreBomNotation)
+            }
+
             // TODO: validate if this is needed
 //            if (exposesEazyPortalCoreViaApi) {
 //                // api/client expose eazyportal-core transitively — propagate the BOM constraints to their consumers too.
