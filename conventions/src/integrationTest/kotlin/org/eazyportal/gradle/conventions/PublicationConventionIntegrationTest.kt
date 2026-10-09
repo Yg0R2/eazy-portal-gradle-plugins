@@ -110,6 +110,46 @@ class PublicationConventionIntegrationTest {
     }
 
     @Test
+    fun `a gradle library with release version, publish without a signing key fails and publishes nothing`(
+        @TempDir workingDir: File,
+    ) {
+        val projectDir = buildExampleProject(workingDir)
+        val repositoryDir = File(workingDir, "repo")
+
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask(
+                "publishToMavenLocal",
+                "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION",
+                "-Dmaven.repo.local=${repositoryDir.absolutePath}",
+            )
+
+        assertThat(output)
+            .contains("Execution failed for task ':signMavenPublication'")
+            .contains("No configured signatory")
+        assertThat(File(repositoryDir, "org/eazyportal/example/$EXAMPLE_ROOT_PROJECT_NAME/$EXAMPLE_PROJECT_RELEASE_VERSION"))
+            .doesNotExist()
+    }
+
+    @Test
+    fun `a gradle plugin with release version, publish without a signing key fails and publishes nothing`(
+        @TempDir workingDir: File,
+    ) {
+        val projectDir = buildExamplePluginProject(workingDir)
+        val repositoryDir = File(workingDir, "repo")
+
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask(
+                "publishToMavenLocal",
+                "-Pversion=$EXAMPLE_PROJECT_RELEASE_VERSION",
+                "-Dmaven.repo.local=${repositoryDir.absolutePath}",
+            )
+
+        assertThat(output).contains("No configured signatory")
+        assertThat(File(repositoryDir, "org/eazyportal/example/plugin"))
+            .doesNotExist()
+    }
+
+    @Test
     fun `a gradle library with release version, publish with a test signing key signs every artifact and POM for the maven publications`(
         @TempDir workingDir: File,
     ) {
