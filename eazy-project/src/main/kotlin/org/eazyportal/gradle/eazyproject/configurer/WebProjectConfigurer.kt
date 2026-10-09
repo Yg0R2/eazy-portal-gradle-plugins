@@ -19,9 +19,9 @@ internal class WebProjectConfigurer(
     override fun configureDependencies() {
         applyEazyPortalCore(DependencyConfiguration.IMPLEMENTATION, ProjectType.WEB)
 
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
         applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.API)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.SERVICE)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.SERVICE)
     }
 
 }

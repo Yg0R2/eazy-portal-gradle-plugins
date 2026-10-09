@@ -79,6 +79,16 @@ internal abstract class GradleProjectConfigurer(
         appliedPlugins += pluginId
     }
 
+    /** If the sibling project exists, adds it as dependency (`:$projectType`) on [dependencyConfiguration] and records it. */
+    protected fun applyOptionalSiblingProject(
+        dependencyConfiguration: DependencyConfiguration,
+        projectType: ProjectType,
+    ) {
+        if (project.findProject(":$projectType") != null) {
+            applySiblingProject(dependencyConfiguration, projectType)
+        }
+    }
+
     /** Adds a sibling project dependency (`:$projectType`) on [dependencyConfiguration] and records it. */
     protected fun applySiblingProject(
         dependencyConfiguration: DependencyConfiguration,

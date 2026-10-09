@@ -19,7 +19,7 @@ internal class ClientProjectConfigurer(
     override fun configureDependencies() {
         applyEazyPortalCore(DependencyConfiguration.API, ProjectType.CLIENT)
 
-        applySiblingProject(DependencyConfiguration.API, ProjectType.COMMON)
+        applyOptionalSiblingProject(DependencyConfiguration.API, ProjectType.COMMON)
         applySiblingProject(DependencyConfiguration.API, ProjectType.API)
     }
 

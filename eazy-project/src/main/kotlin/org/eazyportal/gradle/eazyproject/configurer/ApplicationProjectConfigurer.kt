@@ -22,12 +22,11 @@ internal class ApplicationProjectConfigurer(
     override fun configureDependencies() {
         applyEazyPortalCore(DependencyConfiguration.IMPLEMENTATION, ProjectType.APPLICATION)
 
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.API)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.PERSISTENCE)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.SERVICE)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.CLIENT)
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.WEB)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.API)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.PERSISTENCE)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.SERVICE)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.WEB)
     }
 
 }

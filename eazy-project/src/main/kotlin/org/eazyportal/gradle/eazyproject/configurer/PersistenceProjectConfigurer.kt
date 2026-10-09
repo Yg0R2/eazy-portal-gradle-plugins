@@ -19,7 +19,7 @@ internal class PersistenceProjectConfigurer(
     override fun configureDependencies() {
         applyEazyPortalCore(DependencyConfiguration.IMPLEMENTATION, ProjectType.PERSISTENCE)
 
-        applySiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
+        applyOptionalSiblingProject(DependencyConfiguration.IMPLEMENTATION, ProjectType.COMMON)
     }
 
 }

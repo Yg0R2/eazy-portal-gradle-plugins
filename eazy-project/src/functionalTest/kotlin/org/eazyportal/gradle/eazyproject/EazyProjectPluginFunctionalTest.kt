@@ -42,12 +42,12 @@ class EazyProjectPluginFunctionalTest {
         expectedConvention: String,
         @TempDir workingDir: File,
     ) {
-        // `application` depends on every other layer sibling (ApplicationProjectConfigurer),
+        // `application` depends on every other layer sibling that exists, except `client` (ApplicationProjectConfigurer),
         // so those siblings must exist as projects — the dependency is a `project.project(":x")` reference,
         // not a real build of them.
         val siblings =
             if (subprojectName == "application") {
-                listOf("common", "api", "persistence", "service", "client", "web")
+                listOf("common", "api", "persistence", "service", "web")
             } else {
                 emptyList()
             }

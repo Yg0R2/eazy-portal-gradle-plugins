@@ -108,7 +108,7 @@ eazySettings {
 }
 
 rootProject.name = "«receiver-repo»"
-include("common", "api", "persistence", "service", "client", "web", "application")
+include("common", "api", "persistence", "service", "client", "web", "application")   // only the modules you need - see "Required and optional sibling modules"
 ----
 
 That's it.
@@ -134,16 +134,28 @@ The archetype is derived from the module name (case-insensitive); keep the stand
 |Module |Type |Published? |Depends on (in-repo) |Gets `eazyportal-core-*`
 
 |`common`      |library |yes |-                              |`eazyportal-core-common` (impl)
-|`api`         |library |yes |`common` (api)                 |`eazyportal-core-api` (api)
-|`persistence` |library |yes |`common`                       |`eazyportal-core-persistence` (impl)
-|`service`     |library |yes |`common`, `api`, `persistence` |`eazyportal-core-service` (impl)
-|`client`      |library |yes |`common`, `api` (both api)     |`eazyportal-core-client` (api)
-|`web`         |library |yes |`common`, `api`, `service`     |`eazyportal-core-web` (impl)
-|`application` |project |no  |all siblings                   |`eazyportal-core-application` (impl)
+|`api`         |library |yes |`common` (api, optional)       |`eazyportal-core-api` (api)
+|`persistence` |library |yes |`common` (optional)            |`eazyportal-core-persistence` (impl)
+|`service`     |library |yes |`common`, `api`, `persistence` (all optional) |`eazyportal-core-service` (impl)
+|`client`      |library |yes |`api` (*required*), `common` (optional); both api |`eazyportal-core-client` (api)
+|`web`         |library |yes |`api` (*required*), `common`, `service` (optional) |`eazyportal-core-web` (impl)
+|`application` |project |no  |`common`, `api`, `persistence`, `service`, `web` (all optional) |`eazyportal-core-application` (impl)
 |`default`     |project |no  |-                              |_(none - your custom module)_
 |===
 
 Dependencies without an annotation use the `implementation` configuration.
+
+=== Required and optional sibling modules
+
+You only `include` the modules your repository needs.
+A module is wired to a sibling from the table *when that sibling exists*:
+
+* *Optional* siblings (most of them) are simply skipped when absent. For example, a repository with only `service` and `api` gets `service` -> `api` and nothing else.
+* *Required* siblings must exist. `client` and `web` both need `api`; without it the build fails while configuring that module with `Project with path ':api' could not be found in project ':client'.` (or `':web'`).
+
+`application` depends on whichever of `common`, `api`, `persistence`, `service` and `web` exist.
+It does *not* depend on `client`.
+`./gradlew :<module>:eazyDiagnostics` lists the siblings that were actually wired.
 Library modules apply `org.eazyportal.gradle.kotlin-library-convention`; `application` and `default` apply `org.eazyportal.gradle.kotlin-project-convention`.
 
 Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on all its test configurations (unit, functional and integration tests, and test fixtures; see <<Tests in your modules>>), and has JUnit Platform enabled.
@@ -379,6 +391,9 @@ The release or SNAPSHOT routing below is decided by that `version`.
 
 |`Build was configured to prefer settings repositories...`
 |You declared repositories in a module - remove them. Repositories are centralized to a *vetted* set for supply-chain security; a genuinely needed vetted repository goes in your `settings.gradle.kts` `dependencyResolutionManagement { }`, never in a module.
+
+|`Project with path ':api' could not be found in project ':client'.`
+|`client` and `web` require an `api` module. Add it to `include(...)` in your `settings.gradle.kts` (see <<Required and optional sibling modules>>).
 
 |A module didn't get the expected conventions
 |Its name isn't a standard archetype, so it is treated as `default`. Rename it or configure it yourself (see <<Module structure and what each module gets>>).

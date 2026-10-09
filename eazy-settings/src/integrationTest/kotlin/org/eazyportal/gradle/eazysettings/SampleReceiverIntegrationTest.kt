@@ -158,9 +158,67 @@ class SampleReceiverIntegrationTest {
         }
     }
 
+    @Test
+    fun `a receiver with only the required siblings wires just those and skips the absent optional ones`(
+        @TempDir workingDir: File,
+    ) {
+        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
+        }
+
+        // `client` and `web` each require `api`; every other sibling (`common`, `service`, ...) is optional and absent here.
+        val projectDir = buildExampleProject(workingDir, repositoryDir, listOf("api", "client", "web"))
+
+        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
+
+        val output = gradleRunner(projectDir) {
+            gradleUserHome = gradleHomeDir
+
+            stubGitHubCredentials()
+        }.runGradleTask(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
+
+        assertThat(output)
+            .containsSubsequence(
+                "eazy-project diagnostics — :api",
+                "  siblings               : []",
+            ).containsSubsequence(
+                "eazy-project diagnostics — :client",
+                "  siblings               : [:api (api)]",
+            ).containsSubsequence(
+                "eazy-project diagnostics — :web",
+                "  siblings               : [:api (implementation)]",
+            )
+    }
+
+    @Test
+    fun `a receiver fails when a module is missing its required sibling`(
+        @TempDir workingDir: File,
+    ) {
+        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+            eazyportalArtifacts()
+        }
+
+        // `client` requires `api`, which this receiver does not have.
+        val projectDir = buildExampleProject(workingDir, repositoryDir, listOf("common", "client"))
+
+        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
+
+        val output = gradleRunner(projectDir) {
+            gradleUserHome = gradleHomeDir
+
+            stubGitHubCredentials()
+        }.runFailingGradleTask(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
+
+        assertThat(output).containsSubsequence(
+            "A problem occurred configuring project ':client'.",
+            "   > Project with path ':api' could not be found in project ':client'.",
+        )
+    }
+
     private fun buildExampleProject(
         workingDir: File,
         repositoryDir: File,
+        projectNames: List<String> = PROJECT_EXPECTATIONS.map { it.projectName },
     ): File =
         exampleProject(workingDir) {
             settings {
@@ -185,8 +243,7 @@ class SampleReceiverIntegrationTest {
                 }
             }
 
-            PROJECT_EXPECTATIONS.asSequence()
-                .map { it.projectName }
+            projectNames.asSequence()
                 .forEach { projectName ->
                     subproject(projectName)
                 }
@@ -285,7 +342,6 @@ class SampleReceiverIntegrationTest {
                     "api" to "implementation",
                     "persistence" to "implementation",
                     "service" to "implementation",
-                    "client" to "implementation",
                     "web" to "implementation",
                 ),
                 coreProjectType = ProjectType.APPLICATION,

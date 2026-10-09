@@ -80,7 +80,7 @@ class ProjectConfigurerWiringTest {
             Expectation(
                 projectType = ProjectType.APPLICATION,
                 convention = KOTLIN_PROJECT_CONVENTION,
-                implementationSiblings = listOf("common", "api", "persistence", "service", "client", "web"),
+                implementationSiblings = listOf("common", "api", "persistence", "service", "web"),
                 eazyPortalCoreImplementation = "application",
             ),
             Expectation(
