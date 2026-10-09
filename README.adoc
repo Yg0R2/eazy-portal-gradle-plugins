@@ -318,6 +318,8 @@ Inside a tier every test still runs, and failures are reported together at the e
 * *Test fixtures* (`java-test-fixtures`) hold helpers shared between tiers or modules.
 The functional and integration tiers automatically depend on the module's own main output and its test fixtures.
 Other modules can consume them with `testImplementation(testFixtures(project(":<module>")))`.
+* *Tests see the module's whole main dependency graph.* Every tier (unit, functional, integration) and the test-fixtures source set inherit the module's `implementation` configuration (and the `api` it extends), so its sibling modules and the `eazyportal-core` layers they expose are on the test classpath automatically - you never re-declare them.
+Test and fixture code can therefore use and mock any class the production code can reach; an `application` integration test, for example, boots Spring with every layer present.
 
 `eazyportal-core-test` (JUnit and the common test libraries) and the `eazyportal-core` BOM are applied automatically to *every* test configuration:
 `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation`.

@@ -53,6 +53,23 @@ testing {
     }
 }
 
+// Every test source set must see everything the MAIN source set depends on — the sibling modules and their
+// transitively-exposed api — so test and fixture code can use and mock the dependent modules (design §5.3; e.g. an
+// `application` integration test boots Spring with every layer on the classpath). The built-in `test` suite already
+// `extendsFrom implementation`; the extra suites and the test-fixtures source set don't, so wire them the same way.
+// `implementation` itself `extendsFrom api`, so this one edge carries both production levels.
+configurations.named("implementation").let { implementationConfiguration ->
+    listOf(
+        "functionalTestImplementation",
+        "integrationTestImplementation",
+        "testFixturesImplementation",
+    ).forEach { testConfigurationName ->
+        configurations.named(testConfigurationName) {
+            extendsFrom(implementationConfiguration.get())
+        }
+    }
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
