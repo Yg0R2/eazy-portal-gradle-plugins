@@ -28,6 +28,8 @@ dependencies {
     // JDK auto-provisioning (design §6.3): applied by id in EazySettingsPlugin, so it must be on the plugin classpath.
     implementation(libs.foojay.resolver)
 
+    testImplementation(testFixtures(project(":eazy-project")))
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)

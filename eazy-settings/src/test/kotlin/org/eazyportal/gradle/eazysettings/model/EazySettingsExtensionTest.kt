@@ -4,6 +4,7 @@ import org.eazyportal.gradle.eazyproject.model.Framework
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
 import org.gradle.api.internal.provider.MissingValueException
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
@@ -38,11 +39,11 @@ class EazySettingsExtensionTest {
         val project = ProjectBuilder.builder().build()
 
         val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java).apply {
-            eazyPortalCoreVersion.set("9.9.9")
+            eazyPortalCoreVersion.set(CORE_VERSION)
         }
 
         assertThat(extension.eazyPortalCoreVersion.get())
-            .isEqualTo("9.9.9")
+            .isEqualTo(CORE_VERSION)
     }
 
     @Test
