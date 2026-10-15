@@ -1,10 +1,12 @@
 package org.eazyportal.gradle.eazyproject.configurer
 
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.wiringSummary
 import org.assertj.core.api.Assertions.assertThat
@@ -99,7 +101,10 @@ class SiblingProjectPresenceTest {
         }
 
         val eazyProjectExtension = root.extensions
-            .create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
+            .create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
+                eazyPortalCoreVersion.set(CORE_DEFAULT_VERSION)
+                framework.set(Framework.SPRING_BOOT)
+            }
 
         return root.childProjects.getValue(type.toString()).also {
             ProjectConfigurerFactory.forType(eazyProjectExtension, it)

@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy
 import org.gradle.api.internal.provider.MissingValueException
@@ -36,6 +37,29 @@ class EazyProjectExtensionTest {
 
         assertThat(extension.eazyPortalCoreVersion.get())
             .isEqualTo("9.9.9")
+    }
+
+    @Test
+    fun `framework retrieval should fail since default value is not set`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
+
+        assertThatThrownBy { extension.framework.get() }
+            .isInstanceOf(MissingValueException::class.java)
+            .hasMessage("Cannot query the value of extension 'eazyProject' property 'framework' because it has no value available.")
+    }
+
+    @Test
+    fun `framework can be overridden`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
+            framework.set(Framework.SPRING_BOOT)
+        }
+
+        assertThat(extension.framework.get())
+            .isEqualTo(Framework.SPRING_BOOT)
     }
 
 }

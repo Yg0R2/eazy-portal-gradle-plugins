@@ -1,5 +1,6 @@
 package org.eazyportal.gradle.eazysettings.model
 
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test
 class EazySettingsExtensionTest {
 
     @Test
-    fun `eazyPortalCoreVersion retrieval should fail since no value is set`() {
+    fun `config value retrieval should fail since no value is set`() {
         val project = ProjectBuilder.builder().build()
 
         val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java)
@@ -26,6 +27,10 @@ class EazySettingsExtensionTest {
         assertThatThrownBy { extension.eazyPortalCoreVersion.get() }
             .isInstanceOf(MissingValueException::class.java)
             .hasMessage("Cannot query the value of extension 'eazySettings' property 'eazyPortalCoreVersion' because it has no value available.")
+
+        assertThatThrownBy { extension.framework.get() }
+            .isInstanceOf(MissingValueException::class.java)
+            .hasMessage("Cannot query the value of extension 'eazySettings' property 'framework' because it has no value available.")
     }
 
     @Test
@@ -38,6 +43,18 @@ class EazySettingsExtensionTest {
 
         assertThat(extension.eazyPortalCoreVersion.get())
             .isEqualTo("9.9.9")
+    }
+
+    @Test
+    fun `framework can be set`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java).apply {
+            framework.set(Framework.SPRING_BOOT)
+        }
+
+        assertThat(extension.framework.get())
+            .isEqualTo(Framework.SPRING_BOOT)
     }
 
 }

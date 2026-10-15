@@ -1,13 +1,15 @@
 package org.eazyportal.gradle.eazysettings
 
-import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -53,7 +55,24 @@ class EazySettingsPluginFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output).contains("eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION")
+        assertThat(output)
+            .contains("eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION")
+            .contains("framework              : ${Framework.SPRING_BOOT}")
+    }
+
+    // TODO: refactor
+    @Test
+    fun `the eazySettings framework is fed to every subproject`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir, "extras") {
+            settings {
+                generateEazySettingsString()
+            }
+        }
+
+        val output = gradleRunner(projectDir)
+            .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+
+        assertThat(output).contains("framework              : ${Framework.SPRING_BOOT}")
     }
 
     @Test
@@ -61,7 +80,7 @@ class EazySettingsPluginFunctionalTest {
         val projectDir = buildExampleProject(workingDir, "extras") {
             settings {
                 script {
-                    generateEazySettingsString("9.9.9")
+                    generateEazySettingsString()
                 }
             }
         }
@@ -69,7 +88,7 @@ class EazySettingsPluginFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output).contains("eazyPortalCoreVersion  : 9.9.9")
+        assertThat(output).contains("eazyPortalCoreVersion  : $CORE_VERSION")
     }
 
     @Test
@@ -77,7 +96,7 @@ class EazySettingsPluginFunctionalTest {
         val gradleRunner = buildExampleProject(workingDir, "extras-a", "extras-b") {
             settings {
                 script {
-                    generateEazySettingsString("9.9.9")
+                    generateEazySettingsString()
                 }
             }
         }.let(::gradleRunner)
@@ -90,7 +109,7 @@ class EazySettingsPluginFunctionalTest {
         )
         assertThat(firstRun)
             .contains("Configuration cache entry stored.")
-            .contains("eazyPortalCoreVersion  : 9.9.9")
+            .contains("eazyPortalCoreVersion  : $CORE_VERSION")
             .doesNotContain("problem was found", "problems were found")
 
         val secondRun = gradleRunner.runGradleTask(
@@ -101,7 +120,7 @@ class EazySettingsPluginFunctionalTest {
         )
         assertThat(secondRun)
             .contains("Reusing configuration cache.")
-            .contains("eazyPortalCoreVersion  : 9.9.9")
+            .contains("eazyPortalCoreVersion  : $CORE_VERSION")
             .doesNotContain("problem was found", "problems were found")
     }
 
@@ -123,7 +142,7 @@ class EazySettingsPluginFunctionalTest {
     fun `the hermetic stub resolves eazyportal-core with no credentials — the real GitHub repo is registered but never hit`(
         @TempDir workingDir: File,
     ) {
-        val exampleRepositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val exampleRepositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -158,7 +177,7 @@ class EazySettingsPluginFunctionalTest {
             stubGitHubCredentials()
         }.runGradleTask(":common:dependencies", "--configuration", "compileClasspath")
 
-        assertThat(output).contains("$CORE_GROUP_ID:${createCoreArtifactId("common")}:$EXAMPLE_CORE_DEFAULT_VERSION")
+        assertThat(output).contains("$CORE_GROUP_ID:${createCoreArtifactId("common")}:$CORE_DEFAULT_VERSION")
     }
 
     @Test
@@ -200,10 +219,14 @@ class EazySettingsPluginFunctionalTest {
             builder()
         }
 
-    private fun generateEazySettingsString(eazyPortalCoreVersionOverride: String): String =
+    private fun generateEazySettingsString(
+        eazyPortalCoreVersionOverride: String = CORE_VERSION,
+        framework: Framework = Framework.SPRING_BOOT,
+    ): String =
         """
         $EAZY_SETTINGS_EXTENSION_NAME {
             eazyPortalCoreVersion = "$eazyPortalCoreVersionOverride"
+            framework = ${Framework::class.java.name}.${framework.name}
         }
         """.trimIndent()
 

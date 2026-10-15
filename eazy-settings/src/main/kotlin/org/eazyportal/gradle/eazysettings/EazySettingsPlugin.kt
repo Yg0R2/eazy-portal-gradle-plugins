@@ -70,6 +70,7 @@ class EazySettingsPlugin : Plugin<Settings> {
 
         extensions.configure(EazyProjectExtension::class.java) {
             it.eazyPortalCoreVersion.set(eazySettingsExtension.eazyPortalCoreVersion.orNull)
+            it.framework.set(eazySettingsExtension.framework.orNull)
         }
     }
 

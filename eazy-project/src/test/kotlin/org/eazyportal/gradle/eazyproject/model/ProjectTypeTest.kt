@@ -26,6 +26,22 @@ class ProjectTypeTest {
         }
 
     @TestFactory
+    fun `only application, persistence, service and web are framework-specific`(): List<DynamicTest> =
+        ProjectType.entries.map { projectType ->
+            val expected = projectType in setOf(
+                ProjectType.APPLICATION,
+                ProjectType.PERSISTENCE,
+                ProjectType.SERVICE,
+                ProjectType.WEB,
+            )
+
+            dynamicTest("$projectType frameworkSpecific=$expected") {
+                assertThat(projectType.isFrameworkSpecific)
+                    .isEqualTo(expected)
+            }
+        }
+
+    @TestFactory
     fun `fromProjectName falls back to DEFAULT for unknown names`(): List<DynamicTest> =
         listOf(
             "payment-service",

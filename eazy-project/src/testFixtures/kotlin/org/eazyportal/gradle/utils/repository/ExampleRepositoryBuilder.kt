@@ -1,9 +1,10 @@
 package org.eazyportal.gradle.utils.repository
 
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_BOM_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import java.io.File
 
 /**
@@ -16,7 +17,7 @@ import java.io.File
  * ```
  * val repositoryDir = exampleRepository(workingDir) {
 *    artifact {
- *         artifactId = "eazyportal-core-bom"
+ *         artifactId = "eazyportal-spring-boot-core-bom"
  *         packaging = "pom"
  *         version = "1.0.0"
  *         managedArtifactIds = listOf(
@@ -53,24 +54,36 @@ class ExampleRepositoryBuilder(
 
     /** Declares EazyPortal artifacts. */
     fun eazyportalArtifacts() {
-        val coreArtifactIds = (ProjectType.entries - ProjectType.DEFAULT)
-            .asSequence()
-            .map(ProjectType::toString)
-            .plus("test")
-            .map(ExampleRepositoryFixtures::createCoreArtifactId)
-            .toList()
+        val projectTypes = ProjectType.entries - ProjectType.DEFAULT
 
-        artifact {
-            artifactId = CORE_BOM_ARTIFACT_ID
-            packaging = "pom"
-            managedArtifactIds = coreArtifactIds
-        }
+        val frameworkAgnosticArtifactIds = projectTypes
+            .filterNot { it.isFrameworkSpecific }
+            .map { createCoreArtifactId(it.toString()) }
+            .plus(createCoreArtifactId("test"))
 
-        coreArtifactIds.forEach {
+        Framework.entries.forEach { framework ->
+            val frameworkArtifactIds = projectTypes
+                .filter { it.isFrameworkSpecific }
+                .map { createCoreArtifactId(it.toString(), framework) }
+
+            artifact {
+                artifactId = createCoreArtifactId("bom", framework)
+                packaging = "pom"
+                managedArtifactIds = frameworkAgnosticArtifactIds + frameworkArtifactIds
+            }
+
+            frameworkArtifactIds.forEach {
                 artifact {
                     artifactId = it
                 }
             }
+        }
+
+        frameworkAgnosticArtifactIds.forEach {
+            artifact {
+                artifactId = it
+            }
+        }
     }
 
     /**

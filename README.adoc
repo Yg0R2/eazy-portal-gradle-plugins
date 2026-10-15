@@ -102,9 +102,11 @@ plugins {
     id("org.eazyportal.gradle.eazy-settings") version "«plugins-version»"
 }
 
-// Optional - pin the eazyportal-core version (otherwise the default from "Default versions" below applies):
+// Optional - pin the eazyportal-core version (otherwise the default from "Default versions" below applies)
+// and/or choose the framework (otherwise `SPRING_BOOT` applies; see "Framework" below):
 eazySettings {
     eazyPortalCoreVersion = "«x.y.z»"
+    framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
 }
 
 rootProject.name = "«receiver-repo»"
@@ -131,19 +133,20 @@ The archetype is derived from the module name (case-insensitive); keep the stand
 
 [cols="1,1,1,2,2",options="header"]
 |===
-|Module |Type |Published? |Depends on (in-repo) |Gets `eazyportal-core-*`
+|Module |Type |Published? |Depends on (in-repo) |Gets `eazyportal-core-*` / `eazyportal-«framework»-core-*`
 
 |`common`      |library |yes |-                              |`eazyportal-core-common` (impl)
 |`api`         |library |yes |`common` (api, optional)       |`eazyportal-core-api` (api)
-|`persistence` |library |yes |`common` (optional)            |`eazyportal-core-persistence` (impl)
-|`service`     |library |yes |`common`, `api`, `persistence` (all optional) |`eazyportal-core-service` (impl)
+|`persistence` |library |yes |`common` (optional)            |`eazyportal-«framework»-core-persistence` (impl)
+|`service`     |library |yes |`common`, `api`, `persistence` (all optional) |`eazyportal-«framework»-core-service` (impl)
 |`client`      |library |yes |`api` (*required*), `common` (optional); both api |`eazyportal-core-client` (api)
-|`web`         |library |yes |`api` (*required*), `common`, `service` (optional) |`eazyportal-core-web` (impl)
-|`application` |project |no  |`common`, `api`, `persistence`, `service`, `web` (all optional) |`eazyportal-core-application` (impl)
+|`web`         |library |yes |`api` (*required*), `common`, `service` (optional) |`eazyportal-«framework»-core-web` (impl)
+|`application` |project |no  |`common`, `api`, `persistence`, `service`, `web` (all optional) |`eazyportal-«framework»-core-application` (impl)
 |`default`     |project |no  |-                              |_(none - your custom module)_
 |===
 
 Dependencies without an annotation use the `implementation` configuration.
+`«framework»` is the `eazySettings { framework }` value, e.g. `eazyportal-spring-boot-core-service`; see <<Framework>>.
 
 === Required and optional sibling modules
 
@@ -160,8 +163,8 @@ Library modules apply `org.eazyportal.gradle.kotlin-library-convention`; `applic
 
 Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on all its test configurations (unit, functional and integration tests, and test fixtures; see <<Tests in your modules>>), and has JUnit Platform enabled.
 
-NOTE: The `eazyportal-core-*` dependencies are declared _versionless_; see <<Versions and overriding>>.
-A module sees another `eazyportal-core` layer only if its own `eazyportal-core-<type>` artifact re-exposes it via `api`.
+NOTE: The `eazyportal-core-*` and `eazyportal-«framework»-core-*` dependencies are declared _versionless_; see <<Versions and overriding>>.
+A module sees another `eazyportal-core` layer only if its own `eazyportal-core-<type>` (or `eazyportal-<framework>-core-<type>`) artifact re-exposes it via `api`.
 
 Need a module that doesn't fit the standard shape?
 Name it anything not in the list - it becomes a `default` module (Kotlin, non-publishing, no `eazyportal-core` wiring) that you configure yourself.
@@ -213,11 +216,25 @@ To see exactly what the plugins did to a module:
 ./gradlew :service:eazyDiagnostics
 ----
 
-It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override).
+It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override) and the resolved `framework`.
+
+== Framework
+
+`eazyportal-core` ships one flavour per framework.
+`eazySettings { framework }` picks it with the `Framework` enum, so a typo does not compile.
+It selects the BOM (`eazyportal-«framework»-core-bom`) and the framework-specific modules (`persistence`, `service`, `web` and `application`: `eazyportal-«framework»-core-«type»`).
+`common`, `api`, `client` and `eazyportal-core-test` are framework-agnostic.
+
+[cols="1,1",options="header"]
+|===
+|`Framework` |Artifact segment
+
+|`SPRING_BOOT` (default) |`spring-boot`
+|===
 
 == Versions and overriding
 
-`eazyportal-core-*` versions are aligned by the *`eazyportal-core` BOM* (`org.eazyportal.core:eazyportal-core-bom`), and `eazyPortalCoreVersion` sets that BOM version.
+`eazyportal-core-*` and `eazyportal-«framework»-core-*` versions are aligned by the *`eazyportal-core` BOM* (`org.eazyportal.core:eazyportal-«framework»-core-bom`, e.g. `eazyportal-spring-boot-core-bom`), and `eazyPortalCoreVersion` sets that BOM version.
 It uses a built-in default unless you override it in `settings.gradle.kts`:
 
 [source,kotlin]

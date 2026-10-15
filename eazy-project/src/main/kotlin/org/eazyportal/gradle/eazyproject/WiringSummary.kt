@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 
 /**
  * The single source of truth for what a [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer] wired into a module (design §5.7):
@@ -15,12 +16,20 @@ internal data class WiringSummary(
     val eazyPortalCore: List<WiredDependency>,
 )
 
-/** A single dependency the Configurer added, paired with the configuration it was added to. */
+/**
+ * A single dependency the Configurer added, paired with the configuration it was added to.
+ * The notation is resolved on access, since a framework-specific one is only known once `eazy-settings` has applied its DSL.
+ */
 internal data class WiredDependency(
     val configuration: DependencyConfiguration,
-    val notation: String,
+    private val notationProvider: Provider<String>,
 ) {
+
+    val notation: String
+        get() = notationProvider.get()
+
     override fun toString(): String = "$notation ($configuration)"
+
 }
 
 private const val WIRING_SUMMARY_KEY = "org.eazyportal.gradle.eazyproject.wiringSummary"

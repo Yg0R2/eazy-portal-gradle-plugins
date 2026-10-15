@@ -1,10 +1,11 @@
 package org.eazyportal.gradle.eazysettings
 
-import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
@@ -43,7 +44,7 @@ class SampleReceiverIntegrationTest {
     fun `the sample receiver resolves every archetype's wiring and publishes a release version, fully offline`(
         @TempDir workingDir: File,
     ) {
-        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -85,7 +86,7 @@ class SampleReceiverIntegrationTest {
     fun `the sample receiver resolves every archetype's wiring and publishes a SNAPSHOT version, fully offline`(
         @TempDir workingDir: File,
     ) {
-        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -125,7 +126,7 @@ class SampleReceiverIntegrationTest {
     fun `eazyportal-core-test resolves versionless from the BOM on every test tier and on the test fixtures`(
         @TempDir workingDir: File,
     ) {
-        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -153,7 +154,7 @@ class SampleReceiverIntegrationTest {
 
             assertThat(output)
                 .describedAs("eazyportal-core-test on $classpath")
-                .contains("$CORE_GROUP_ID:${createCoreArtifactId("test")}:$EXAMPLE_CORE_DEFAULT_VERSION")
+                .contains("$CORE_GROUP_ID:${createCoreArtifactId("test")}:$CORE_DEFAULT_VERSION")
                 .doesNotContain("FAILED")
         }
     }
@@ -162,7 +163,7 @@ class SampleReceiverIntegrationTest {
     fun `a receiver with only the required siblings wires just those and skips the absent optional ones`(
         @TempDir workingDir: File,
     ) {
-        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -194,7 +195,7 @@ class SampleReceiverIntegrationTest {
     fun `a receiver fails when a module is missing its required sibling`(
         @TempDir workingDir: File,
     ) {
-        val repositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 
@@ -269,7 +270,7 @@ class SampleReceiverIntegrationTest {
 
             val coreText = buildList {
                 if (isPublishing) {
-                    add("${createCoreArtifactId(coreProjectType.toString())} ($coreConfiguration)")
+                    add("${createCoreArtifactId(coreProjectType, Framework.SPRING_BOOT)} ($coreConfiguration)")
                 }
 
                 TEST_CONFIGURATIONS.forEach {
@@ -284,7 +285,8 @@ class SampleReceiverIntegrationTest {
                 "  convention             : [$convention]",
                 "  siblings               : $siblingsText",
                 "  eazyportal-core        : $coreText   (versions via the eazyportal-core BOM)",
-                "  eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
+                "  eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
+                "  framework              : ${Framework.SPRING_BOOT}",
             )
         }
 

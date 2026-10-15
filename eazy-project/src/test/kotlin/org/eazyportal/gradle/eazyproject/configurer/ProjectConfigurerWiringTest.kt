@@ -1,7 +1,7 @@
 package org.eazyportal.gradle.eazyproject.configurer
 
 import org.assertj.core.api.Assertions.assertThat
-import org.eazyportal.gradle.eazyproject.DefaultVersions
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
@@ -10,9 +10,11 @@ import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.wiringSummary
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_BOM_ARTIFACT_ID
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_PROJECT_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.gradle.api.Project
@@ -26,7 +28,7 @@ import org.junit.jupiter.api.TestFactory
  * The acceptance test for the Configurer hierarchy (design §9.3 / review D3): for **every** archetype it applies the
  * real Configurer to a `ProjectBuilder` module and asserts the §5.3 wiring table **exactly** — the applied
  * convention, each sibling dependency's configuration (`api` vs `implementation`), each versionless
- * `eazyportal-core-<type>` dependency's configuration, `eazyportal-core-test` on every test configuration (unit, functional,
+ * `eazyportal-core-<type>` (`eazyportal-<framework>-core-<type>` for the framework-specific archetypes) dependency's configuration, `eazyportal-core-test` on every test configuration (unit, functional,
  * integration, test fixtures), and the eazyportal-core BOM platform on `implementation` + every test configuration (and on `api` for the archetypes that expose eazyportal-core
  * transitively). Because the assertions pin the *exact* configuration each dependency lands on, a leaked level (e.g.
  * an `implementation` dependency declared on `api`) fails the test.
@@ -43,45 +45,146 @@ class ProjectConfigurerWiringTest {
             Expectation(
                 projectType = ProjectType.COMMON,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                eazyPortalCoreImplementation = "common",
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
             ),
             Expectation(
                 projectType = ProjectType.API,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                apiSiblings = listOf("common"),
-                eazyPortalCoreApi = "api",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = API,
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "api",
+                        configuration = API,
+                    )
+                ),
                 bomOnApi = true,
             ),
             Expectation(
                 projectType = ProjectType.PERSISTENCE,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                implementationSiblings = listOf("common"),
-                eazyPortalCoreImplementation = "persistence",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "persistence",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
             ),
             Expectation(
                 projectType = ProjectType.SERVICE,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                implementationSiblings = listOf("common", "api", "persistence"),
-                eazyPortalCoreImplementation = "service",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "api",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "persistence",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "service",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
             ),
             Expectation(
                 projectType = ProjectType.CLIENT,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                apiSiblings = listOf("common", "api"),
-                eazyPortalCoreApi = "client",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = API,
+                    ),
+                    Expectation.Dependency(
+                        projectName = "api",
+                        configuration = API,
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "client",
+                        configuration = API,
+                    )
+                ),
                 bomOnApi = true,
             ),
             Expectation(
                 projectType = ProjectType.WEB,
                 convention = KOTLIN_LIBRARY_CONVENTION,
-                implementationSiblings = listOf("common", "api", "service"),
-                eazyPortalCoreImplementation = "web",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "api",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "service",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "web",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
             ),
             Expectation(
                 projectType = ProjectType.APPLICATION,
                 convention = KOTLIN_PROJECT_CONVENTION,
-                implementationSiblings = listOf("common", "api", "persistence", "service", "web"),
-                eazyPortalCoreImplementation = "application",
+                siblings = listOf(
+                    Expectation.Dependency(
+                        projectName = "common",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "api",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "persistence",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "service",
+                        configuration = IMPLEMENTATION
+                    ),
+                    Expectation.Dependency(
+                        projectName = "web",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
+                eazyPortalCores = listOf(
+                    Expectation.Dependency(
+                        projectName = "application",
+                        configuration = IMPLEMENTATION
+                    )
+                ),
             ),
             Expectation(
                 projectType = ProjectType.DEFAULT,
@@ -97,7 +200,8 @@ class ProjectConfigurerWiringTest {
                 val project = configureModule(expectation.projectName)
 
                 assertConventionApplied(project, expectation)
-                assertSiblings(project, expectation)
+                assertProductionSiblings(project, expectation)
+                assertTestConfigurationDependencies(project, expectation)
                 assertEazyPortalCoreMainDependency(project, expectation)
                 assertEazyPortalCoreTest(project)
                 assertBom(project, expectation)
@@ -120,7 +224,10 @@ class ProjectConfigurerWiringTest {
 
         val eazyProjectExtension = root.extensions
             .create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
-            .apply { eazyPortalCoreVersion.set(EXAMPLE_CORE_VERSION) }
+            .apply {
+                eazyPortalCoreVersion.set(CORE_DEFAULT_VERSION)
+                framework.set(Framework.SPRING_BOOT)
+            }
 
         return root.childProjects.getValue(projectName).also {
             ProjectConfigurerFactory.forType(eazyProjectExtension, it)
@@ -134,29 +241,74 @@ class ProjectConfigurerWiringTest {
             .isTrue()
     }
 
-    private fun assertSiblings(project: Project, expectation: Expectation) {
-        assertThat(project.siblingPaths(API))
-            .describedAs("%s api siblings", expectation.projectType)
-            .containsExactlyInAnyOrderElementsOf(expectation.apiSiblings.map { ":$it" })
+    /**
+     * The §5.3 production wiring: each sibling sits on EXACTLY its declared level (`api` vs `implementation`) and
+     * nowhere else. Asserted on the *directly declared* dependencies (`dependencies`, not `allDependencies`), so a
+     * leaked level — an `implementation` sibling declared on `api`, or vice versa — fails here.
+     */
+    private fun assertProductionSiblings(project: Project, expectation: Expectation) {
+        val actual = listOf(API, IMPLEMENTATION)
+            .associate {
+                it.toString() to project.configurations.findByName(it.toString())
+                    ?.dependencies
+                    ?.filterIsInstance<ProjectDependency>()
+                    ?.map(ProjectDependency::getPath)
+                    .orEmpty()
+            }.filterValues { it.isNotEmpty() }
 
-        assertThat(project.siblingPaths(IMPLEMENTATION))
-            .describedAs("%s implementation siblings", expectation.projectType)
-            .containsExactlyInAnyOrderElementsOf(expectation.implementationSiblings.map { ":$it" })
+        assertThat(actual)
+            .describedAs("%s production siblings by configuration", expectation.projectType)
+            .containsExactlyInAnyOrderEntriesOf(
+                expectation.siblings.groupBy { it.configuration.toString() }
+                    .mapValues { (_, dependencies) -> dependencies.map { ":${it.projectName}" } }
+            )
+    }
+
+    /**
+     * Every test source set must SEE everything the main source set depends on — the siblings (so test and fixture
+     * code can use and mock the dependent modules; an `application` integration test boots Spring with every layer
+     * present) — plus the module itself. Siblings arrive by configuration inheritance (`functionalTest`,
+     * `integrationTest` and `testFixtures` `extendsFrom implementation`; `test` already does), so this asserts the
+     * full *reachable* set via `allDependencies`.
+     *
+     * The module references itself both as its MAIN jar (no capability) and as its TEST-FIXTURES jar (the
+     * `test-fixtures` feature capability); which of the two lands on a given configuration differs by configuration,
+     * so the two are distinguished by that capability and both are pinned.
+     */
+    private fun assertTestConfigurationDependencies(project: Project, expectation: Expectation) {
+        val siblings = expectation.siblings.map { ":${it.projectName}" }
+        val self = ":${expectation.projectName}"
+        val selfTestFixtures = "$self (test-fixtures)"
+
+        mapOf(
+            DependencyConfiguration.TEST_IMPLEMENTATION to (siblings + selfTestFixtures),
+            DependencyConfiguration.FUNCTIONAL_TEST_IMPLEMENTATION to (siblings + self + selfTestFixtures),
+            DependencyConfiguration.INTEGRATION_TEST_IMPLEMENTATION to (siblings + self + selfTestFixtures),
+            DependencyConfiguration.TEST_FIXTURES_IMPLEMENTATION to (siblings + self),
+        ).forEach { (configuration, expected) ->
+            assertThat(project.projectDependencies(configuration))
+                .describedAs("%s %s reachable project dependencies (siblings + self)", expectation.projectType, configuration)
+                .containsExactlyInAnyOrderElementsOf(expected)
+        }
     }
 
     private fun assertEazyPortalCoreMainDependency(project: Project, expectation: Expectation) {
+        val dependenciesByConfiguration = expectation.eazyPortalCores.groupBy { it.configuration }
+
         // The eazyportal-core main layer must sit on EXACTLY its expected configuration and nowhere else — this is what
         // catches a leaked level (an `implementation` layer declared on `api`, or vice versa).
-        assertThat(project.eazyPortalCoreMainModules(API))
-            .describedAs("%s eazyportal-core on api", expectation.projectType)
-            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreApi?.let { createCoreArtifactId(it) }))
-
-        assertThat(project.eazyPortalCoreMainModules(IMPLEMENTATION))
-            .describedAs("%s eazyportal-core on implementation", expectation.projectType)
-            .containsExactlyElementsOf(listOfNotNull(expectation.eazyPortalCoreImplementation?.let { createCoreArtifactId(it) }))
+        dependenciesByConfiguration.forEach { (configuration, dependencies) ->
+            assertThat(project.eazyPortalCoreMainModules(configuration))
+                .describedAs("%s eazyportal-core on %s", expectation.projectType, configuration)
+                .containsExactlyInAnyOrderElementsOf(
+                    dependencies.map {
+                        createCoreArtifactId(it.projectName, Framework.SPRING_BOOT)
+                    }
+                )
+        }
 
         // Every eazyportal-core main dependency is versionless (the BOM pins it).
-        (project.eazyPortalCoreExternalDependencies(API) + project.eazyPortalCoreExternalDependencies(IMPLEMENTATION))
+        dependenciesByConfiguration.keys.flatMap { project.eazyPortalCoreExternalDependencies(it) }
             .filter { it.name != CORE_BOM_ARTIFACT_ID }
             .forEach { dependency ->
                 assertThat(dependency.version)
@@ -189,16 +341,17 @@ class ProjectConfigurerWiringTest {
     private fun assertBom(project: Project, expectation: Expectation) {
         assertThat(project.bomVersions(IMPLEMENTATION))
             .describedAs("%s BOM on implementation", expectation.projectType)
-            .containsExactly(EXAMPLE_CORE_VERSION)
+            .containsExactly(CORE_DEFAULT_VERSION)
 
         TEST_CONFIGURATIONS.forEach { configuration ->
             assertThat(project.bomVersions(configuration))
                 .describedAs("%s BOM on %s", expectation.projectType, configuration)
-                .containsExactly(EXAMPLE_CORE_VERSION)
+                .containsExactly(CORE_DEFAULT_VERSION)
         }
 
+        // TODO: validate that whether [GradleProjectConfigure] needs this
 //        assertThat(project.bomVersions(API))
-//            .describedAs("%s BOM on api (only when it exposes eazyportal-core transitively)", expectation.type)
+//            .describedAs("%s BOM on api (only when it exposes eazyportal-core transitively)", expectation.projectType)
 //            .isEqualTo(if (expectation.bomOnApi) listOf(EXAMPLE_CORE_VERSION) else emptyList())
     }
 
@@ -208,31 +361,57 @@ class ProjectConfigurerWiringTest {
         val summary = project.wiringSummary()
 
         assertThat(summary.pluginIds).containsExactly(expectation.convention)
-        assertThat(summary.siblings.map { it.notation })
+        assertThat(summary.siblings.map { it.toString() })
             .containsExactlyInAnyOrderElementsOf(
-                (expectation.apiSiblings + expectation.implementationSiblings).map { ":$it" },
+                expectation.siblings.map { ":${it.projectName} (${it.configuration})" }
             )
-        assertThat(summary.eazyPortalCore.filter { it.notation == CORE_TEST_PROJECT_ARTIFACT_ID }.map { it.configuration })
-            .containsExactlyElementsOf(TEST_CONFIGURATIONS)
+
+        // eazyportal-core entries are external coordinates (`eazyportal-[<framework>-]core-<layer>`), not project paths — so,
+        // unlike the sibling block above, they carry no leading `:`, and the framework-specific layers are
+        // framework-prefixed (same resolution as assertEazyPortalCoreMainDependency, via createCoreArtifactId).
+        assertThat(summary.eazyPortalCore.map { it.toString() })
+            .containsExactlyInAnyOrder(
+                *expectation.eazyPortalCores.groupBy { it.configuration }
+                    .flatMap { (configuration, dependencies) ->
+                        dependencies.map {
+                            "${createCoreArtifactId(it.projectName, Framework.SPRING_BOOT)} ($configuration)"
+                        }
+                    }.toTypedArray(),
+                *TEST_CONFIGURATIONS.map { "$CORE_TEST_PROJECT_ARTIFACT_ID ($it)" }.toTypedArray(),
+            )
     }
 
     private companion object {
-        const val EXAMPLE_CORE_VERSION = DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
-
         val STANDARD_MODULES = ProjectType.entries.map { it.toString() } + "unknown"
 
-        fun Project.siblingPaths(dependencyConfiguration: DependencyConfiguration): List<String> =
-            configurations.findByName(dependencyConfiguration.toString())
-                ?.dependencies
-                ?.filterIsInstance<ProjectDependency>()
-                ?.map { it.path }
-                ?: emptyList()
+        /**
+         * The project (sibling + self) dependencies *reachable* from [dependencyConfiguration] — `allDependencies`,
+         * so inherited siblings count. A self-reference to the module's test-fixtures jar is tagged `(test-fixtures)`
+         * (the `test-fixtures` feature capability) to tell it apart from the main-jar reference on the same configuration.
+         */
+        fun Project.projectDependencies(dependencyConfiguration: DependencyConfiguration): List<String> =
+            configurations.getByName(dependencyConfiguration.toString())
+                .allDependencies
+                .filterIsInstance<ProjectDependency>()
+                .map {
+                    it.path + if (it.requestsTestFixtures()) {
+                        " (test-fixtures)"
+                    } else {
+                        ""
+                    }
+                }
+
+        // A plain `project()` dependency requests no capability; `testFixtures(project())` requests the module's
+        // `test-fixtures` feature capability (CapabilitySelector only exposes a display name — "feature
+        // 'test-fixtures'" — in the public API, so match on that).
+        private fun ProjectDependency.requestsTestFixtures(): Boolean =
+            capabilitySelectors.any { it.displayName.contains("test-fixtures") }
 
         fun Project.eazyPortalCoreExternalDependencies(dependencyConfiguration: DependencyConfiguration): List<ExternalModuleDependency> =
             configurations.findByName(dependencyConfiguration.toString())
                 ?.dependencies
                 ?.filterIsInstance<ExternalModuleDependency>()
-                ?.filter { it.name.startsWith("eazyportal-core-") }
+                ?.filter { it.group == CORE_GROUP_ID }
                 ?: emptyList()
 
         /** eazyportal-core *main-layer* modules on [configuration] — excludes the BOM platform and `eazyportal-core-test`. */
@@ -252,12 +431,16 @@ class ProjectConfigurerWiringTest {
         val projectType: ProjectType,
         val projectName: String = projectType.toString(),
         val convention: String,
-//        val dependencies: List<Pair<DependencyConfiguration, ProjectType>> = emptyList(),
-        val apiSiblings: List<String> = emptyList(),
-        val implementationSiblings: List<String> = emptyList(),
-        val eazyPortalCoreApi: String? = null,
-        val eazyPortalCoreImplementation: String? = null,
+        val siblings: List<Dependency> = emptyList(),
+        val eazyPortalCores: List<Dependency> = emptyList(),
         val bomOnApi: Boolean = false,
-    )
+    ) {
+
+        data class Dependency(
+            val projectName: String,
+            val configuration: DependencyConfiguration,
+        )
+
+    }
 
 }

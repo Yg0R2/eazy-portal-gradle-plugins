@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazyproject
 
 import org.eazyportal.gradle.eazyproject.configurer.ProjectConfigurerFactory
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -27,7 +28,8 @@ class EazyProjectPlugin : Plugin<Project> {
         }
 
         val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
-            eazyPortalCoreVersion.convention(DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION)
+            eazyPortalCoreVersion.convention(DefaultVersions.CORE_DEFAULT_VERSION)
+            framework.convention(Framework.SPRING_BOOT)
         }
 
         ProjectConfigurerFactory.forType(extension, project)
@@ -45,11 +47,12 @@ class EazyProjectPlugin : Plugin<Project> {
             task.group = "help"
             task.description = "Reports how eazy-project configured this module."
 
-            // Captured as plain data here — CC-safe, no Project escapes the doLast (design §5.7).
-            val summary = project.wiringSummary()
-            val eazyPortalCoreVersion = extension.eazyPortalCoreVersion.get()
+            // Captured as plain data here — CC-safe, no Project (or lazy notation) escapes the doLast (design §5.7).
             val projectPath = project.path
             val archetype = ProjectType.fromProjectName(project.name)
+            val summary = project.wiringSummary()
+            val eazyPortalCoreVersion = extension.eazyPortalCoreVersion.get()
+            val framework = extension.framework.get()
 
             task.doLast {
                 task.logger.lifecycle(
@@ -60,6 +63,7 @@ class EazyProjectPlugin : Plugin<Project> {
                       siblings               : ${summary.siblings}
                       eazyportal-core        : ${summary.eazyPortalCore}   (versions via the eazyportal-core BOM)
                       eazyPortalCoreVersion  : $eazyPortalCoreVersion   (source: ${getExampleCoreVersionSource(eazyPortalCoreVersion)})
+                      framework              : $framework
                     """.trimIndent(),
                 )
             }
@@ -67,7 +71,7 @@ class EazyProjectPlugin : Plugin<Project> {
     }
 
     private fun getExampleCoreVersionSource(eazyPortalCoreVersion: String): String =
-        if (eazyPortalCoreVersion == DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION) {
+        if (eazyPortalCoreVersion == DefaultVersions.CORE_DEFAULT_VERSION) {
             "default (DefaultVersions)"
         } else {
             "«eazy-settings» DSL override"

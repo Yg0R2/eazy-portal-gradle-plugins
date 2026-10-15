@@ -1,8 +1,9 @@
 package org.eazyportal.gradle.eazyproject
 
-import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
@@ -63,7 +64,7 @@ class EazyProjectPluginFunctionalTest {
         }
         val expectedExampleCoreDependency = subprojectName
             .takeIf { expectedArchetype == it }
-            ?.let { "${createCoreArtifactId(subprojectName)} (implementation), " }
+            ?.let { "${createCoreArtifactId(subprojectName, Framework.SPRING_BOOT)} (implementation), " }
             .orEmpty()
         val expectedTestDependencies = TEST_CONFIGURATIONS.joinToString(", ") {
             "$CORE_TEST_PROJECT_ARTIFACT_ID ($it)"
@@ -75,7 +76,8 @@ class EazyProjectPluginFunctionalTest {
             "  convention             : [$expectedConvention]",
             "  siblings               : $expectedSiblings",
             "  eazyportal-core        : [${expectedExampleCoreDependency}$expectedTestDependencies]   (versions via the eazyportal-core BOM)",
-            "  eazyPortalCoreVersion  : $EXAMPLE_CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
+            "  eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
+            "  framework              : ${Framework.SPRING_BOOT}",
         )
     }
 
@@ -96,7 +98,7 @@ class EazyProjectPluginFunctionalTest {
 
     @Test
     fun `the transitively-applied convention takes effect, not just its id`(@TempDir workingDir: File) {
-        val exampleRepositoryDir = exampleRepository(workingDir, EXAMPLE_CORE_DEFAULT_VERSION) {
+        val exampleRepositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
             eazyportalArtifacts()
         }
 

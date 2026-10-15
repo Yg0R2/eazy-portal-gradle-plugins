@@ -1,10 +1,11 @@
 package org.eazyportal.gradle.eazyproject
 
-import org.eazyportal.gradle.eazyproject.DefaultVersions.EXAMPLE_CORE_DEFAULT_VERSION
+import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -32,13 +33,18 @@ class EazyProjectPluginTest {
     }
 
     @Test
-    fun `applying creates the eazyProject extension with the DefaultVersions eazyPortalCoreVersion convention`() {
+    fun `applying creates the eazyProject extension with default conventions`() {
         val common = buildReceiverSubproject("common")
 
         EazyProjectPlugin().apply(common)
 
-        assertThat(common.extensions.getByType(EazyProjectExtension::class.java).eazyPortalCoreVersion.get())
-            .isEqualTo(EXAMPLE_CORE_DEFAULT_VERSION)
+        with(common.extensions.getByType(EazyProjectExtension::class.java)) {
+            assertThat(eazyPortalCoreVersion.get())
+                .isEqualTo(CORE_DEFAULT_VERSION)
+
+            assertThat(framework.get())
+                .isEqualTo(Framework.SPRING_BOOT)
+        }
     }
 
     @Test

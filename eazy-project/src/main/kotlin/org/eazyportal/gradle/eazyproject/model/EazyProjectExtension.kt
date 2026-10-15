@@ -16,4 +16,12 @@ abstract class EazyProjectExtension {
      */
     abstract val eazyPortalCoreVersion: Property<String>
 
+    /**
+     * Framework flavour of eazyportal-core (selects `eazyportal-{framework}-core-bom` and the framework-specific modules).
+     * Populated by `eazy-settings`;
+     * defaulted by [org.eazyportal.gradle.eazyproject.EazyProjectPlugin.apply];
+     * read lazily as a [Property].
+     */
+    abstract val framework: Property<Framework>
+
 }

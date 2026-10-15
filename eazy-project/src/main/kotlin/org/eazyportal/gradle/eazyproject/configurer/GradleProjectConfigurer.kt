@@ -6,6 +6,7 @@ import org.eazyportal.gradle.eazyproject.WiringSummary
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
+import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.recordWiringSummary
 import org.gradle.api.Project
@@ -16,7 +17,7 @@ import org.gradle.api.provider.Provider
  *
  * [configure] is **final**: the order is fixed and identical for all archetypes —
  * 1. apply the matching convention ([configurePlugins]),
- * 2. import the eazyportal-core BOM so every eazyportal-core-* dependency resolves to one aligned version,
+ * 2. import the `eazyportal-{framework}-core-bom` so every eazyportal-core dependency resolves to one aligned version,
  * 3. wire sibling + eazyportal-core dependencies ([configureDependencies]),
  * 4. add `eazyportal-core-test` on every test configuration — `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation` (every module gets it, §5.3).
  *
@@ -41,7 +42,7 @@ internal abstract class GradleProjectConfigurer(
         importEazyPortalCoreBom()
         configureDependencies()
         TEST_CONFIGURATIONS.forEach {
-            applyEazyPortalCore(it, "test")
+            applyEazyPortalCore(it, project.provider { createEazyPortalCoreArtifactId("test") })
         }
 
         project.recordWiringSummary(
@@ -55,21 +56,31 @@ internal abstract class GradleProjectConfigurer(
     /** Wires the archetype's sibling + eazyportal-core dependencies via [applySiblingProject] / [applyEazyPortalCore]. */
     protected abstract fun configureDependencies()
 
-    /** Adds the versionless `eazyportal-core-$projectType` dependency on [configuration] and records it. */
+    /**
+     * Adds the versionless eazyportal-core dependency of [projectType] on [dependencyConfiguration] and records it:
+     * `eazyportal-{framework}-core-$projectType` for a [ProjectType.isFrameworkSpecific] type, else the framework-agnostic `eazyportal-core-$projectType`.
+     */
     protected fun applyEazyPortalCore(
         dependencyConfiguration: DependencyConfiguration,
         projectType: ProjectType,
     ) {
-        applyEazyPortalCore(dependencyConfiguration, projectType.toString())
+        val artifactIdProvider = if (projectType.isFrameworkSpecific) {
+            // Lazy: the framework is only known once `eazy-settings` has applied its DSL, after this configurer ran (§6.3).
+            eazyProjectExtension.framework.map { createEazyPortalCoreArtifactId(projectType.toString(), it) }
+        } else {
+            project.provider { createEazyPortalCoreArtifactId(projectType.toString()) }
+        }
+
+        applyEazyPortalCore(dependencyConfiguration, artifactIdProvider)
     }
 
     private fun applyEazyPortalCore(
         dependencyConfiguration: DependencyConfiguration,
-        projectName: String,
+        artifactIdProvider: Provider<String>,
     ) {
-        project.dependencies.add(dependencyConfiguration.toString(), createEazyPortalCoreNotation(projectName))
+        project.dependencies.addProvider(dependencyConfiguration.toString(), artifactIdProvider.map(::createEazyPortalCoreNotation))
 
-        eazyPortalCoreDependencies += WiredDependency(dependencyConfiguration, "eazyportal-core-$projectName")
+        eazyPortalCoreDependencies += WiredDependency(dependencyConfiguration, artifactIdProvider)
     }
 
     /** Applies [pluginId] and records it as the module's plugin in the [WiringSummary]. */
@@ -96,19 +107,25 @@ internal abstract class GradleProjectConfigurer(
     ) {
         project.dependencies.add(dependencyConfiguration.toString(), project.project(":$projectType"))
 
-        siblingProjectDependencies += WiredDependency(dependencyConfiguration, ":$projectType")
+        siblingProjectDependencies += WiredDependency(dependencyConfiguration, project.provider { ":$projectType" })
     }
 
     /** eazyportal-core notation WITHOUT a version — the BOM (see [importEazyPortalCoreBom]) pins it. */
-    private fun createEazyPortalCoreNotation(projectName: String): String =
-        "org.eazyportal.core:eazyportal-core-$projectName"
+    private fun createEazyPortalCoreNotation(artifactId: String): String =
+        "org.eazyportal.core:$artifactId"
 
-    /** Imports the eazyportal-core BOM/platform so every eazyportal-core-* dependency resolves to one aligned version. */
+    /** `eazyportal-[{framework}-]core-{projectName}` — the core artifact id. */
+    private fun createEazyPortalCoreArtifactId(projectName: String, framework: Framework? = null): String =
+        "eazyportal-${framework?.let { "$it-" } ?: ""}core-$projectName"
+
+    /** Imports the `eazyportal-{framework}-core-bom` platform so every eazyportal-core dependency resolves to one aligned version. */
     private fun importEazyPortalCoreBom() {
         with(project.dependencies) {
-            // lazy: version set later (§6.3)
-            val eazyPortalCoreBomNotation = eazyProjectExtension.eazyPortalCoreVersion.map {
-                platform("${createEazyPortalCoreNotation("bom")}:$it")
+            // lazy: version and framework are set later (§6.3)
+            val eazyPortalCoreBomNotation = project.provider {
+                with (eazyProjectExtension) {
+                    platform("${createEazyPortalCoreNotation(createEazyPortalCoreArtifactId("bom", framework.get()))}:${eazyPortalCoreVersion.get()}")
+                }
             }
 
             addProvider(IMPLEMENTATION.toString(), eazyPortalCoreBomNotation)

@@ -6,6 +6,6 @@ package org.eazyportal.gradle.eazyproject
  */
 object DefaultVersions {
 
-    const val EXAMPLE_CORE_DEFAULT_VERSION = "1.2.3"
+    const val CORE_DEFAULT_VERSION = "1.2.3"
 
 }
