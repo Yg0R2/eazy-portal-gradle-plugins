@@ -24,15 +24,15 @@ class PomAssert(
     fun hasEazyPortalValues(): PomAssert =
         also {
             Assertions.assertThat(actual.getElementsByTagName("license").length).isGreaterThan(0)
-            it.xPathTextIsEqualTo("licenses/license/name", "«license-name»") // resolved in TOOLS-76
-            it.xPathTextIsEqualTo("licenses/license/url", "https://raw.githubusercontent.com/«github-owner»/«github-repo»/refs/heads/main/LICENSE")
+            it.xPathTextIsEqualTo("licenses/license/name", "Apache-2.0")
+            it.xPathTextIsEqualTo("licenses/license/url", "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE")
 
             Assertions.assertThat(actual.getElementsByTagName("scm").length).isGreaterThan(0)
-            it.xPathTextIsEqualTo("scm/connection", "scm:git:https://github.com/«github-owner»/«github-repo».git")
-            it.xPathTextIsEqualTo("scm/developerConnection", "scm:git:ssh://git@github.com/«github-owner»/«github-repo».git")
-            it.xPathTextIsEqualTo("scm/url", "https://github.com/«github-owner»/«github-repo»")
+            it.xPathTextIsEqualTo("scm/connection", "scm:git:https://github.com/eazyportal/gradle-plugins.git")
+            it.xPathTextIsEqualTo("scm/developerConnection", "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git")
+            it.xPathTextIsEqualTo("scm/url", "https://github.com/eazyportal/gradle-plugins")
 
-            it.xPathTextIsEqualTo("url", "https://github.com/«github-owner»/«github-repo»")
+            it.xPathTextIsEqualTo("url", "https://github.com/eazyportal/gradle-plugins")
         }
 
     fun isArtifactIdEqualTo(expectedArtifactId: String): PomAssert =

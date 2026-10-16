@@ -17,7 +17,7 @@ import org.gradle.api.Task
  * - and registers the `eazyDiagnostics` task.
  *
  * Applied directly by a receiver module,
- * or — the normal path — auto-applied by `«eazy-settings»` to every subproject (never the root),
+ * or — the normal path — auto-applied by `eazy-settings` to every subproject (never the root),
  * which also feeds [EazyProjectExtension.eazyPortalCoreVersion] (design §6).
  */
 class EazyProjectPlugin : Plugin<Project> {
@@ -74,7 +74,7 @@ class EazyProjectPlugin : Plugin<Project> {
         if (eazyPortalCoreVersion == DefaultVersions.CORE_DEFAULT_VERSION) {
             "default (DefaultVersions)"
         } else {
-            "«eazy-settings» DSL override"
+            "DSL override"
         }
 
     companion object {

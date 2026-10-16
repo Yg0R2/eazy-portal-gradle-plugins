@@ -5,7 +5,7 @@ import org.gradle.api.plugins.jvm.JvmTestSuite
 /*
  * Hand-written build for the conventions included build — the one build that cannot apply its own
  * conventions (chicken-and-egg). Keep the publishing block in sync with `publication-convention`
- * (design §4b.1); placeholders («…») are resolved in TOOLS-76.
+ * (design §4b.1).
  */
 plugins {
     `kotlin-dsl`      // pins Kotlin to embeddedKotlinVersion + enables precompiled script plugins
@@ -58,7 +58,7 @@ publishing {
         if (release) {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/«github-owner»/«github-repo»")
+                url = uri("https://maven.pkg.github.com/eazyportal/gradle-plugins")
                 credentials(PasswordCredentials::class)   // lazy: GitHubPackagesUsername / GitHubPackagesPassword
             }
         }
@@ -70,17 +70,17 @@ publishing {
         pom {
             name = provider { project.name }
             description = provider { project.description ?: project.name }
-            url = "https://github.com/«github-owner»/«github-repo»"
+            url = "https://github.com/eazyportal/gradle-plugins"
             licenses {
                 license {
-                    name = "«license-name»"
-                    url = "https://raw.githubusercontent.com/«github-owner»/«github-repo»/refs/heads/main/LICENSE"
+                    name = "Apache-2.0"
+                    url = "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE"
                 }
             }
             scm {
-                url = "https://github.com/«github-owner»/«github-repo»"
-                connection = "scm:git:https://github.com/«github-owner»/«github-repo».git"
-                developerConnection = "scm:git:ssh://git@github.com/«github-owner»/«github-repo».git"
+                url = "https://github.com/eazyportal/gradle-plugins"
+                connection = "scm:git:https://github.com/eazyportal/gradle-plugins.git"
+                developerConnection = "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git"
             }
         }
     }

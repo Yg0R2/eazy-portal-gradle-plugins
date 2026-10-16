@@ -56,7 +56,7 @@ class EazySettingsPluginFunctionalTest {
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output)
-            .contains("eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION")
+            .contains("eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))")
             .contains("framework              : ${Framework.SPRING_BOOT}")
     }
 
@@ -88,7 +88,7 @@ class EazySettingsPluginFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output).contains("eazyPortalCoreVersion  : $CORE_VERSION")
+        assertThat(output).contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
     }
 
     @Test
@@ -109,7 +109,7 @@ class EazySettingsPluginFunctionalTest {
         )
         assertThat(firstRun)
             .contains("Configuration cache entry stored.")
-            .contains("eazyPortalCoreVersion  : $CORE_VERSION")
+            .contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
             .doesNotContain("problem was found", "problems were found")
 
         val secondRun = gradleRunner.runGradleTask(
@@ -120,7 +120,7 @@ class EazySettingsPluginFunctionalTest {
         )
         assertThat(secondRun)
             .contains("Reusing configuration cache.")
-            .contains("eazyPortalCoreVersion  : $CORE_VERSION")
+            .contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
             .doesNotContain("problem was found", "problems were found")
     }
 

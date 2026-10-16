@@ -92,7 +92,7 @@ pluginManagement {
         gradlePluginPortal()
         maven {
             name = "GitHubPackages"   // identity -> GitHubPackagesUsername / GitHubPackagesPassword
-            url = uri("https://maven.pkg.github.com/«github-owner»/«github-repo»")
+            url = uri("https://maven.pkg.github.com/eazyportal/gradle-plugins")
             credentials(PasswordCredentials::class)
         }
     }
@@ -109,7 +109,7 @@ eazySettings {
     framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
 }
 
-rootProject.name = "«receiver-repo»"
+rootProject.name = "example-project"
 include("common", "api", "persistence", "service", "client", "web", "application")   // only the modules you need - see "Required and optional sibling modules"
 ----
 
@@ -272,8 +272,8 @@ Use a different BOM version only if you know it is compatible with your plugin v
 |===
 |Plugin version |Compatible `eazyportal-core` BOM
 
-|`«plugins-version»`
-|`1.2.3`
+|`0.1.0`
+|`0.1.0`
 |===
 
 _A new row is added with every plugin release (see <<Contributing>>)._
