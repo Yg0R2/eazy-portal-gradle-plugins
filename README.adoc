@@ -106,11 +106,12 @@ plugins {
 // and/or choose the framework (otherwise `SPRING_BOOT` applies; see "Framework" below):
 eazySettings {
     eazyPortalCoreVersion = "«x.y.z»"
+    exclude = listOf("platform")   // subproject names left completely unconfigured - see "Excluding modules"
     framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
 }
 
 rootProject.name = "example-project"
-include("common", "api", "persistence", "service", "client", "web", "application")   // only the modules you need - see "Required and optional sibling modules"
+include("common", "api", "persistence", "platform", "service", "client", "web", "application")   // only the modules you need - see "Required and optional sibling modules"
 ----
 
 That's it.
@@ -147,6 +148,28 @@ The archetype is derived from the module name (case-insensitive); keep the stand
 
 Dependencies without an annotation use the `implementation` configuration.
 `«framework»` is the `eazySettings { framework }` value, e.g. `eazyportal-spring-boot-core-service`; see <<Framework>>.
+
+=== Excluding modules
+
+`eazySettings { exclude = listOf("«module-name»", ...) }` lists subproject *names* that `eazy-project` is not applied to.
+An excluded module gets nothing: no convention, no `eazyportal-core` BOM or dependencies, no test suites and no `eazyDiagnostics` task - it is configured entirely by its own `build.gradle.kts`.
+The default is an empty list.
+
+Use it for a module that cannot take the conventions, e.g. a Gradle platform (BOM) module.
+`java-platform` cannot be applied together with the `java` plugin that the conventions bring, so such a module must be excluded and apply `java-platform` itself:
+
+[source,kotlin]
+----
+// settings.gradle.kts
+eazySettings {
+    exclude = listOf("platform")
+}
+
+// platform/build.gradle.kts
+plugins {
+    `java-platform`
+}
+----
 
 === Required and optional sibling modules
 

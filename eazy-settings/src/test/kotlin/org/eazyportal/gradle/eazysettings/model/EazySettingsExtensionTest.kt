@@ -47,6 +47,28 @@ class EazySettingsExtensionTest {
     }
 
     @Test
+    fun `exclude is empty by default`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java)
+
+        assertThat(extension.exclude.get())
+            .isEmpty()
+    }
+
+    @Test
+    fun `exclude can be set`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java).apply {
+            exclude.set(listOf("platform", "bom"))
+        }
+
+        assertThat(extension.exclude.get())
+            .containsExactly("platform", "bom")
+    }
+
+    @Test
     fun `framework can be set`() {
         val project = ProjectBuilder.builder().build()
 

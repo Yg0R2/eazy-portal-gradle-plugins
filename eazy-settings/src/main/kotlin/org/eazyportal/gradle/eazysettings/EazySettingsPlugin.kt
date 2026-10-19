@@ -13,7 +13,7 @@ import java.net.URI
 /**
  * Receiver entry point (design §6.3): creates the [EazySettingsExtension], auto-provisions the JDK toolchain,
  * centralizes dependency repositories (design §6.5 — a deliberate supply-chain control, not tidiness) and,
- * once the settings file has fully evaluated, auto-applies [EazyProjectPlugin] to every subproject (never the root),
+ * once the settings file has fully evaluated, auto-applies [EazyProjectPlugin] to every subproject (never the root, never a name listed in [EazySettingsExtension.exclude]),
  * feeding the resolved `eazyPortalCoreVersion` override when the DSL sets one — else `eazy-project`'s own convention default stands.
  *
  * `beforeProject` is registered from *within* `settingsEvaluated`, not directly in [apply] (design §6.5):
@@ -33,8 +33,11 @@ class EazySettingsPlugin : Plugin<Settings> {
 
         // TODO: after lifecycle API stabilizes, validate if this is still needed
         settings.gradle.settingsEvaluated {
+            // Resolved to a plain Set here (not the live SetProperty) so the captured state stays isolatable, like the String? above.
+            val excludedProjectNames = extension.exclude.get()
+
             settings.gradle.lifecycle.beforeProject { project ->
-                project.takeIf { project != project.rootProject }
+                project.takeIf { it != it.rootProject && it.name !in excludedProjectNames }
                     ?.configureEazyProject(extension)
             }
         }

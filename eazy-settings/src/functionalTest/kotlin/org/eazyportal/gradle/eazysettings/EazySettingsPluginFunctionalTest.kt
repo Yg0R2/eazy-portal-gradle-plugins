@@ -125,6 +125,51 @@ class EazySettingsPluginFunctionalTest {
     }
 
     @Test
+    fun `an excluded subproject is left unconfigured, so it can apply java-platform, while the others still get eazy-project`(
+        @TempDir workingDir: File,
+    ) {
+        val projectDir = buildExampleProject(workingDir, "extras") {
+            settings {
+                script {
+                    """
+                    $EAZY_SETTINGS_EXTENSION_NAME {
+                        exclude = listOf("platform")
+                    }
+                    """.trimIndent()
+                }
+            }
+
+            subproject("platform") {
+                plugins("java-platform")
+            }
+        }
+
+        val gradleRunner = gradleRunner(projectDir)
+
+        gradleRunner.runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME").run {
+            assertThat(this).contains("eazy-project diagnostics — :extras")
+        }
+
+        gradleRunner.runFailingGradleTask(":platform:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME").run {
+            assertThat(this).contains("not found in project ':platform'")
+        }
+    }
+
+    @Test
+    fun `a subproject applying java-platform fails when it is not excluded`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir) {
+            subproject("platform") {
+                plugins("java-platform")
+            }
+        }
+
+        val output = gradleRunner(projectDir)
+            .runFailingGradleTask("help")
+
+        assertThat(output).contains("""The "java-platform" plugin cannot be applied together with the "java" (or "java-library") plugin.""")
+    }
+
+    @Test
     fun `a module declaring its own repositories fails the build (FAIL_ON_PROJECT_REPOS)`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir) {
             subproject("extras") {
