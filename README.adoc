@@ -271,7 +271,27 @@ The same BOM also supplies *third-party* dependency versions (Spring `spring-boo
 Need a library the BOM doesn't cover?
 Add it in that module *with* an explicit version.
 
-The effective version is resolved in this order: the `eazySettings { eazyPortalCoreVersion }` override if set, otherwise the plugin's default from the table below.
+The effective version is resolved in this order: the module's own `eazyProject { eazyPortalCoreVersion }` override if set, otherwise the `eazySettings { eazyPortalCoreVersion }` override if set, otherwise the plugin's default from the table below.
+
+=== Overriding per module
+
+`eazySettings` values are the repository-wide choice, but a single module can override them in its own `build.gradle.kts` through the `eazyProject { }` extension, which `eazy-project` registers on every configured module:
+
+[source,kotlin]
+----
+// <module>/build.gradle.kts
+eazyProject {
+    eazyPortalCoreVersion = "«x.y.z»"
+    framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
+}
+----
+
+The override applies to that module only; its siblings keep the `eazySettings` values.
+`eazyDiagnostics` reports the module's effective `eazyPortalCoreVersion` and `framework`.
+
+NOTE: `eazyProject { }` only changes these two *values*.
+It cannot change *which* plugins or dependencies a module gets, because that is decided while the module is being set up, before its `build.gradle.kts` runs.
+To leave a module unconfigured, list it in `eazySettings { exclude }` - see <<Excluding modules>>.
 
 === Default versions
 

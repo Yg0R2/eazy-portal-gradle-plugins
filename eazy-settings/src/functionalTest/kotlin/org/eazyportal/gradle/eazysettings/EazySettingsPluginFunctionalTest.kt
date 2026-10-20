@@ -2,6 +2,7 @@ package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
 import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
@@ -89,6 +90,96 @@ class EazySettingsPluginFunctionalTest {
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
         assertThat(output).contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
+    }
+
+    @Test
+    fun `a subproject's own eazyProject override wins over the eazySettings one, without affecting its siblings`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir, "extras-a", "extras-b") {
+            settings {
+                script {
+                    generateEazySettingsString()
+                }
+            }
+
+            subproject("extras-a") {
+                script {
+                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                }
+            }
+        }
+        val gradleRunner = gradleRunner(projectDir)
+
+        val overriddenOutput = gradleRunner.runGradleTask(":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+        val inheritedOutput = gradleRunner.runGradleTask(":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+
+        assertThat(overriddenOutput)
+            .contains("eazyPortalCoreVersion  : $SUBPROJECT_CORE_VERSION   (source: DSL override)")
+        assertThat(inheritedOutput)
+            .contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
+            .doesNotContain(SUBPROJECT_CORE_VERSION)
+    }
+
+    @Test
+    fun `a subproject's own eazyProject override wins over eazy-project's own default`(@TempDir workingDir: File) {
+        val projectDir = buildExampleProject(workingDir, "extras") {
+            subproject("extras") {
+                script {
+                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                }
+            }
+        }
+
+        val output = gradleRunner(projectDir)
+            .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+
+        assertThat(output)
+            .contains("eazyPortalCoreVersion  : $SUBPROJECT_CORE_VERSION   (source: DSL override)")
+    }
+
+    @Test
+    fun `a subproject's own eazyProject override is fed into its eazyportal-core BOM`(@TempDir workingDir: File) {
+        val exampleRepositoryDir = exampleRepository(workingDir, SUBPROJECT_CORE_VERSION) {
+            eazyportalArtifacts()
+        }
+
+        val projectDir = buildExampleProject(workingDir, "common") {
+            settings {
+                script {
+                    """
+                    dependencyResolutionManagement {
+                        repositories {
+                            exclusiveContent {
+                                forRepository {
+                                    maven { url = uri("${exampleRepositoryDir.toURI()}") }
+                                }
+
+                                filter {
+                                    includeGroup("$CORE_GROUP_ID")
+                                }
+                            }
+                        }
+                    }
+                    """.trimIndent()
+                }
+            }
+
+            subproject("common") {
+                script {
+                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                }
+            }
+        }
+
+        val gradleHomeDir = File(workingDir, "gradle-home")
+            .also { it.mkdirs() }
+
+        val output = gradleRunner(projectDir) {
+            gradleUserHome = gradleHomeDir
+
+            stubGitHubCredentials()
+        }.runGradleTask(":common:dependencies", "--configuration", "compileClasspath")
+
+        assertThat(output).contains("$CORE_GROUP_ID:${createCoreArtifactId("common")}:$SUBPROJECT_CORE_VERSION")
     }
 
     @Test
@@ -264,6 +355,15 @@ class EazySettingsPluginFunctionalTest {
             builder()
         }
 
+    private fun generateEazyProjectString(
+        eazyPortalCoreVersionOverride: String,
+    ): String =
+        """
+        $EAZY_PROJECT_EXTENSION_NAME {
+            eazyPortalCoreVersion = "$eazyPortalCoreVersionOverride"
+        }
+        """.trimIndent()
+
     private fun generateEazySettingsString(
         eazyPortalCoreVersionOverride: String = CORE_VERSION,
         framework: Framework = Framework.SPRING_BOOT,
@@ -274,5 +374,9 @@ class EazySettingsPluginFunctionalTest {
             framework = ${Framework::class.java.name}.${framework.name}
         }
         """.trimIndent()
+
+    private companion object {
+        const val SUBPROJECT_CORE_VERSION = "0.0.2"
+    }
 
 }
