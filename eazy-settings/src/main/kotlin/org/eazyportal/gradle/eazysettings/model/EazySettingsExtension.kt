@@ -20,4 +20,10 @@ abstract class EazySettingsExtension {
     /** Override for the [Framework] fed to every subproject's `eazyProject { framework }`; selects the `eazyportal-{framework}-core-*` artifacts. */
     abstract val framework: Property<Framework>
 
+    /**
+     * Override fed to every subproject's `eazyProject { applyEazyPortalCoreDependencies }`; `false` skips every eazyportal-core dependency (BOM included)
+     * while keeping the convention + sibling wiring. Left unset, `eazy-project`'s own `true` convention applies.
+     */
+    abstract val applyEazyPortalCoreDependencies: Property<Boolean>
+
 }

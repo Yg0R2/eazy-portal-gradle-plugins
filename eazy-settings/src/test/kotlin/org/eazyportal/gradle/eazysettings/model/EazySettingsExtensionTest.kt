@@ -32,6 +32,22 @@ class EazySettingsExtensionTest {
         assertThatThrownBy { extension.framework.get() }
             .isInstanceOf(MissingValueException::class.java)
             .hasMessage("Cannot query the value of extension 'eazySettings' property 'framework' because it has no value available.")
+
+        assertThatThrownBy { extension.applyEazyPortalCoreDependencies.get() }
+            .isInstanceOf(MissingValueException::class.java)
+            .hasMessage("Cannot query the value of extension 'eazySettings' property 'applyEazyPortalCoreDependencies' because it has no value available.")
+    }
+
+    @Test
+    fun `applyEazyPortalCoreDependencies can be set`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_SETTINGS_EXTENSION_NAME, EazySettingsExtension::class.java).apply {
+            applyEazyPortalCoreDependencies.set(false)
+        }
+
+        assertThat(extension.applyEazyPortalCoreDependencies.get())
+            .isFalse()
     }
 
     @Test

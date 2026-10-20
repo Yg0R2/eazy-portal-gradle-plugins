@@ -30,6 +30,7 @@ class EazyProjectPlugin : Plugin<Project> {
         val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
             eazyPortalCoreVersion.convention(DefaultVersions.CORE_DEFAULT_VERSION)
             framework.convention(Framework.SPRING_BOOT)
+            applyEazyPortalCoreDependencies.convention(true)
         }
 
         ProjectConfigurerFactory.forType(extension, project)
@@ -53,6 +54,12 @@ class EazyProjectPlugin : Plugin<Project> {
             val summary = project.wiringSummary()
             val eazyPortalCoreVersion = extension.eazyPortalCoreVersion.get()
             val framework = extension.framework.get()
+            val applyEazyPortalCoreDependencies = extension.applyEazyPortalCoreDependencies.get()
+            val eazyPortalCore = if (applyEazyPortalCoreDependencies) {
+                "${summary.eazyPortalCore}   (versions via the eazyportal-core BOM)"
+            } else {
+                "N/A   (disabled via DSL)"
+            }
 
             task.doLast {
                 task.logger.lifecycle(
@@ -61,9 +68,10 @@ class EazyProjectPlugin : Plugin<Project> {
                       archetype              : $archetype
                       convention             : ${summary.pluginIds}
                       siblings               : ${summary.siblings}
-                      eazyportal-core        : ${summary.eazyPortalCore}   (versions via the eazyportal-core BOM)
+                      eazyportal-core        : $eazyPortalCore
                       eazyPortalCoreVersion  : $eazyPortalCoreVersion   (source: ${getExampleCoreVersionSource(eazyPortalCoreVersion)})
                       framework              : $framework
+                      applyEazyPortalCoreDependencies : $applyEazyPortalCoreDependencies
                     """.trimIndent(),
                 )
             }

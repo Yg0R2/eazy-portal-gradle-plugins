@@ -108,6 +108,7 @@ eazySettings {
     eazyPortalCoreVersion = "«x.y.z»"
     exclude = listOf("platform")   // subproject names left completely unconfigured - see "Excluding modules"
     framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
+    applyEazyPortalCoreDependencies = true   // false skips every eazyportal-core dependency - see "Skipping eazyportal-core dependencies"
 }
 
 rootProject.name = "example-project"
@@ -170,6 +171,15 @@ plugins {
     `java-platform`
 }
 ----
+
+=== Skipping eazyportal-core dependencies
+
+`eazySettings { applyEazyPortalCoreDependencies = false }` keeps the module wiring - the convention and the sibling dependencies - but adds *no* `eazyportal-core` dependency: no `eazyportal-«framework»-core-bom`, no `eazyportal-core-*` / `eazyportal-«framework»-core-*` layer and no `eazyportal-core-test`.
+The default is `true`.
+Without `eazyportal-core-test`, the modules have to declare their own test dependencies (e.g. JUnit).
+
+A single module can flip it back (or off) in its own `build.gradle.kts` with `eazyProject { applyEazyPortalCoreDependencies = «true|false» }`; see <<Overriding per module>>.
+`eazyDiagnostics` reports the effective value.
 
 === Required and optional sibling modules
 
@@ -239,7 +249,7 @@ To see exactly what the plugins did to a module:
 ./gradlew :service:eazyDiagnostics
 ----
 
-It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override) and the resolved `framework`.
+It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override), the resolved `framework` and `applyEazyPortalCoreDependencies`.
 
 == Framework
 
@@ -283,14 +293,15 @@ The effective version is resolved in this order: the module's own `eazyProject {
 eazyProject {
     eazyPortalCoreVersion = "«x.y.z»"
     framework = org.eazyportal.gradle.eazyproject.model.Framework.SPRING_BOOT
+    applyEazyPortalCoreDependencies = false
 }
 ----
 
 The override applies to that module only; its siblings keep the `eazySettings` values.
-`eazyDiagnostics` reports the module's effective `eazyPortalCoreVersion` and `framework`.
+`eazyDiagnostics` reports the module's effective `eazyPortalCoreVersion`, `framework` and `applyEazyPortalCoreDependencies`.
 
-NOTE: `eazyProject { }` only changes these two *values*.
-It cannot change *which* plugins or dependencies a module gets, because that is decided while the module is being set up, before its `build.gradle.kts` runs.
+NOTE: `eazyProject { }` only changes these *values*; `applyEazyPortalCoreDependencies` can switch the `eazyportal-core` dependencies on or off, because they are added lazily.
+It cannot change *which* plugins or sibling dependencies a module gets, because that is decided while the module is being set up, before its `build.gradle.kts` runs.
 To leave a module unconfigured, list it in `eazySettings { exclude }` - see <<Excluding modules>>.
 
 === Default versions

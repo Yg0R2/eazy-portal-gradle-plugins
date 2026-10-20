@@ -44,6 +44,9 @@ class EazyProjectPluginTest {
 
             assertThat(framework.get())
                 .isEqualTo(Framework.SPRING_BOOT)
+
+            assertThat(applyEazyPortalCoreDependencies.get())
+                .isTrue()
         }
     }
 

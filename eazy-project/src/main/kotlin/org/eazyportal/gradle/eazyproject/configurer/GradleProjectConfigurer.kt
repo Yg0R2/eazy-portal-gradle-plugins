@@ -10,6 +10,7 @@ import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazyproject.recordWiringSummary
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Provider
 
 /**
@@ -26,6 +27,8 @@ import org.gradle.api.provider.Provider
  * so the summary can never drift from what was actually applied.
  * All coordinates are versionless (the BOM pins them) and added lazily via [Provider]s where the version is involved,
  * keeping apply-time configuration-cache friendly (§5.6).
+ * Every eazyportal-core dependency (BOM included) is additionally gated by [EazyProjectExtension.applyEazyPortalCoreDependencies];
+ * the convention and the sibling wiring are not.
  */
 internal abstract class GradleProjectConfigurer(
     protected val eazyProjectExtension: EazyProjectExtension,
@@ -78,9 +81,27 @@ internal abstract class GradleProjectConfigurer(
         dependencyConfiguration: DependencyConfiguration,
         artifactIdProvider: Provider<String>,
     ) {
-        project.dependencies.addProvider(dependencyConfiguration.toString(), artifactIdProvider.map(::createEazyPortalCoreNotation))
+        addEazyPortalCoreLater(dependencyConfiguration, artifactIdProvider.map { project.dependencies.create(createEazyPortalCoreNotation(it)) })
 
         eazyPortalCoreDependencies += WiredDependency(dependencyConfiguration, artifactIdProvider)
+    }
+
+    /**
+     * Adds [dependencyProvider] to [dependencyConfiguration] lazily, and only while [EazyProjectExtension.applyEazyPortalCoreDependencies] holds:
+     * the flag is final only once `eazy-settings` fed it and the module's own build script ran — both after this configurer (§6.3) —
+     * so it is never read here, only when Gradle realizes the configuration's dependencies.
+     */
+    private fun addEazyPortalCoreLater(
+        dependencyConfiguration: DependencyConfiguration,
+        dependencyProvider: Provider<out Dependency>,
+    ) {
+        val gatedDependencies = eazyProjectExtension.applyEazyPortalCoreDependencies.map { enabled ->
+            if (enabled) listOf(dependencyProvider.get()) else emptyList()
+        }
+
+        project.configurations.named(dependencyConfiguration.toString()) {
+            it.dependencies.addAllLater(gatedDependencies)
+        }
     }
 
     /** Applies [pluginId] and records it as the module's plugin in the [WiringSummary]. */
@@ -128,10 +149,10 @@ internal abstract class GradleProjectConfigurer(
                 }
             }
 
-            addProvider(IMPLEMENTATION.toString(), eazyPortalCoreBomNotation)
+            addEazyPortalCoreLater(IMPLEMENTATION, eazyPortalCoreBomNotation)
 
             TEST_CONFIGURATIONS.forEach {
-                addProvider(it.toString(), eazyPortalCoreBomNotation)
+                addEazyPortalCoreLater(it, eazyPortalCoreBomNotation)
             }
 
             // TODO: validate if this is needed

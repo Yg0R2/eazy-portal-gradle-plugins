@@ -24,4 +24,13 @@ abstract class EazyProjectExtension {
      */
     abstract val framework: Property<Framework>
 
+    /**
+     * Escape hatch: `false` skips every eazyportal-core dependency — the `eazyportal-{framework}-core-bom` import, the archetype's `eazyportal-core-*` and `eazyportal-core-test` —
+     * while the convention plugin and the sibling wiring stay in place.
+     * Populated by `eazy-settings`;
+     * defaulted (`true`) by [org.eazyportal.gradle.eazyproject.EazyProjectPlugin.apply];
+     * read lazily as a [Property] — only final once the module's own build script ran.
+     */
+    abstract val applyEazyPortalCoreDependencies: Property<Boolean>
+
 }

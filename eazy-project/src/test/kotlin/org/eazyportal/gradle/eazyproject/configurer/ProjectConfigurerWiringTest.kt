@@ -209,8 +209,40 @@ class ProjectConfigurerWiringTest {
             }
         }
 
-    /** Builds a receiver with all standard modules (so `project(":sibling")` resolves) and configures [type]'s module. */
-    private fun configureModule(projectName: String): Project {
+    /**
+     * `applyEazyPortalCoreDependencies = false` drops every eazyportal-core dependency (BOM and `eazyportal-core-test` included) but keeps the convention + siblings.
+     * The flag is flipped AFTER the Configurer ran — the real ordering, since `eazy-settings` and the module's build script set it after the plugin applied (§6.3).
+     */
+    @TestFactory
+    fun `applyEazyPortalCoreDependencies=false skips every eazyportal-core dependency but keeps the convention and siblings`(): List<DynamicTest> =
+        listOf(ProjectType.SERVICE, ProjectType.CLIENT, ProjectType.DEFAULT).map { projectType ->
+            DynamicTest.dynamicTest("projectType=$projectType") {
+                val project = configureModule(projectType.toString(), applyEazyPortalCoreDependencies = false)
+
+                (listOf(API, IMPLEMENTATION) + TEST_CONFIGURATIONS).forEach { configuration ->
+                    assertThat(project.eazyPortalCoreExternalDependencies(configuration))
+                        .describedAs("%s eazyportal-core dependencies on %s", projectType, configuration)
+                        .isEmpty()
+                }
+
+                assertThat(project.pluginManager.hasPlugin(project.wiringSummary().pluginIds.single())).isTrue()
+                assertThat(
+                    listOf(API, IMPLEMENTATION).flatMap { configuration ->
+                        project.configurations.getByName(configuration.toString())
+                            .dependencies
+                            .filterIsInstance<ProjectDependency>()
+                            .map { "${it.path} ($configuration)" }
+                    }
+                ).describedAs("%s siblings stay wired", projectType)
+                    .containsExactlyInAnyOrderElementsOf(project.wiringSummary().siblings.map { it.toString() })
+            }
+        }
+
+    /**
+     * Builds a receiver with all standard modules (so `project(":sibling")` resolves) and configures [type]'s module.
+     * [applyEazyPortalCoreDependencies] is set only after the Configurer ran, like `eazy-settings` does.
+     */
+    private fun configureModule(projectName: String, applyEazyPortalCoreDependencies: Boolean = true): Project {
         val root = ProjectBuilder.builder()
             .withName("receiver")
             .build()
@@ -227,11 +259,14 @@ class ProjectConfigurerWiringTest {
             .apply {
                 eazyPortalCoreVersion.set(CORE_DEFAULT_VERSION)
                 framework.set(Framework.SPRING_BOOT)
+                this.applyEazyPortalCoreDependencies.set(true)
             }
 
         return root.childProjects.getValue(projectName).also {
             ProjectConfigurerFactory.forType(eazyProjectExtension, it)
                 .configure()
+
+            eazyProjectExtension.applyEazyPortalCoreDependencies.set(applyEazyPortalCoreDependencies)
         }
     }
 

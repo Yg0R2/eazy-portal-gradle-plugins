@@ -14,7 +14,7 @@ import java.net.URI
  * Receiver entry point (design §6.3): creates the [EazySettingsExtension], auto-provisions the JDK toolchain,
  * centralizes dependency repositories (design §6.5 — a deliberate supply-chain control, not tidiness) and,
  * once the settings file has fully evaluated, auto-applies [EazyProjectPlugin] to every subproject (never the root, never a name listed in [EazySettingsExtension.exclude]),
- * feeding the resolved `eazyPortalCoreVersion` override when the DSL sets one — else `eazy-project`'s own convention default stands.
+ * feeding the resolved `eazyPortalCoreVersion` / `framework` / `applyEazyPortalCoreDependencies` overrides when the DSL sets them — else `eazy-project`'s own convention defaults stand.
  *
  * `beforeProject` is registered from *within* `settingsEvaluated`, not directly in [apply] (design §6.5):
  * `gradle.lifecycle.beforeProject` isolates its captured state at REGISTRATION time.
@@ -74,6 +74,7 @@ class EazySettingsPlugin : Plugin<Settings> {
         extensions.configure(EazyProjectExtension::class.java) {
             it.eazyPortalCoreVersion.set(eazySettingsExtension.eazyPortalCoreVersion.orNull)
             it.framework.set(eazySettingsExtension.framework.orNull)
+            it.applyEazyPortalCoreDependencies.set(eazySettingsExtension.applyEazyPortalCoreDependencies.orNull)
         }
     }
 

@@ -63,4 +63,27 @@ class EazyProjectExtensionTest {
             .isEqualTo(Framework.SPRING_BOOT)
     }
 
+    @Test
+    fun `applyEazyPortalCoreDependencies retrieval should fail since default value is not set`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java)
+
+        assertThatThrownBy { extension.applyEazyPortalCoreDependencies.get() }
+            .isInstanceOf(MissingValueException::class.java)
+            .hasMessage("Cannot query the value of extension 'eazyProject' property 'applyEazyPortalCoreDependencies' because it has no value available.")
+    }
+
+    @Test
+    fun `applyEazyPortalCoreDependencies can be overridden`() {
+        val project = ProjectBuilder.builder().build()
+
+        val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
+            applyEazyPortalCoreDependencies.set(false)
+        }
+
+        assertThat(extension.applyEazyPortalCoreDependencies.get())
+            .isFalse()
+    }
+
 }

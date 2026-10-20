@@ -24,31 +24,38 @@ class PomAssert(
     fun hasEazyPortalValues(): PomAssert =
         also {
             Assertions.assertThat(actual.getElementsByTagName("license").length).isGreaterThan(0)
-            it.xPathTextIsEqualTo("licenses/license/name", "Apache-2.0")
-            it.xPathTextIsEqualTo("licenses/license/url", "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE")
+            hasTextAt("licenses/license/name", "Apache-2.0")
+            hasTextAt("licenses/license/url", "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE")
 
             Assertions.assertThat(actual.getElementsByTagName("scm").length).isGreaterThan(0)
-            it.xPathTextIsEqualTo("scm/connection", "scm:git:https://github.com/eazyportal/gradle-plugins.git")
-            it.xPathTextIsEqualTo("scm/developerConnection", "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git")
-            it.xPathTextIsEqualTo("scm/url", "https://github.com/eazyportal/gradle-plugins")
+            hasTextAt("scm/connection", "scm:git:https://github.com/eazyportal/gradle-plugins.git")
+            hasTextAt("scm/developerConnection", "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git")
+            hasTextAt("scm/url", "https://github.com/eazyportal/gradle-plugins")
 
-            it.xPathTextIsEqualTo("url", "https://github.com/eazyportal/gradle-plugins")
+            hasTextAt("url", "https://github.com/eazyportal/gradle-plugins")
         }
 
+    /** The first element at the slash-separated element [xPath] has the [expectedValue] as text. */
+    fun hasTextAt(xPath: String, expectedValue: String): PomAssert =
+        also { it.xPathTextIsEqualTo(xPath, expectedValue) }
+
     fun isArtifactIdEqualTo(expectedArtifactId: String): PomAssert =
-        also { xPathTextIsEqualTo("artifactId", expectedArtifactId) }
+        hasTextAt("artifactId", expectedArtifactId)
 
     fun isDescriptionEqualTo(expectedDescription: String): PomAssert =
-        also { xPathTextIsEqualTo("description", expectedDescription) }
+        hasTextAt("description", expectedDescription)
 
     fun isGroupIdEqualTo(expectedGroupId: String): PomAssert =
-        also { xPathTextIsEqualTo("groupId", expectedGroupId) }
+        hasTextAt("groupId", expectedGroupId)
 
     fun isNameEqualTo(expectedName: String): PomAssert =
-        also { xPathTextIsEqualTo("name", expectedName) }
+        hasTextAt("name", expectedName)
+
+    fun isPackagingEqualTo(expectedPackaging: String): PomAssert =
+        hasTextAt("packaging", expectedPackaging)
 
     fun isVersionEqualTo(expectedVersion: String): PomAssert =
-        also { xPathTextIsEqualTo("version", expectedVersion) }
+        hasTextAt("version", expectedVersion)
 
     private fun xPathTextIsEqualTo(xPath: String, expectedValue: String) {
         val actualValue = actual.textOf(xPath)

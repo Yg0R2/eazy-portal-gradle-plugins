@@ -104,6 +104,7 @@ class SiblingProjectPresenceTest {
             .create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
                 eazyPortalCoreVersion.set(CORE_DEFAULT_VERSION)
                 framework.set(Framework.SPRING_BOOT)
+                applyEazyPortalCoreDependencies.set(true)
             }
 
         return root.childProjects.getValue(type.toString()).also {
