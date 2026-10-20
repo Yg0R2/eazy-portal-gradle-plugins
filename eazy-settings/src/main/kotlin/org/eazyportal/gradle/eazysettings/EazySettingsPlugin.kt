@@ -79,6 +79,7 @@ class EazySettingsPlugin : Plugin<Settings> {
 
     companion object {
         const val EAZY_SETTINGS_EXTENSION_NAME = "eazySettings"
+        const val EAZY_SETTINGS_PLUGIN_ID = "org.eazyportal.gradle.eazy-settings"
     }
 
 }

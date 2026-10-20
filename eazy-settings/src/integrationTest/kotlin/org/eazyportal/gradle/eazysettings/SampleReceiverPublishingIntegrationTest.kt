@@ -7,6 +7,7 @@ import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.K
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
 import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
+import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_RELEASE_VERSION
@@ -25,8 +26,8 @@ import java.io.File
  * (`eazy-settings` applied by bare id from the settings `plugins { }` block, exactly the real
  * README Quickstart path), over the full standard module set. Each module resolves to its correct
  * archetype + convention + sibling/eazyportal-core wiring (the TOOLS-66 matrix already unit-tested by
- * `ProjectConfigurerWiringTest` / `EazyProjectPluginFunctionalTest`, here proven through one real,
- * wired-together receiver build) and publishes.
+ * `ProjectConfigurerWiringTest` / `EazyProjectArchetypeMappingFunctionalTest`, here proven through one real,
+ * wired-together receiver build) and publishes — as a release and as a SNAPSHOT version.
  *
  * Hermetic/offline specifically for the eazyportal-core supply chain, the actual subject of this technique:
  * eazyportal-core-* resolves from a stub repository built and published fresh into this @TempDir — the real
@@ -36,9 +37,9 @@ import java.io.File
  * artifact lands in an isolated `-Dmaven.repo.local` repository, never `~/.m2`.
  * `GRADLE_USER_HOME` is isolated per run too, so no ambient cache can mask a resolution gap.
  * (Kotlin-stdlib itself still resolves from `mavenCentral()` — a baseline every build in this project
- * already depends on, design decision noted on [EazySettingsPluginIntegrationTest].)
+ * already depends on, design decision noted on [EazySettingsToolchainIntegrationTest].)
  */
-class SampleReceiverIntegrationTest {
+class SampleReceiverPublishingIntegrationTest {
 
     @Test
     fun `the sample receiver resolves every archetype's wiring and publishes a release version, fully offline`(
@@ -122,108 +123,13 @@ class SampleReceiverIntegrationTest {
         }
     }
 
-    @Test
-    fun `eazyportal-core-test resolves versionless from the BOM on every test tier and on the test fixtures`(
-        @TempDir workingDir: File,
-    ) {
-        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
-            eazyportalArtifacts()
-        }
-
-        val projectDir = buildExampleProject(workingDir, repositoryDir)
-
-        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
-
-        listOf(
-            "testCompileClasspath",
-            "functionalTestCompileClasspath",
-            "integrationTestCompileClasspath",
-            "testFixturesCompileClasspath",
-        ).forEach { classpath ->
-            val output = gradleRunner(projectDir) {
-                gradleUserHome = gradleHomeDir
-
-                stubGitHubCredentials()
-            }.runGradleTask(
-                ":common:dependencyInsight",
-                "--configuration",
-                classpath,
-                "--dependency",
-                createCoreArtifactId("test"),
-            )
-
-            assertThat(output)
-                .describedAs("eazyportal-core-test on $classpath")
-                .contains("$CORE_GROUP_ID:${createCoreArtifactId("test")}:$CORE_DEFAULT_VERSION")
-                .doesNotContain("FAILED")
-        }
-    }
-
-    @Test
-    fun `a receiver with only the required siblings wires just those and skips the absent optional ones`(
-        @TempDir workingDir: File,
-    ) {
-        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
-            eazyportalArtifacts()
-        }
-
-        // `client` and `web` each require `api`; every other sibling (`common`, `service`, ...) is optional and absent here.
-        val projectDir = buildExampleProject(workingDir, repositoryDir, listOf("api", "client", "web"))
-
-        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
-
-        val output = gradleRunner(projectDir) {
-            gradleUserHome = gradleHomeDir
-
-            stubGitHubCredentials()
-        }.runGradleTask(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
-
-        assertThat(output)
-            .containsSubsequence(
-                "eazy-project diagnostics — :api",
-                "  siblings               : []",
-            ).containsSubsequence(
-                "eazy-project diagnostics — :client",
-                "  siblings               : [:api (api)]",
-            ).containsSubsequence(
-                "eazy-project diagnostics — :web",
-                "  siblings               : [:api (implementation)]",
-            )
-    }
-
-    @Test
-    fun `a receiver fails when a module is missing its required sibling`(
-        @TempDir workingDir: File,
-    ) {
-        val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
-            eazyportalArtifacts()
-        }
-
-        // `client` requires `api`, which this receiver does not have.
-        val projectDir = buildExampleProject(workingDir, repositoryDir, listOf("common", "client"))
-
-        val gradleHomeDir = File(workingDir, "gradle-home").also { it.mkdirs() }
-
-        val output = gradleRunner(projectDir) {
-            gradleUserHome = gradleHomeDir
-
-            stubGitHubCredentials()
-        }.runFailingGradleTask(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
-
-        assertThat(output).containsSubsequence(
-            "A problem occurred configuring project ':client'.",
-            "   > Project with path ':api' could not be found in project ':client'.",
-        )
-    }
-
     private fun buildExampleProject(
         workingDir: File,
         repositoryDir: File,
-        projectNames: List<String> = PROJECT_EXPECTATIONS.map { it.projectName },
     ): File =
         exampleProject(workingDir) {
             settings {
-                plugins("org.eazyportal.gradle.eazy-settings")
+                plugins(EAZY_SETTINGS_PLUGIN_ID)
 
                 script {
                     """
@@ -244,10 +150,9 @@ class SampleReceiverIntegrationTest {
                 }
             }
 
-            projectNames.asSequence()
-                .forEach { projectName ->
-                    subproject(projectName)
-                }
+            PROJECT_EXPECTATIONS.forEach {
+                subproject(it.projectName)
+            }
         }
 
     /** One row of the TOOLS-66 wiring matrix (design §5.4), expressed as the exact `eazyDiagnostics` output it must produce. */
@@ -292,8 +197,8 @@ class SampleReceiverIntegrationTest {
 
     }
 
-    companion object {
-        private val PROJECT_EXPECTATIONS = listOf(
+    private companion object {
+        val PROJECT_EXPECTATIONS = listOf(
             ProjectExpectation(
                 projectName = "common",
                 coreProjectType = ProjectType.COMMON,

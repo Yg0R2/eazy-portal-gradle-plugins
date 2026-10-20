@@ -1,5 +1,6 @@
 package org.eazyportal.gradle.eazysettings
 
+import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.assertj.core.api.Assertions.assertThat
@@ -17,7 +18,7 @@ import java.io.File
  * Requires network access to `api.foojay.io` — deliberately not hermetic
  * (design decision: every build in this project already depends on network access at build or test time, either for dependencies or JDK downloads).
  */
-class EazySettingsPluginIntegrationTest {
+class EazySettingsToolchainIntegrationTest {
 
     @Test
     fun `a toolchain vendor with no real match fails cleanly after a real foojay lookup`(@TempDir workingDir: File) {
@@ -69,7 +70,7 @@ class EazySettingsPluginIntegrationTest {
     ): File =
          exampleProject(workingDir) {
             settings {
-                plugins("org.eazyportal.gradle.eazy-settings")
+                plugins(EAZY_SETTINGS_PLUGIN_ID)
             }
 
             rootProject {

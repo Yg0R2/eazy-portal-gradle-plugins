@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 /**
  * [EazySettingsExtension]'s own DSL surface (design §6.1).
  * `EazySettingsPlugin` never defaults this property itself — an unset value simply leaves `eazy-project`'s own convention default in place —
- * so there is no "default applies" case to cover here; that behavior is covered by `EazySettingsPluginFunctionalTest`.
+ * so there is no "default applies" case to cover here; that behavior is covered by `EazySettingsExtensionFunctionalTest`.
  *
  * A [org.gradle.api.Project] stands in for the real `Settings` extension container — the extension is a plain `ExtensionAware`-hosted DSL surface,
  * indifferent to which container hosts it (the same trick `eazy-project`'s own extension test uses).

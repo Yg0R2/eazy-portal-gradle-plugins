@@ -80,6 +80,7 @@ class EazyProjectPlugin : Plugin<Project> {
     companion object {
         const val EAZY_PROJECT_EXTENSION_NAME = "eazyProject"
         const val EAZY_PROJECT_DIAGNOSTICS_TASK_NAME = "eazyDiagnostics"
+        const val EAZY_PROJECT_PLUGIN_ID = "org.eazyportal.gradle.eazy-project"
     }
 
 }
