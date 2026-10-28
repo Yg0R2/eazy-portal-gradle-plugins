@@ -4,10 +4,12 @@ import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_PLUGIN_ID
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
 import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
+import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_BOM_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_TEST_PROJECT_ARTIFACT_ID
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
@@ -64,22 +66,22 @@ class EazyProjectArchetypeMappingFunctionalTest {
 
         val expectedArchetype = ProjectType.fromProjectName(subprojectName).toString()
         val expectedSiblings = siblings.joinToString(", ", "[", "]") {
-            ":$it (implementation)"
+            ":$it ($IMPLEMENTATION)"
         }
+        val expectedBomDependencies = "$CORE_BOM_ARTIFACT_ID (${(listOf(IMPLEMENTATION) + TEST_CONFIGURATIONS).joinToString(", ")}), "
         val expectedExampleCoreDependency = subprojectName
             .takeIf { expectedArchetype == it }
-            ?.let { "${createCoreArtifactId(subprojectName, Framework.SPRING_BOOT)} (implementation), " }
+            ?.let { "${createCoreArtifactId(subprojectName, Framework.SPRING_BOOT)} ($IMPLEMENTATION), " }
             .orEmpty()
-        val expectedTestDependencies = TEST_CONFIGURATIONS.joinToString(", ") {
-            "$CORE_TEST_PROJECT_ARTIFACT_ID ($it)"
-        }
+        val expectedTestDependencies = "$CORE_TEST_PROJECT_ARTIFACT_ID (${TEST_CONFIGURATIONS.joinToString(", ")})"
+
         assertThat(output).containsSubsequence(
             "> Task :$subprojectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
             "eazy-project diagnostics — :$subprojectName",
             "  archetype              : $expectedArchetype",
             "  convention             : [$expectedConvention]",
             "  siblings               : $expectedSiblings",
-            "  eazyportal-core        : [${expectedExampleCoreDependency}$expectedTestDependencies]   (versions via the eazyportal-core BOM)",
+            "  eazyportal-core        : [$expectedBomDependencies$expectedExampleCoreDependency$expectedTestDependencies]   (versions via the eazyportal-core BOM)",
             "  eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
             "  framework              : ${Framework.SPRING_BOOT}",
         )

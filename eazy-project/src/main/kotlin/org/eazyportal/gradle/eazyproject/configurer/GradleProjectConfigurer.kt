@@ -77,31 +77,31 @@ internal abstract class GradleProjectConfigurer(
         applyEazyPortalCore(dependencyConfiguration, artifactIdProvider)
     }
 
+    /**
+     * Adds the eazyportal-core [artifactIdProvider] to [dependencyConfiguration] and records it — the single path every eazyportal-core dependency (BOM included) takes.
+     * The dependency is added lazily, and only while [EazyProjectExtension.applyEazyPortalCoreDependencies] holds:
+     * the flag is final only once `eazy-settings` fed it and the module's own build script ran — both after this configurer (§6.3) —
+     * so it is never read here, only when Gradle realizes the configuration's dependencies.
+     * [createDependency] turns the versionless notation into the [Dependency] (a [platform][org.gradle.api.artifacts.dsl.DependencyHandler.platform] for the BOM).
+     */
     private fun applyEazyPortalCore(
         dependencyConfiguration: DependencyConfiguration,
         artifactIdProvider: Provider<String>,
+        createDependency: (notation: String) -> Dependency = project.dependencies::create,
     ) {
-        addEazyPortalCoreLater(dependencyConfiguration, artifactIdProvider.map { project.dependencies.create(createEazyPortalCoreNotation(it)) })
-
-        eazyPortalCoreDependencies += WiredDependency(dependencyConfiguration, artifactIdProvider)
-    }
-
-    /**
-     * Adds [dependencyProvider] to [dependencyConfiguration] lazily, and only while [EazyProjectExtension.applyEazyPortalCoreDependencies] holds:
-     * the flag is final only once `eazy-settings` fed it and the module's own build script ran — both after this configurer (§6.3) —
-     * so it is never read here, only when Gradle realizes the configuration's dependencies.
-     */
-    private fun addEazyPortalCoreLater(
-        dependencyConfiguration: DependencyConfiguration,
-        dependencyProvider: Provider<out Dependency>,
-    ) {
-        val gatedDependencies = eazyProjectExtension.applyEazyPortalCoreDependencies.map { enabled ->
-            if (enabled) listOf(dependencyProvider.get()) else emptyList()
+        val coreDependency = eazyProjectExtension.applyEazyPortalCoreDependencies.map { enabled ->
+            if (enabled) {
+                createDependency(createEazyPortalCoreNotation(artifactIdProvider.get()))
+            } else {
+                null
+            }
         }
 
         project.configurations.named(dependencyConfiguration.toString()) {
-            it.dependencies.addAllLater(gatedDependencies)
+            it.dependencies.addLater(coreDependency)
         }
+
+        eazyPortalCoreDependencies += WiredDependency(dependencyConfiguration, coreDependency.map { it.name })
     }
 
     /** Applies [pluginId] and records it as the module's plugin in the [WiringSummary]. */
@@ -141,26 +141,23 @@ internal abstract class GradleProjectConfigurer(
 
     /** Imports the `eazyportal-{framework}-core-bom` platform so every eazyportal-core dependency resolves to one aligned version. */
     private fun importEazyPortalCoreBom() {
-        with(project.dependencies) {
-            // lazy: version and framework are set later (§6.3)
-            val eazyPortalCoreBomNotation = project.provider {
-                with (eazyProjectExtension) {
-                    platform("${createEazyPortalCoreNotation(createEazyPortalCoreArtifactId("bom", framework.get()))}:${eazyPortalCoreVersion.get()}")
-                }
-            }
-
-            addEazyPortalCoreLater(IMPLEMENTATION, eazyPortalCoreBomNotation)
-
-            TEST_CONFIGURATIONS.forEach {
-                addEazyPortalCoreLater(it, eazyPortalCoreBomNotation)
-            }
-
-            // TODO: validate if this is needed
-//            if (exposesEazyPortalCoreViaApi) {
-//                // api/client expose eazyportal-core transitively — propagate the BOM constraints to their consumers too.
-//                addProvider(API.toString(), eazyPortalCoreBomNotation)
-//            }
+        // lazy: version and framework are set later (§6.3)
+        val bomArtifactIdProvider = eazyProjectExtension.framework.map { createEazyPortalCoreArtifactId("bom", it) }
+        val createBomDependency = { notation: String ->
+            project.dependencies.platform("$notation:${eazyProjectExtension.eazyPortalCoreVersion.get()}")
         }
+
+        applyEazyPortalCore(IMPLEMENTATION, bomArtifactIdProvider, createBomDependency)
+
+        TEST_CONFIGURATIONS.forEach {
+            applyEazyPortalCore(it, bomArtifactIdProvider, createBomDependency)
+        }
+
+        // TODO: validate if this is needed
+//        if (exposesEazyPortalCoreViaApi) {
+//            // api/client expose eazyportal-core transitively — propagate the BOM constraints to their consumers too.
+//            applyEazyPortalCore(API, bomArtifactIdProvider, createBomDependency)
+//        }
     }
 
 }

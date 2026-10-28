@@ -24,7 +24,7 @@ class EazyProjectPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         if (project == project.rootProject) {
-            throw GradleException("org.eazyportal.gradle.eazy-project plugin must not be applied to the root project — it is only for subprojects.",)
+            throw GradleException("$EAZY_PROJECT_PLUGIN_ID plugin must not be applied to the root project — it is only for subprojects.",)
         }
 
         val extension = project.extensions.create(EAZY_PROJECT_EXTENSION_NAME, EazyProjectExtension::class.java).apply {
@@ -49,46 +49,71 @@ class EazyProjectPlugin : Plugin<Project> {
             task.description = "Reports how eazy-project configured this module."
 
             // Captured as plain data here — CC-safe, no Project (or lazy notation) escapes the doLast (design §5.7).
-            val projectPath = project.path
-            val archetype = ProjectType.fromProjectName(project.name)
-            val summary = project.wiringSummary()
-            val eazyPortalCoreVersion = extension.eazyPortalCoreVersion.get()
-            val framework = extension.framework.get()
-            val applyEazyPortalCoreDependencies = extension.applyEazyPortalCoreDependencies.get()
-            val eazyPortalCore = if (applyEazyPortalCoreDependencies) {
-                "${summary.eazyPortalCore}   (versions via the eazyportal-core BOM)"
-            } else {
-                "N/A   (disabled via DSL)"
-            }
+            val message = Message(
+                projectPath = project.path,
+                archetype = ProjectType.fromProjectName(project.name),
+                summary = project.wiringSummary(),
+                extension = extension,
+            )
 
             task.doLast {
-                task.logger.lifecycle(
-                    """
-                    eazy-project diagnostics — $projectPath
-                      archetype              : $archetype
-                      convention             : ${summary.pluginIds}
-                      siblings               : ${summary.siblings}
-                      eazyportal-core        : $eazyPortalCore
-                      eazyPortalCoreVersion  : $eazyPortalCoreVersion   (source: ${getExampleCoreVersionSource(eazyPortalCoreVersion)})
-                      framework              : $framework
-                      applyEazyPortalCoreDependencies : $applyEazyPortalCoreDependencies
-                    """.trimIndent(),
-                )
+                task.logger.lifecycle(message.toString())
             }
         }
     }
-
-    private fun getExampleCoreVersionSource(eazyPortalCoreVersion: String): String =
-        if (eazyPortalCoreVersion == DefaultVersions.CORE_DEFAULT_VERSION) {
-            "default (DefaultVersions)"
-        } else {
-            "DSL override"
-        }
 
     companion object {
         const val EAZY_PROJECT_EXTENSION_NAME = "eazyProject"
         const val EAZY_PROJECT_DIAGNOSTICS_TASK_NAME = "eazyDiagnostics"
         const val EAZY_PROJECT_PLUGIN_ID = "org.eazyportal.gradle.eazy-project"
+    }
+
+    private data class Message(
+        private val projectPath: String,
+        private val archetype: ProjectType,
+        private val summary: WiringSummary,
+        private val extension: EazyProjectExtension,
+    ) {
+
+        private val eazyPortalCoreVersion by lazy {
+            extension.eazyPortalCoreVersion.get()
+        }
+
+        private val framework by lazy {
+            extension.framework.get()
+        }
+
+        private val applyEazyPortalCoreDependencies by lazy {
+            extension.applyEazyPortalCoreDependencies.get()
+        }
+
+        private val eazyPortalCore by lazy {
+            if (applyEazyPortalCoreDependencies) {
+                "${summary.eazyPortalCoreString()}   (versions via the eazyportal-core BOM)"
+            } else {
+                "N/A   (disabled via DSL)"
+            }
+        }
+
+        override fun toString(): String =
+            """
+            eazy-project diagnostics — $projectPath
+              archetype              : $archetype
+              convention             : ${summary.pluginIds}
+              siblings               : ${summary.siblingsString()}
+              eazyportal-core        : $eazyPortalCore
+              eazyPortalCoreVersion  : $eazyPortalCoreVersion   (source: ${getExampleCoreVersionSource(eazyPortalCoreVersion)})
+              framework              : $framework
+              applyEazyPortalCoreDependencies : $applyEazyPortalCoreDependencies
+            """.trimIndent()
+
+        private fun getExampleCoreVersionSource(eazyPortalCoreVersion: String): String =
+            if (eazyPortalCoreVersion == DefaultVersions.CORE_DEFAULT_VERSION) {
+                "default (DefaultVersions)"
+            } else {
+                "DSL override"
+            }
+
     }
 
 }
