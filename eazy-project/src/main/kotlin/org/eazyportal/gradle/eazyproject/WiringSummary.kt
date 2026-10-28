@@ -14,7 +14,26 @@ internal data class WiringSummary(
     val pluginIds: List<String>,
     val siblings: List<WiredDependency>,
     val eazyPortalCore: List<WiredDependency>,
-)
+) {
+
+    fun siblingsString(): String =
+        siblings.toGroupedString()
+
+    fun eazyPortalCoreString(): String =
+        eazyPortalCore.toGroupedString()
+
+    /**
+     * Renders [this] with each notation listed once, followed by every configuration it landed on, in wiring order —
+     * e.g. `[eazyportal-spring-boot-core-bom (implementation, testImplementation), eazyportal-core-common (implementation)]`.
+     */
+    private fun List<WiredDependency>.toGroupedString(): String =
+        groupBy(WiredDependency::notation, WiredDependency::configuration)
+            .entries
+            .joinToString(", ", "[", "]") { (notation, configurations) ->
+                "$notation (${configurations.joinToString(", ")})"
+            }
+
+}
 
 /**
  * A single dependency the Configurer added, paired with the configuration it was added to.

@@ -5,6 +5,7 @@ import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJEC
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
 import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
@@ -174,13 +175,13 @@ class SampleReceiverPublishingIntegrationTest {
                 }
 
             val coreText = buildList {
+                add("${createCoreArtifactId("bom", Framework.SPRING_BOOT)} (${(listOf(IMPLEMENTATION) + TEST_CONFIGURATIONS).joinToString(", ")})")
+
                 if (isPublishing) {
                     add("${createCoreArtifactId(coreProjectType, Framework.SPRING_BOOT)} ($coreConfiguration)")
                 }
 
-                TEST_CONFIGURATIONS.forEach {
-                    add("${createCoreArtifactId("test")} ($it)")
-                }
+                add("${createCoreArtifactId("test")} (${TEST_CONFIGURATIONS.joinToString(", ")})")
             }.joinToString(", ", "[", "]")
 
             return arrayOf(

@@ -413,6 +413,7 @@ class ProjectConfigurerWiringTest {
                         }
                     }.toTypedArray(),
                 *TEST_CONFIGURATIONS.map { "$CORE_TEST_PROJECT_ARTIFACT_ID ($it)" }.toTypedArray(),
+                *(listOf(IMPLEMENTATION) + TEST_CONFIGURATIONS).map { "$CORE_BOM_ARTIFACT_ID ($it)" }.toTypedArray(),
             )
     }
 
