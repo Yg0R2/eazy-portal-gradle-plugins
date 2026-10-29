@@ -26,6 +26,24 @@ class ProjectTypeTest {
         }
 
     @TestFactory
+    fun `fromProjectName resolves the kebab name suffix, case-insensitively`(): List<DynamicTest> =
+        listOf(
+            "example-service" to ProjectType.SERVICE,
+            "payment-Api" to ProjectType.API,
+            "billing-APPLICATION" to ProjectType.APPLICATION,
+            "shared-common" to ProjectType.COMMON,
+            "user-Persistence" to ProjectType.PERSISTENCE,
+            "admin-CLIENT" to ProjectType.CLIENT,
+            "portal-web" to ProjectType.WEB,
+            "fallback-default" to ProjectType.DEFAULT,
+        ).map { (name, expected) ->
+            dynamicTest("\"$name\" to ${expected.name}") {
+                assertThat(ProjectType.fromProjectName(name))
+                    .isEqualTo(expected)
+            }
+        }
+
+    @TestFactory
     fun `only application, persistence, service and web are framework-specific`(): List<DynamicTest> =
         ProjectType.entries.map { projectType ->
             val expected = projectType in setOf(
@@ -44,8 +62,10 @@ class ProjectTypeTest {
     @TestFactory
     fun `fromProjectName falls back to DEFAULT for unknown names`(): List<DynamicTest> =
         listOf(
-            "payment-service",
+            "paymentAPI",
+            "payment-library",
             "custom-module",
+            "customService",
         ).map { name ->
             dynamicTest("\"$name\" to DEFAULT") {
                 assertThat(ProjectType.fromProjectName(name))

@@ -29,7 +29,7 @@ enum class ProjectType(
          */
         fun fromProjectName(name: String): ProjectType =
             entries.firstOrNull {
-                it.type.equals(name, true)
+                name.equals(it.type, true) || name.endsWith("-${it.type}", true)
             } ?: DEFAULT
     }
 
