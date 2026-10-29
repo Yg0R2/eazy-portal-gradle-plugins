@@ -12,10 +12,10 @@ enum class ProjectType(
 
     API("api"),
     APPLICATION("application", true),
+    CLIENT("client"),
     COMMON("common"),
     PERSISTENCE("persistence", true),
     SERVICE("service", true),
-    CLIENT("client"),
     WEB("web", true),
     DEFAULT("default");
 
