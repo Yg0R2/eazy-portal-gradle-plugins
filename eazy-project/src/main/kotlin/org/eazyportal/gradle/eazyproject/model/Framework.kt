@@ -13,4 +13,8 @@ enum class Framework(
     override fun toString(): String =
         framework
 
+    companion object {
+        val allFrameworks = Framework.entries.map(Framework::toString)
+    }
+
 }
