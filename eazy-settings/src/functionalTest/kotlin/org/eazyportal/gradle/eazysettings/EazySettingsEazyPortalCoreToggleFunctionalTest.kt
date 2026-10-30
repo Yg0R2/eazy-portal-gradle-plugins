@@ -19,7 +19,7 @@ import java.io.File
 
 /**
  * Black-box coverage for the `eazySettings { applyEazyPortalCoreDependencies = false }` escape hatch:
- * every eazyportal-core dependency (BOM and `eazyportal-core-test` included) is skipped, while the convention and the sibling wiring stay.
+ * every eazyportal-core dependency (BOM and core `test` included) is skipped, while the convention and the sibling wiring stay.
  * The flag is only final after the module's own build script ran, so a `eazyProject { }` override is covered too.
  */
 class EazySettingsEazyPortalCoreToggleFunctionalTest {

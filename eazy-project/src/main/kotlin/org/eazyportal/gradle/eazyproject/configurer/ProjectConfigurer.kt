@@ -3,7 +3,7 @@ package org.eazyportal.gradle.eazyproject.configurer
 /**
  * Configures a single receiver module for its archetype (design §5.4):
  * - applies the matching convention,
- * - imports the `eazyportal-{framework}-core-bom`,
+ * - imports the core `{framework}-bom`,
  * - wires sibling projects,
  * - and adds eazyportal-core dependencies at the correct configuration level.
  *

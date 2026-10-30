@@ -18,9 +18,9 @@ import org.gradle.api.provider.Provider
  *
  * [configure] is **final**: the order is fixed and identical for all archetypes —
  * 1. apply the matching convention ([configurePlugins]),
- * 2. import the `eazyportal-{framework}-core-bom` so every eazyportal-core dependency resolves to one aligned version,
+ * 2. import the `{framework}-bom` so every eazyportal-core dependency resolves to one aligned version,
  * 3. wire sibling + eazyportal-core dependencies ([configureDependencies]),
- * 4. add `eazyportal-core-test` on every test configuration — `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation` (every module gets it, §5.3).
+ * 4. add the core `test` artifact on every test configuration — `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation` (every module gets it, §5.3).
  *
  * Subclasses fill only the archetype-specific blanks and wire dependencies through [applySiblingProject] / [applyEazyPortalCore],
  * which both add the dependency **and** record it into the [org.eazyportal.gradle.eazyproject.WiringSummary] —
@@ -61,7 +61,7 @@ internal abstract class GradleProjectConfigurer(
 
     /**
      * Adds the versionless eazyportal-core dependency of [projectType] on [dependencyConfiguration] and records it:
-     * `eazyportal-{framework}-core-$projectType` for a [ProjectType.isFrameworkSpecific] type, else the framework-agnostic `eazyportal-core-$projectType`.
+     * `{framework}-$projectType` for a [ProjectType.isFrameworkSpecific] type, else the framework-agnostic `$projectType`.
      */
     protected fun applyEazyPortalCore(
         dependencyConfiguration: DependencyConfiguration,
@@ -135,11 +135,11 @@ internal abstract class GradleProjectConfigurer(
     private fun createEazyPortalCoreNotation(artifactId: String): String =
         "org.eazyportal.core:$artifactId"
 
-    /** `eazyportal-[{framework}-]core-{projectName}` — the core artifact id. */
+    /** `[{framework}-]{projectName}` — the core artifact id. */
     private fun createEazyPortalCoreArtifactId(projectName: String, framework: Framework? = null): String =
-        "eazyportal-${framework?.let { "$it-" } ?: ""}core-$projectName"
+        "${framework?.let { "$it-" } ?: ""}$projectName"
 
-    /** Imports the `eazyportal-{framework}-core-bom` platform so every eazyportal-core dependency resolves to one aligned version. */
+    /** Imports the `{framework}-bom` platform so every eazyportal-core dependency resolves to one aligned version. */
     private fun importEazyPortalCoreBom() {
         // lazy: version and framework are set later (§6.3)
         val bomArtifactIdProvider = eazyProjectExtension.framework.map { createEazyPortalCoreArtifactId("bom", it) }

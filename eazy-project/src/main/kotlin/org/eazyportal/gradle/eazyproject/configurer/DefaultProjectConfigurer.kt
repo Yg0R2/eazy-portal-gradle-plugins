@@ -5,7 +5,7 @@ import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.gradle.api.Project
 
 /**
- * `default` — the escape hatch for a non-standard module (§5.2). Gets `kotlin-project` + `eazyportal-core-test` (from
+ * `default` — the escape hatch for a non-standard module (§5.2). Gets `kotlin-project` + core `test` (from
  * the base template) and nothing else; it opts into any other convention by bare id in its own build script.
  */
 internal class DefaultProjectConfigurer(
@@ -18,7 +18,7 @@ internal class DefaultProjectConfigurer(
     }
 
     override fun configureDependencies() {
-        // none — only eazyportal-core-test (added by the base template) + the BOM.
+        // none — only core test (added by the base template) + the BOM.
     }
 
 }

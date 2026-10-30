@@ -9,7 +9,7 @@ import org.gradle.api.provider.Property
 abstract class EazyProjectExtension {
 
     /**
-     * eazyportal-core-* version.
+     * eazyportal-core version.
      * Populated by `eazy-settings`;
      * defaulted by [org.eazyportal.gradle.eazyproject.EazyProjectPlugin.apply] (the sole owner of the default — design §5.5);
      * read lazily as a [Property].
@@ -17,7 +17,7 @@ abstract class EazyProjectExtension {
     abstract val eazyPortalCoreVersion: Property<String>
 
     /**
-     * Framework flavour of eazyportal-core (selects `eazyportal-{framework}-core-bom` and the framework-specific modules).
+     * Framework flavour of eazyportal-core (selects `{framework}-bom` and the framework-specific modules).
      * Populated by `eazy-settings`;
      * defaulted by [org.eazyportal.gradle.eazyproject.EazyProjectPlugin.apply];
      * read lazily as a [Property].
@@ -25,7 +25,7 @@ abstract class EazyProjectExtension {
     abstract val framework: Property<Framework>
 
     /**
-     * Escape hatch: `false` skips every eazyportal-core dependency — the `eazyportal-{framework}-core-bom` import, the archetype's `eazyportal-core-*` and `eazyportal-core-test` —
+     * Escape hatch: `false` skips every eazyportal-core dependency — the `{framework}-bom` import, the archetype's core layer and core `test` —
      * while the convention plugin and the sibling wiring stay in place.
      * Populated by `eazy-settings`;
      * defaulted (`true`) by [org.eazyportal.gradle.eazyproject.EazyProjectPlugin.apply];

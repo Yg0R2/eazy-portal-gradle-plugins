@@ -13,14 +13,14 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 /**
- * TOOLS-73 (design §7.4/§7.5, §9.5): `eazyportal-core-test` — added to every module on every test tier — resolves versionless from the `eazyportal-core` BOM.
- * Hermetic/offline like [SampleReceiverPublishingIntegrationTest]: `eazyportal-core-*` resolves from a stub repository built fresh into the @TempDir,
+ * TOOLS-73 (design §7.4/§7.5, §9.5): core `test` — added to every module on every test tier — resolves versionless from the `eazyportal-core` BOM.
+ * Hermetic/offline like [SampleReceiverPublishingIntegrationTest]: eazyportal-core artifacts resolve from a stub repository built fresh into the @TempDir,
  * with an isolated `GRADLE_USER_HOME` and stubbed, never-used GitHub Packages credentials.
  */
 class SampleReceiverCoreTestBomIntegrationTest {
 
     @Test
-    fun `eazyportal-core-test resolves versionless from the BOM on every test tier and on the test fixtures`(
+    fun `core test resolves versionless from the BOM on every test tier and on the test fixtures`(
         @TempDir workingDir: File,
     ) {
         val repositoryDir = exampleRepository(workingDir, CORE_DEFAULT_VERSION) {
@@ -74,7 +74,7 @@ class SampleReceiverCoreTestBomIntegrationTest {
             )
 
             assertThat(output)
-                .describedAs("eazyportal-core-test on $classpath")
+                .describedAs("core test on $classpath")
                 .contains("$CORE_GROUP_ID:${createCoreArtifactId("test")}:$CORE_DEFAULT_VERSION")
                 .doesNotContain("FAILED")
         }

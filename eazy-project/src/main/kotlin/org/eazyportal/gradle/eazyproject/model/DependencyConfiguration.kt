@@ -15,7 +15,7 @@ enum class DependencyConfiguration(
         configurationName
 
     companion object {
-        /** Every non-production configuration that gets the eazyportal-core BOM and `eazyportal-core-test`: the three test tiers + test fixtures. */
+        /** Every non-production configuration that gets the eazyportal-core BOM and the core `test` artifact: the three test tiers + test fixtures. */
         val TEST_CONFIGURATIONS: List<DependencyConfiguration> = listOf(
             TEST_IMPLEMENTATION,
             FUNCTIONAL_TEST_IMPLEMENTATION,

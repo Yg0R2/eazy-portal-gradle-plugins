@@ -31,7 +31,7 @@ import java.io.File
  * wired-together receiver build) and publishes — as a release and as a SNAPSHOT version.
  *
  * Hermetic/offline specifically for the eazyportal-core supply chain, the actual subject of this technique:
- * eazyportal-core-* resolves from a stub repository built and published fresh into this @TempDir — the real
+ * eazyportal-core artifacts resolve from a stub repository built and published fresh into this @TempDir — the real
  * GitHub Packages repository is registered (design §6.5) but never hit (only stubbed, never-used
  * credentials are supplied — Gradle requires its typed [org.gradle.api.credentials.PasswordCredentials]
  * to be present even though `exclusiveContent` guarantees it is never queried) — and every published

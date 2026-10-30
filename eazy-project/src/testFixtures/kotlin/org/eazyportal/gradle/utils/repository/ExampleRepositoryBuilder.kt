@@ -17,22 +17,22 @@ import java.io.File
  * ```
  * val repositoryDir = exampleRepository(workingDir) {
 *    artifact {
- *         artifactId = "eazyportal-spring-boot-core-bom"
+ *         artifactId = "spring-boot-bom"
  *         packaging = "pom"
  *         version = "1.0.0"
  *         managedArtifactIds = listOf(
- *             "eazyportal-core-common",
- *             "eazyportal-core-test",
+ *             "common",
+ *             "test",
  *         )
  *     }
  *
  *     artifact {
- *         artifactId = "eazyportal-core-common"
+ *         artifactId = "common"
  *         version = "1.0.0"
  *     }
  *
  *     artifact {
- *         artifactId = "eazyportal-core-test"
+ *         artifactId = "test"
  *         version = "1.0.0"
  *     }
  * }

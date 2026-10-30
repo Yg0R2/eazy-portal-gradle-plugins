@@ -3,7 +3,7 @@ package org.eazyportal.gradle.eazyproject.model
 /**
  * Name-based archetype for a receiver module (design §5.2). Each constant carries its **explicit kebab name**,
  * so a future multi-word archetype (e.g. `message-broker`) matches directly with no kebab↔enum-name normalization.
- * [isFrameworkSpecific] archetypes depend on `eazyportal-{framework}-core-{type}`; the others on the framework-agnostic `eazyportal-core-{type}`.
+ * [isFrameworkSpecific] archetypes depend on `{framework}-{type}`; the others on the framework-agnostic `{type}`.
  */
 enum class ProjectType(
     private val type: String,

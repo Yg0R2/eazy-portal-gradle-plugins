@@ -13,7 +13,7 @@ object ExampleRepositoryFixtures {
     const val CORE_VERSION = "0.0.1"
 
     /**
-     * `eazyportal-[{framework}-]core-{projectName}` — the framework segment is present only for a
+     * `[{framework}-]{projectName}` — the framework segment is present only for a
      * [ProjectType.isFrameworkSpecific] project (or `bom`); for any other project [framework] is ignored.
      *
      * @throws IllegalArgumentException if the project is framework-specific (or `bom`) and [framework] is `null`.
@@ -26,10 +26,10 @@ object ExampleRepositoryFixtures {
                 throw IllegalArgumentException("Cannot create artifact id for framework-specific project type $projectType without a framework")
             }
 
-            listOf("eazyportal", framework.toString(), "core", projectName)
+            "$framework-$projectName"
         } else {
-            listOf("eazyportal", "core", projectName)
-        }.joinToString("-")
+            projectName
+        }
     }
 
     /**

@@ -135,20 +135,20 @@ The archetype is derived from the module name (case-insensitive); keep the stand
 
 [cols="1,1,1,2,2",options="header"]
 |===
-|Module |Type |Published? |Depends on (in-repo) |Gets `eazyportal-core-*` / `eazyportal-«framework»-core-*`
+|Module |Type |Published? |Depends on (in-repo) |Gets core `«type»` / `«framework»-«type»`
 
-|`common`      |library |yes |-                              |`eazyportal-core-common` (impl)
-|`api`         |library |yes |`common` (api, optional)       |`eazyportal-core-api` (api)
-|`persistence` |library |yes |`common` (optional)            |`eazyportal-«framework»-core-persistence` (impl)
-|`service`     |library |yes |`common`, `api`, `persistence` (all optional) |`eazyportal-«framework»-core-service` (impl)
-|`client`      |library |yes |`api` (*required*), `common` (optional); both api |`eazyportal-core-client` (api)
-|`web`         |library |yes |`api` (*required*), `common`, `service` (optional) |`eazyportal-«framework»-core-web` (impl)
-|`application` |project |no  |`common`, `api`, `persistence`, `service`, `web` (all optional) |`eazyportal-«framework»-core-application` (impl)
+|`common`      |library |yes |-                              |`common` (impl)
+|`api`         |library |yes |`common` (api, optional)       |`api` (api)
+|`persistence` |library |yes |`common` (optional)            |`«framework»-persistence` (impl)
+|`service`     |library |yes |`common`, `api`, `persistence` (all optional) |`«framework»-service` (impl)
+|`client`      |library |yes |`api` (*required*), `common` (optional); both api |`client` (api)
+|`web`         |library |yes |`api` (*required*), `common`, `service` (optional) |`«framework»-web` (impl)
+|`application` |project |no  |`common`, `api`, `persistence`, `service`, `web` (all optional) |`«framework»-application` (impl)
 |`default`     |project |no  |-                              |_(none - your custom module)_
 |===
 
 Dependencies without an annotation use the `implementation` configuration.
-`«framework»` is the `eazySettings { framework }` value, e.g. `eazyportal-spring-boot-core-service`; see <<Framework>>.
+`«framework»` is the `eazySettings { framework }` value, e.g. `spring-boot-service`; see <<Framework>>.
 
 === Excluding modules
 
@@ -174,9 +174,9 @@ plugins {
 
 === Skipping eazyportal-core dependencies
 
-`eazySettings { applyEazyPortalCoreDependencies = false }` keeps the module wiring - the convention and the sibling dependencies - but adds *no* `eazyportal-core` dependency: no `eazyportal-«framework»-core-bom`, no `eazyportal-core-*` / `eazyportal-«framework»-core-*` layer and no `eazyportal-core-test`.
+`eazySettings { applyEazyPortalCoreDependencies = false }` keeps the module wiring - the convention and the sibling dependencies - but adds *no* `eazyportal-core` dependency: no `«framework»-bom`, no core `«type»` / `«framework»-«type»` layer and no core `test`.
 The default is `true`.
-Without `eazyportal-core-test`, the modules have to declare their own test dependencies (e.g. JUnit).
+Without the core `test` artifact, the modules have to declare their own test dependencies (e.g. JUnit).
 
 A single module can flip it back (or off) in its own `build.gradle.kts` with `eazyProject { applyEazyPortalCoreDependencies = «true|false» }`; see <<Overriding per module>>.
 `eazyDiagnostics` reports the effective value.
@@ -194,10 +194,10 @@ It does *not* depend on `client`.
 `./gradlew :<module>:eazyDiagnostics` lists the siblings that were actually wired.
 Library modules apply `org.eazyportal.gradle.kotlin-library-convention`; `application` and `default` apply `org.eazyportal.gradle.kotlin-project-convention`.
 
-Every module also receives `eazyportal-core-test` (JUnit + test dependencies) on all its test configurations (unit, functional and integration tests, and test fixtures; see <<Tests in your modules>>), and has JUnit Platform enabled.
+Every module also receives the core `test` artifact (JUnit + test dependencies) on all its test configurations (unit, functional and integration tests, and test fixtures; see <<Tests in your modules>>), and has JUnit Platform enabled.
 
-NOTE: The `eazyportal-core-*` and `eazyportal-«framework»-core-*` dependencies are declared _versionless_; see <<Versions and overriding>>.
-A module sees another `eazyportal-core` layer only if its own `eazyportal-core-<type>` (or `eazyportal-<framework>-core-<type>`) artifact re-exposes it via `api`.
+NOTE: The core `«type»` and `«framework»-«type»` dependencies are declared _versionless_; see <<Versions and overriding>>.
+A module sees another `eazyportal-core` layer only if its own `<type>` (or `<framework>-<type>`) artifact re-exposes it via `api`.
 
 Need a module that doesn't fit the standard shape?
 Name it anything not in the list - it becomes a `default` module (Kotlin, non-publishing, no `eazyportal-core` wiring) that you configure yourself.
@@ -260,7 +260,7 @@ eazy-project diagnostics — :service
   eazyportal-core :
     version      : 1.2.3   (source: default (DefaultVersions))
     framework    : spring-boot
-    dependencies : [eazyportal-spring-boot-core-bom (implementation, testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation), eazyportal-spring-boot-core-service (implementation), eazyportal-core-test (testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation)]
+    dependencies : [spring-boot-bom (implementation, testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation), spring-boot-service (implementation), test (testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation)]
 ----
 
 `source` is `default (DefaultVersions)` or `DSL override`.
@@ -275,8 +275,8 @@ With `applyEazyPortalCoreDependencies = false`, the whole `eazyportal-core` sect
 
 `eazyportal-core` ships one flavour per framework.
 `eazySettings { framework }` picks it with the `Framework` enum, so a typo does not compile.
-It selects the BOM (`eazyportal-«framework»-core-bom`) and the framework-specific modules (`persistence`, `service`, `web` and `application`: `eazyportal-«framework»-core-«type»`).
-`common`, `api`, `client` and `eazyportal-core-test` are framework-agnostic.
+It selects the BOM (`«framework»-bom`) and the framework-specific modules (`persistence`, `service`, `web` and `application`: `«framework»-«type»`).
+`common`, `api`, `client` and core `test` are framework-agnostic.
 
 [cols="1,1",options="header"]
 |===
@@ -287,7 +287,7 @@ It selects the BOM (`eazyportal-«framework»-core-bom`) and the framework-speci
 
 == Versions and overriding
 
-`eazyportal-core-*` and `eazyportal-«framework»-core-*` versions are aligned by the *`eazyportal-core` BOM* (`org.eazyportal.core:eazyportal-«framework»-core-bom`, e.g. `eazyportal-spring-boot-core-bom`), and `eazyPortalCoreVersion` sets that BOM version.
+Core `«type»` and `«framework»-«type»` versions are aligned by the *`eazyportal-core` BOM* (`org.eazyportal.core:«framework»-bom`, e.g. `spring-boot-bom`), and `eazyPortalCoreVersion` sets that BOM version.
 It uses a built-in default unless you override it in `settings.gradle.kts`:
 
 [source,kotlin]
@@ -412,7 +412,7 @@ Other modules can consume them with `testImplementation(testFixtures(project(":<
 * *Tests see the module's whole main dependency graph.* Every tier (unit, functional, integration) and the test-fixtures source set inherit the module's `implementation` configuration (and the `api` it extends), so its sibling modules and the `eazyportal-core` layers they expose are on the test classpath automatically - you never re-declare them.
 Test and fixture code can therefore use and mock any class the production code can reach; an `application` integration test, for example, boots Spring with every layer present.
 
-`eazyportal-core-test` (JUnit and the common test libraries) and the `eazyportal-core` BOM are applied automatically to *every* test configuration:
+The core `test` artifact (JUnit and the common test libraries) and the `eazyportal-core` BOM are applied automatically to *every* test configuration:
 `testImplementation`, `functionalTestImplementation`, `integrationTestImplementation` and `testFixturesImplementation`.
 So all tiers and the test fixtures share the same test libraries, and any library managed by the BOM can be declared *without a version* in any of them.
 A library the BOM does not manage needs an explicit version, as everywhere else.

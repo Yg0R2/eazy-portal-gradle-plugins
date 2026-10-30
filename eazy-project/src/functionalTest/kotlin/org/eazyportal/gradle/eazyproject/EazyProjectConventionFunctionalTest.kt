@@ -69,7 +69,7 @@ class EazyProjectConventionFunctionalTest {
      * A receiver: an empty root + `subprojectName`'s subproject applying `eazy-project` [+ `extraPluginIds`].
      * The root carries `allprojects { repositories { mavenCentral() [+ repositoryDir] } }` — needed because real compilation/publishing is exercised.
      * [repositoryDir], when given, is the `file://`-published sample
-     * so a real `compileClasspath` resolution of `org.eazyportal.core:eazyportal-core-*`
+     * so a real `compileClasspath` resolution of the `org.eazyportal.core:*` artifacts
      * (added unconditionally by every [org.eazyportal.gradle.eazyproject.configurer.GradleProjectConfigurer]) succeeds —
      * those coordinates are design placeholders for a real internal registry, not anything mavenCentral() has.
      */

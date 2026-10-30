@@ -24,7 +24,7 @@ internal data class WiringSummary(
 
     /**
      * Renders [this] with each notation listed once, followed by every configuration it landed on, in wiring order —
-     * e.g. `[eazyportal-spring-boot-core-bom (implementation, testImplementation), eazyportal-core-common (implementation)]`.
+     * e.g. `[spring-boot-bom (implementation, testImplementation), common (implementation)]`.
      */
     private fun List<WiredDependency>.toGroupedString(): String =
         groupBy(WiredDependency::notation, WiredDependency::configuration)

@@ -44,7 +44,7 @@ class EazySettingsPlugin : Plugin<Settings> {
     }
 
     /**
-     * Dependency repositories for regular deps like `eazyportal-core-*` (design §6.3/§6.5) — NOT plugin resolution that stays the receiver's hand-written `pluginManagement` bootstrap (README Quickstart).
+     * Dependency repositories for regular deps like the eazyportal-core artifacts (design §6.3/§6.5) — NOT plugin resolution that stays the receiver's hand-written `pluginManagement` bootstrap (README Quickstart).
      * [RepositoriesMode.FAIL_ON_PROJECT_REPOS] is a deliberate supply-chain security control:
      * a module declaring its own `repositories { }` fails the build outright, so every repo an artifact can come from is centralized here and vetted, never ad-hoc per module.
      * `mavenLocal()` is intentionally omitted — add it per-repo only when testing an `eazyportal-core` SNAPSHOT, never as a standing resolution source.

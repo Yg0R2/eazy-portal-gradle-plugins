@@ -28,7 +28,7 @@ import org.junit.jupiter.api.TestFactory
  * The acceptance test for the Configurer hierarchy (design §9.3 / review D3): for **every** archetype it applies the
  * real Configurer to a `ProjectBuilder` module and asserts the §5.3 wiring table **exactly** — the applied
  * convention, each sibling dependency's configuration (`api` vs `implementation`), each versionless
- * `eazyportal-core-<type>` (`eazyportal-<framework>-core-<type>` for the framework-specific archetypes) dependency's configuration, `eazyportal-core-test` on every test configuration (unit, functional,
+ * `<type>` (`<framework>-<type>` for the framework-specific archetypes) dependency's configuration, core `test` on every test configuration (unit, functional,
  * integration, test fixtures), and the eazyportal-core BOM platform on `implementation` + every test configuration (and on `api` for the archetypes that expose eazyportal-core
  * transitively). Because the assertions pin the *exact* configuration each dependency lands on, a leaked level (e.g.
  * an `implementation` dependency declared on `api`) fails the test.
@@ -210,7 +210,7 @@ class ProjectConfigurerWiringTest {
         }
 
     /**
-     * `applyEazyPortalCoreDependencies = false` drops every eazyportal-core dependency (BOM and `eazyportal-core-test` included) but keeps the convention + siblings.
+     * `applyEazyPortalCoreDependencies = false` drops every eazyportal-core dependency (BOM and core `test` included) but keeps the convention + siblings.
      * The flag is flipped AFTER the Configurer ran — the real ordering, since `eazy-settings` and the module's build script set it after the plugin applied (§6.3).
      */
     @TestFactory
@@ -365,7 +365,7 @@ class ProjectConfigurerWiringTest {
                 .isNull()
         }
 
-        // eazyportal-core-test is a test-only dependency: it must never leak onto a production configuration.
+        // core `test` is a test-only dependency: it must never leak onto a production configuration.
         listOf(API, IMPLEMENTATION).forEach { configuration ->
             assertThat(project.eazyPortalCoreExternalDependencies(configuration).map { it.name })
                 .describedAs("$CORE_TEST_PROJECT_ARTIFACT_ID must not be on $configuration")
@@ -401,7 +401,7 @@ class ProjectConfigurerWiringTest {
                 expectation.siblings.map { ":${it.projectName} (${it.configuration})" }
             )
 
-        // eazyportal-core entries are external coordinates (`eazyportal-[<framework>-]core-<layer>`), not project paths — so,
+        // eazyportal-core entries are external coordinates (`[<framework>-]<layer>`), not project paths — so,
         // unlike the sibling block above, they carry no leading `:`, and the framework-specific layers are
         // framework-prefixed (same resolution as assertEazyPortalCoreMainDependency, via createCoreArtifactId).
         assertThat(summary.eazyPortalCore.map { it.toString() })
@@ -450,7 +450,7 @@ class ProjectConfigurerWiringTest {
                 ?.filter { it.group == CORE_GROUP_ID }
                 ?: emptyList()
 
-        /** eazyportal-core *main-layer* modules on [configuration] — excludes the BOM platform and `eazyportal-core-test`. */
+        /** eazyportal-core *main-layer* modules on [configuration] — excludes the BOM platform and core `test`. */
         fun Project.eazyPortalCoreMainModules(dependencyConfiguration: DependencyConfiguration): List<String> =
             eazyPortalCoreExternalDependencies(dependencyConfiguration)
                 .map { it.name }

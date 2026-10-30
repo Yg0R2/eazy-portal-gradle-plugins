@@ -6,7 +6,7 @@ import org.eazyportal.gradle.eazyproject.model.EazyProjectExtension
 import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.gradle.api.Project
 
-/** `api` — exposes `common` + eazyportal-core-api to consumers via `api`. */
+/** `api` — exposes `common` + core `api` to consumers via `api`. */
 internal class ApiProjectConfigurer(
     eazyProjectExtension: EazyProjectExtension,
     project: Project,
