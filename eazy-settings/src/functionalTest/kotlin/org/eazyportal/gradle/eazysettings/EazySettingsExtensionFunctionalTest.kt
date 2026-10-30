@@ -1,7 +1,10 @@
 package org.eazyportal.gradle.eazysettings
 
-import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert.EazyPortalCoreExpectation
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert.Companion.assertThat
+import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.Framework
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
@@ -9,7 +12,6 @@ import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRu
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -28,23 +30,23 @@ class EazySettingsExtensionFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output)
-            .contains("eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))")
-            .contains("framework              : ${Framework.SPRING_BOOT}")
+        assertThat(output).hasDiagnostics("extras", KOTLIN_PROJECT_CONVENTION)
     }
 
     @Test
     fun `the eazySettings framework is fed to every subproject`(@TempDir workingDir: File) {
         val projectDir = buildExampleProject(workingDir, "extras") {
             settings {
-                generateEazySettingsString()
+                script {
+                    generateEazySettingsString()
+                }
             }
         }
 
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output).contains("framework              : ${Framework.SPRING_BOOT}")
+        assertThat(output).hasCustomDiagnostics("extras")
     }
 
     @Test
@@ -60,7 +62,7 @@ class EazySettingsExtensionFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output).contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
+        assertThat(output).hasCustomDiagnostics("extras")
     }
 
     @Test
@@ -81,7 +83,8 @@ class EazySettingsExtensionFunctionalTest {
         )
         assertThat(firstRun)
             .contains("Configuration cache entry stored.")
-            .contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
+            .hasCustomDiagnostics("extras-a")
+            .hasCustomDiagnostics("extras-b")
             .doesNotContain("problem was found", "problems were found")
 
         val secondRun = gradleRunner.runGradleTask(
@@ -92,7 +95,8 @@ class EazySettingsExtensionFunctionalTest {
         )
         assertThat(secondRun)
             .contains("Reusing configuration cache.")
-            .contains("eazyPortalCoreVersion  : $CORE_VERSION   (source: DSL override)")
+            .hasCustomDiagnostics("extras-a")
+            .hasCustomDiagnostics("extras-b")
             .doesNotContain("problem was found", "problems were found")
     }
 
@@ -120,5 +124,16 @@ class EazySettingsExtensionFunctionalTest {
             framework = ${Framework::class.java.name}.${Framework.SPRING_BOOT.name}
         }
         """.trimIndent()
+
+    /** The block of a module that inherited the `eazySettings` version and framework from [generateEazySettingsString]. */
+    private fun DiagnosticsAssert.hasCustomDiagnostics(projectName: String): DiagnosticsAssert =
+        hasDiagnostics(
+            projectName = projectName,
+            convention = KOTLIN_PROJECT_CONVENTION,
+            eazyPortalCore = EazyPortalCoreExpectation(
+                version = CORE_VERSION,
+                framework = Framework.SPRING_BOOT,
+            ),
+        )
 
 }

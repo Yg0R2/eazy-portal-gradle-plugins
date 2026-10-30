@@ -2,12 +2,13 @@ package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.eazyproject.DefaultVersions.CORE_DEFAULT_VERSION
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert.EazyPortalCoreExpectation
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
 import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
-import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.Companion.TEST_CONFIGURATIONS
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
 import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
-import org.eazyportal.gradle.eazyproject.model.Framework
-import org.eazyportal.gradle.eazyproject.model.ProjectType
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
@@ -15,7 +16,6 @@ import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJEC
 import org.eazyportal.gradle.utils.project.ExampleProjectFixtures.EXAMPLE_PROJECT_SNAPSHOT_VERSION
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -68,7 +68,7 @@ class SampleReceiverPublishingIntegrationTest {
         )
 
         PROJECT_EXPECTATIONS.forEach { expectation ->
-            assertThat(output).containsSubsequence(*expectation.expectedDiagnosticsLines())
+            expectation.assertDiagnostics(output)
 
             if (expectation.isPublishing) {
                 File(
@@ -108,7 +108,7 @@ class SampleReceiverPublishingIntegrationTest {
         )
 
         PROJECT_EXPECTATIONS.forEach { expectation ->
-            assertThat(output).containsSubsequence(*expectation.expectedDiagnosticsLines())
+            expectation.assertDiagnostics(output)
 
             if (expectation.isPublishing) {
                 File(
@@ -160,41 +160,22 @@ class SampleReceiverPublishingIntegrationTest {
     private data class ProjectExpectation(
         val projectName: String,
         val convention: String = KOTLIN_LIBRARY_CONVENTION,
-        val siblingProjects: List<Pair<String, String>> = emptyList(),
-        val coreProjectType: ProjectType = ProjectType.DEFAULT,
-        val coreConfiguration: String = "implementation",
+        val siblingProjects: List<Pair<String, DependencyConfiguration>> = emptyList(),
+        val coreConfiguration: DependencyConfiguration = IMPLEMENTATION,
     ) {
 
         val isPublishing: Boolean =
             convention == KOTLIN_LIBRARY_CONVENTION
 
-        fun expectedDiagnosticsLines(): Array<String> {
-            val siblingsText = siblingProjects
-                .joinToString(", ", "[", "]") { (sibling, configuration) ->
-                    ":$sibling ($configuration)"
-                }
-
-            val coreText = buildList {
-                add("${createCoreArtifactId("bom", Framework.SPRING_BOOT)} (${(listOf(IMPLEMENTATION) + TEST_CONFIGURATIONS).joinToString(", ")})")
-
-                if (isPublishing) {
-                    add("${createCoreArtifactId(coreProjectType, Framework.SPRING_BOOT)} ($coreConfiguration)")
-                }
-
-                add("${createCoreArtifactId("test")} (${TEST_CONFIGURATIONS.joinToString(", ")})")
-            }.joinToString(", ", "[", "]")
-
-            return arrayOf(
-                "> Task :$projectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME",
-                "eazy-project diagnostics — :$projectName",
-                "  archetype              : $coreProjectType",
-                "  convention             : [$convention]",
-                "  siblings               : $siblingsText",
-                "  eazyportal-core        : $coreText   (versions via the eazyportal-core BOM)",
-                "  eazyPortalCoreVersion  : $CORE_DEFAULT_VERSION   (source: default (DefaultVersions))",
-                "  framework              : ${Framework.SPRING_BOOT}",
-            )
-        }
+        fun assertDiagnostics(output: String): DiagnosticsAssert =
+            DiagnosticsAssert.assertThat(output)
+                .contains("> Task :$projectName:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
+                .hasDiagnostics(
+                    projectName = projectName,
+                    convention = convention,
+                    siblingProjects = siblingProjects,
+                    eazyPortalCore = EazyPortalCoreExpectation(configuration = coreConfiguration),
+                )
 
     }
 
@@ -202,57 +183,50 @@ class SampleReceiverPublishingIntegrationTest {
         val PROJECT_EXPECTATIONS = listOf(
             ProjectExpectation(
                 projectName = "common",
-                coreProjectType = ProjectType.COMMON,
             ),
             ProjectExpectation(
                 projectName = "api",
-                siblingProjects = listOf("common" to "api"),
-                coreProjectType = ProjectType.API,
-                coreConfiguration = "api",
+                siblingProjects = listOf("common" to API),
+                coreConfiguration = API,
             ),
             ProjectExpectation(
                 projectName = "persistence",
-                siblingProjects = listOf("common" to "implementation"),
-                coreProjectType = ProjectType.PERSISTENCE,
+                siblingProjects = listOf("common" to IMPLEMENTATION),
             ),
             ProjectExpectation(
                 projectName = "service",
                 siblingProjects = listOf(
-                    "common" to "implementation",
-                    "api" to "implementation",
-                    "persistence" to "implementation",
+                    "common" to IMPLEMENTATION,
+                    "api" to IMPLEMENTATION,
+                    "persistence" to IMPLEMENTATION,
                 ),
-                coreProjectType = ProjectType.SERVICE,
             ),
             ProjectExpectation(
                 projectName = "client",
                 siblingProjects = listOf(
-                    "common" to "api",
-                    "api" to "api",
+                    "common" to API,
+                    "api" to API,
                 ),
-                coreProjectType = ProjectType.CLIENT,
-                coreConfiguration = "api",
+                coreConfiguration = API,
             ),
             ProjectExpectation(
                 projectName = "web",
                 siblingProjects = listOf(
-                    "common" to "implementation",
-                    "api" to "implementation",
-                    "service" to "implementation",
+                    "common" to IMPLEMENTATION,
+                    "api" to IMPLEMENTATION,
+                    "service" to IMPLEMENTATION,
                 ),
-                coreProjectType = ProjectType.WEB,
             ),
             ProjectExpectation(
                 projectName = "application",
                 convention = KOTLIN_PROJECT_CONVENTION,
                 siblingProjects = listOf(
-                    "common" to "implementation",
-                    "api" to "implementation",
-                    "persistence" to "implementation",
-                    "service" to "implementation",
-                    "web" to "implementation",
+                    "common" to IMPLEMENTATION,
+                    "api" to IMPLEMENTATION,
+                    "persistence" to IMPLEMENTATION,
+                    "service" to IMPLEMENTATION,
+                    "web" to IMPLEMENTATION,
                 ),
-                coreProjectType = ProjectType.APPLICATION,
             ),
             ProjectExpectation(
                 projectName = "new-module",

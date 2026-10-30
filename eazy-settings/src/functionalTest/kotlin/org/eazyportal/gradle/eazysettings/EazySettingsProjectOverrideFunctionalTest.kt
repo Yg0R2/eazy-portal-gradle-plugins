@@ -2,6 +2,9 @@ package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert.EazyPortalCoreExpectation
+import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
@@ -9,7 +12,6 @@ import org.eazyportal.gradle.utils.project.ExampleProjectBuilder
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryBuilder.Companion.exampleRepository
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_GROUP_ID
-import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.CORE_VERSION
 import org.eazyportal.gradle.utils.repository.ExampleRepositoryFixtures.createCoreArtifactId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -38,7 +40,7 @@ class EazySettingsProjectOverrideFunctionalTest {
 
             subproject("extras-a") {
                 script {
-                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                    generateEazyProjectString()
                 }
             }
         }
@@ -48,10 +50,10 @@ class EazySettingsProjectOverrideFunctionalTest {
         val overriddenOutput = gradleRunner.runGradleTask(":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
         val inheritedOutput = gradleRunner.runGradleTask(":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(overriddenOutput)
-            .contains("eazyPortalCoreVersion  : $SUBPROJECT_CORE_VERSION   (source: DSL override)")
-        assertThat(inheritedOutput)
-            .contains("eazyPortalCoreVersion  : $SETTINGS_CORE_VERSION   (source: DSL override)")
+        DiagnosticsAssert.assertThat(overriddenOutput)
+            .hasCustomDiagnostics("extras-a", SUBPROJECT_CORE_VERSION)
+        DiagnosticsAssert.assertThat(inheritedOutput)
+            .hasCustomDiagnostics("extras-b", SETTINGS_CORE_VERSION)
             .doesNotContain(SUBPROJECT_CORE_VERSION)
     }
 
@@ -60,7 +62,7 @@ class EazySettingsProjectOverrideFunctionalTest {
         val projectDir = buildExampleProject(workingDir, "extras") {
             subproject("extras") {
                 script {
-                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                    generateEazyProjectString()
                 }
             }
         }
@@ -68,8 +70,8 @@ class EazySettingsProjectOverrideFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":extras:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output)
-            .contains("eazyPortalCoreVersion  : $SUBPROJECT_CORE_VERSION   (source: DSL override)")
+        DiagnosticsAssert.assertThat(output)
+            .hasCustomDiagnostics("extras", SUBPROJECT_CORE_VERSION)
     }
 
     @Test
@@ -101,7 +103,7 @@ class EazySettingsProjectOverrideFunctionalTest {
 
             subproject("common") {
                 script {
-                    generateEazyProjectString(SUBPROJECT_CORE_VERSION)
+                    generateEazyProjectString()
                 }
             }
         }
@@ -135,12 +137,21 @@ class EazySettingsProjectOverrideFunctionalTest {
             builder()
         }
 
-    private fun generateEazyProjectString(eazyPortalCoreVersion: String): String =
+    private fun generateEazyProjectString(
+        eazyPortalCoreVersion: String = SUBPROJECT_CORE_VERSION,
+    ): String =
         """
         $EAZY_PROJECT_EXTENSION_NAME {
             eazyPortalCoreVersion = "$eazyPortalCoreVersion"
         }
         """.trimIndent()
+
+    private fun DiagnosticsAssert.hasCustomDiagnostics(projectName: String, eazyPortalCoreVersion: String): DiagnosticsAssert =
+        hasDiagnostics(
+            projectName = projectName,
+            convention = KOTLIN_PROJECT_CONVENTION,
+            eazyPortalCore = EazyPortalCoreExpectation(version = eazyPortalCoreVersion),
+        )
 
     private companion object {
         const val SETTINGS_CORE_VERSION = "0.0.1"

@@ -16,10 +16,10 @@ internal data class WiringSummary(
     val eazyPortalCore: List<WiredDependency>,
 ) {
 
-    fun siblingsString(): String =
+    fun siblingDependencies(): String =
         siblings.toGroupedString()
 
-    fun eazyPortalCoreString(): String =
+    fun eazyPortalCoreDependencies(): String =
         eazyPortalCore.toGroupedString()
 
     /**

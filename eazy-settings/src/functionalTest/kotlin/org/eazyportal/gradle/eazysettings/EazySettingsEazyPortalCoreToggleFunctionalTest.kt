@@ -2,6 +2,10 @@ package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_EXTENSION_NAME
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert
+import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
+import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_PROJECT_CONVENTION
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_EXTENSION_NAME
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
@@ -27,10 +31,12 @@ class EazySettingsEazyPortalCoreToggleFunctionalTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(":client:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME")
 
-        assertThat(output)
-            .contains("  siblings               : [:api (api)]")
-            .contains("  eazyportal-core        : N/A   (disabled via DSL)")
-            .contains("  applyEazyPortalCoreDependencies : false")
+        DiagnosticsAssert.assertThat(output).hasDiagnostics(
+            projectName = "client",
+            convention = KOTLIN_LIBRARY_CONVENTION,
+            siblingProjects = listOf("api" to API),
+            eazyPortalCore = null,
+        )
     }
 
     @Test
@@ -66,12 +72,17 @@ class EazySettingsEazyPortalCoreToggleFunctionalTest {
 
         val gradleRunner = gradleRunner(projectDir)
 
-        assertThat(gradleRunner.runGradleTask(":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME"))
-            .contains("(versions via the eazyportal-core BOM)")
-            .contains("  applyEazyPortalCoreDependencies : true")
-        assertThat(gradleRunner.runGradleTask(":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME"))
-            .contains("  eazyportal-core        : N/A   (disabled via DSL)")
-            .contains("  applyEazyPortalCoreDependencies : false")
+        DiagnosticsAssert.assertThat(gradleRunner.runGradleTask(":extras-a:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME"))
+            .hasDiagnostics(
+                projectName = "extras-a",
+                convention = KOTLIN_PROJECT_CONVENTION,
+            )
+        DiagnosticsAssert.assertThat(gradleRunner.runGradleTask(":extras-b:$EAZY_PROJECT_DIAGNOSTICS_TASK_NAME"))
+            .hasDiagnostics(
+                projectName = "extras-b",
+                convention = KOTLIN_PROJECT_CONVENTION,
+                eazyPortalCore = null,
+            )
     }
 
     @Test
@@ -85,9 +96,13 @@ class EazySettingsEazyPortalCoreToggleFunctionalTest {
                 "--configuration-cache-problems=fail",
             )
 
-            assertThat(output)
+            DiagnosticsAssert.assertThat(output)
                 .contains(if (run == 0) "Configuration cache entry stored." else "Reusing configuration cache.")
-                .contains("  applyEazyPortalCoreDependencies : false")
+                .hasDiagnostics(
+                    projectName = "extras",
+                    convention = KOTLIN_PROJECT_CONVENTION,
+                    eazyPortalCore = null,
+                )
                 .doesNotContain("problem was found", "problems were found")
         }
     }

@@ -249,7 +249,27 @@ To see exactly what the plugins did to a module:
 ./gradlew :service:eazyDiagnostics
 ----
 
-It prints the module's archetype, applied convention, sibling dependencies, `eazyportal-core` dependencies and the resolved `eazyPortalCoreVersion` (with its source: default or `eazySettings` override), the resolved `framework` and `applyEazyPortalCoreDependencies`.
+Example output:
+
+[source,text]
+----
+eazy-project diagnostics — :service
+  archetype        : service
+  convention       : [org.eazyportal.gradle.kotlin-library-convention]
+  siblings         : [:common (implementation), :api (implementation), :persistence (implementation)]
+  eazyportal-core :
+    version      : 1.2.3   (source: default (DefaultVersions))
+    framework    : spring-boot
+    dependencies : [eazyportal-spring-boot-core-bom (implementation, testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation), eazyportal-spring-boot-core-service (implementation), eazyportal-core-test (testImplementation, functionalTestImplementation, integrationTestImplementation, testFixturesImplementation)]
+----
+
+`source` is `default (DefaultVersions)` or `DSL override`.
+With `applyEazyPortalCoreDependencies = false`, the whole `eazyportal-core` section collapses to one line:
+
+[source,text]
+----
+  eazyportal-core : N/A   (disabled via DSL)
+----
 
 == Framework
 
@@ -298,7 +318,7 @@ eazyProject {
 ----
 
 The override applies to that module only; its siblings keep the `eazySettings` values.
-`eazyDiagnostics` reports the module's effective `eazyPortalCoreVersion`, `framework` and `applyEazyPortalCoreDependencies`.
+`eazyDiagnostics` reports the module's effective `eazyPortalCoreVersion` and `framework`, or `N/A` for the whole `eazyportal-core` section when `applyEazyPortalCoreDependencies` is `false`.
 
 NOTE: `eazyProject { }` only changes these *values*; `applyEazyPortalCoreDependencies` can switch the `eazyportal-core` dependencies on or off, because they are added lazily.
 It cannot change *which* plugins or sibling dependencies a module gets, because that is decided while the module is being set up, before its `build.gradle.kts` runs.

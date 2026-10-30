@@ -27,6 +27,8 @@ dependencies {
     // be on its runtime/plugin classpath. At receivers this resolves from GitHub Packages.
     implementation("org.eazyportal.gradle.conventions:conventions:${version}")
 
+    testFixturesImplementation(libs.assertj.core)
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)

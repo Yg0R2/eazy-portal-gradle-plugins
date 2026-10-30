@@ -42,7 +42,7 @@ class EazyProjectPlugin : Plugin<Project> {
     /** Reports the cascade a receiver module's empty `build.gradle.kts` can't otherwise show (design §5.7). */
     private fun registerDiagnostics(
         project: Project,
-        extension: EazyProjectExtension,
+        eazyProjectExtension: EazyProjectExtension,
     ) {
         project.tasks.register(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME) { task: Task ->
             task.group = "help"
@@ -51,9 +51,9 @@ class EazyProjectPlugin : Plugin<Project> {
             // Captured as plain data here — CC-safe, no Project (or lazy notation) escapes the doLast (design §5.7).
             val message = Message(
                 projectPath = project.path,
-                archetype = ProjectType.fromProjectName(project.name),
-                summary = project.wiringSummary(),
-                extension = extension,
+                projectType = ProjectType.fromProjectName(project.name),
+                wiringSummary = project.wiringSummary(),
+                eazyProjectExtension = eazyProjectExtension,
             )
 
             task.doLast {
@@ -70,48 +70,42 @@ class EazyProjectPlugin : Plugin<Project> {
 
     private data class Message(
         private val projectPath: String,
-        private val archetype: ProjectType,
-        private val summary: WiringSummary,
-        private val extension: EazyProjectExtension,
+        private val projectType: ProjectType,
+        private val wiringSummary: WiringSummary,
+        private val eazyProjectExtension: EazyProjectExtension,
     ) {
 
-        private val eazyPortalCoreVersion by lazy {
-            extension.eazyPortalCoreVersion.get()
-        }
-
-        private val framework by lazy {
-            extension.framework.get()
-        }
-
-        private val applyEazyPortalCoreDependencies by lazy {
-            extension.applyEazyPortalCoreDependencies.get()
-        }
-
-        private val eazyPortalCore by lazy {
-            if (applyEazyPortalCoreDependencies) {
-                "${summary.eazyPortalCoreString()}   (versions via the eazyportal-core BOM)"
-            } else {
-                "N/A   (disabled via DSL)"
-            }
-        }
-
         override fun toString(): String =
-            """
-            eazy-project diagnostics — $projectPath
-              archetype              : $archetype
-              convention             : ${summary.pluginIds}
-              siblings               : ${summary.siblingsString()}
-              eazyportal-core        : $eazyPortalCore
-              eazyPortalCoreVersion  : $eazyPortalCoreVersion   (source: ${getExampleCoreVersionSource(eazyPortalCoreVersion)})
-              framework              : $framework
-              applyEazyPortalCoreDependencies : $applyEazyPortalCoreDependencies
-            """.trimIndent()
+            buildString {
+                appendLine(
+                    """
+                    eazy-project diagnostics — $projectPath
+                      projectType      : $projectType
+                      conventions      : ${wiringSummary.pluginIds}
+                      siblings         : ${wiringSummary.siblingDependencies()}
+                    """.trimIndent()
+                )
+                append(createEazyPortalCoreSection().prependIndent("  "))
+            }
 
-        private fun getExampleCoreVersionSource(eazyPortalCoreVersion: String): String =
-            if (eazyPortalCoreVersion == DefaultVersions.CORE_DEFAULT_VERSION) {
-                "default (DefaultVersions)"
+        private fun createEazyPortalCoreSection(): String =
+            if (eazyProjectExtension.applyEazyPortalCoreDependencies.get()) {
+                val version = eazyProjectExtension.eazyPortalCoreVersion.get()
+
+                val source = if (version == DefaultVersions.CORE_DEFAULT_VERSION) {
+                    "default (DefaultVersions)"
+                } else {
+                    "DSL override"
+                }
+
+                """
+                eazyportal-core :
+                  version      : $version   (source: $source)
+                  framework    : ${eazyProjectExtension.framework.get()}
+                  dependencies : ${wiringSummary.eazyPortalCoreDependencies()}
+                """.trimIndent()
             } else {
-                "DSL override"
+                "eazyportal-core : N/A   (disabled via DSL)"
             }
 
     }

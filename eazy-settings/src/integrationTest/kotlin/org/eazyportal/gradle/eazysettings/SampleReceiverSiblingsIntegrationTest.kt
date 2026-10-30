@@ -1,6 +1,11 @@
 package org.eazyportal.gradle.eazysettings
 
 import org.eazyportal.gradle.eazyproject.EazyProjectPlugin.Companion.EAZY_PROJECT_DIAGNOSTICS_TASK_NAME
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert
+import org.eazyportal.gradle.eazyproject.assertion.DiagnosticsAssert.EazyPortalCoreExpectation
+import org.eazyportal.gradle.eazyproject.model.EazyPortalConventionPluginNames.KOTLIN_LIBRARY_CONVENTION
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.API
+import org.eazyportal.gradle.eazyproject.model.DependencyConfiguration.IMPLEMENTATION
 import org.eazyportal.gradle.eazysettings.EazySettingsPlugin.Companion.EAZY_SETTINGS_PLUGIN_ID
 import org.eazyportal.gradle.utils.gradle.GradleRunnerBuilder.Companion.gradleRunner
 import org.eazyportal.gradle.utils.project.ExampleProjectBuilder.Companion.exampleProject
@@ -26,16 +31,21 @@ class SampleReceiverSiblingsIntegrationTest {
         val output = gradleRunner(projectDir)
             .runGradleTask(EAZY_PROJECT_DIAGNOSTICS_TASK_NAME)
 
-        assertThat(output)
-            .containsSubsequence(
-                "eazy-project diagnostics — :api",
-                "  siblings               : []",
-            ).containsSubsequence(
-                "eazy-project diagnostics — :client",
-                "  siblings               : [:api (api)]",
-            ).containsSubsequence(
-                "eazy-project diagnostics — :web",
-                "  siblings               : [:api (implementation)]",
+        DiagnosticsAssert.assertThat(output)
+            .hasDiagnostics(
+                projectName = "api",
+                convention = KOTLIN_LIBRARY_CONVENTION,
+                siblingProjects = emptyList(),
+                eazyPortalCore = EazyPortalCoreExpectation(configuration = API),
+            ).hasDiagnostics(
+                projectName = "client",
+                convention = KOTLIN_LIBRARY_CONVENTION,
+                siblingProjects = listOf("api" to API),
+                eazyPortalCore = EazyPortalCoreExpectation(configuration = API),
+            ).hasDiagnostics(
+                projectName = "web",
+                convention = KOTLIN_LIBRARY_CONVENTION,
+                siblingProjects = listOf("api" to IMPLEMENTATION),
             )
     }
 
