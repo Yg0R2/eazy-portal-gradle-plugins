@@ -70,6 +70,7 @@ class CoordinatesAndPublishingIntegrationTest {
             version = CONVENTIONS_PLUGIN_VERSION
             name = "conventions"
             description = "EazyPortal Gradle convention plugins"
+            rootProjectName = "gradle-plugins"
         }
     }
 

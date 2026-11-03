@@ -52,6 +52,7 @@ class PublicationConventionIntegrationTest {
             artifactId = EXAMPLE_PLUGIN_PROJECT_NAME
             description = EXAMPLE_PLUGIN_PROJECT_DESCRIPTION
             name = EXAMPLE_PLUGIN_PROJECT_NAME
+            rootProjectName = EXAMPLE_PLUGIN_PROJECT_NAME
         }
 
         assertThatHasEazyPortalValues(File(projectDir, "build/publications/exampleEazyPortalPluginPluginMarkerMaven/pom-default.xml")) {
@@ -59,6 +60,7 @@ class PublicationConventionIntegrationTest {
             artifactId = EXAMPLE_PLUGIN_ARTIFACT_ID
             description = EXAMPLE_PLUGIN_PROJECT_DESCRIPTION
             name = EXAMPLE_PLUGIN_PROJECT_NAME
+            rootProjectName = EXAMPLE_PLUGIN_PROJECT_NAME
         }
     }
 

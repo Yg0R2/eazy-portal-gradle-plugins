@@ -20,7 +20,7 @@ publishing {
         if (release) {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/eazyportal/gradle-plugins")
+                url = uri("https://maven.pkg.github.com/eazyportal/${rootProject.name}")
                 credentials(PasswordCredentials::class)   // lazy: GitHubPackagesUsername / GitHubPackagesPassword
             }
         }
@@ -31,17 +31,17 @@ publishing {
         pom {
             name = provider { project.name }
             description = provider { project.description ?: project.name }
-            url = "https://github.com/eazyportal/gradle-plugins"
+            url = "https://github.com/eazyportal/${rootProject.name}"
             licenses {
                 license {
                     name = "Apache-2.0"
-                    url = "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE"
+                    url = "https://raw.githubusercontent.com/eazyportal/${rootProject.name}/refs/heads/main/LICENSE"
                 }
             }
             scm {
-                url = "https://github.com/eazyportal/gradle-plugins"
-                connection = "scm:git:https://github.com/eazyportal/gradle-plugins.git"
-                developerConnection = "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git"
+                url = "https://github.com/eazyportal/${rootProject.name}"
+                connection = "scm:git:https://github.com/eazyportal/${rootProject.name}.git"
+                developerConnection = "scm:git:ssh://git@github.com/eazyportal/${rootProject.name}.git"
             }
         }
     }

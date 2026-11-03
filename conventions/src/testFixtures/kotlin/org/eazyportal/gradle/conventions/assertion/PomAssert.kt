@@ -21,18 +21,20 @@ class PomAssert(
 
     constructor(pomPath: Path) : this(pomPath.toFile())
 
-    fun hasEazyPortalValues(): PomAssert =
+    fun hasEazyPortalValues(
+        rootProjectName: String,
+    ): PomAssert =
         also {
             Assertions.assertThat(actual.getElementsByTagName("license").length).isGreaterThan(0)
             hasTextAt("licenses/license/name", "Apache-2.0")
-            hasTextAt("licenses/license/url", "https://raw.githubusercontent.com/eazyportal/gradle-plugins/refs/heads/main/LICENSE")
+            hasTextAt("licenses/license/url", "https://raw.githubusercontent.com/eazyportal/$rootProjectName/refs/heads/main/LICENSE")
 
             Assertions.assertThat(actual.getElementsByTagName("scm").length).isGreaterThan(0)
-            hasTextAt("scm/connection", "scm:git:https://github.com/eazyportal/gradle-plugins.git")
-            hasTextAt("scm/developerConnection", "scm:git:ssh://git@github.com/eazyportal/gradle-plugins.git")
-            hasTextAt("scm/url", "https://github.com/eazyportal/gradle-plugins")
+            hasTextAt("scm/connection", "scm:git:https://github.com/eazyportal/$rootProjectName.git")
+            hasTextAt("scm/developerConnection", "scm:git:ssh://git@github.com/eazyportal/$rootProjectName.git")
+            hasTextAt("scm/url", "https://github.com/eazyportal/$rootProjectName")
 
-            hasTextAt("url", "https://github.com/eazyportal/gradle-plugins")
+            hasTextAt("url", "https://github.com/eazyportal/$rootProjectName")
         }
 
     /** The first element at the slash-separated element [xPath] has the [expectedValue] as text. */
@@ -71,6 +73,7 @@ class PomAssert(
         var version: String = EXAMPLE_PROJECT_SNAPSHOT_VERSION,
         var name: String = EXAMPLE_ROOT_PROJECT_NAME,
         var description: String = EXAMPLE_ROOT_PROJECT_DESCRIPTION,
+        var rootProjectName: String = name,
     )
 
     companion object {
@@ -105,16 +108,26 @@ class PomAssert(
         fun assertThatHasEazyPortalValues(
             pom: File,
             assertValuesFunction: PomAssertValues.() -> Unit = { },
-        ): PomAssert =
-            assertThat(pom, assertValuesFunction)
-                .hasEazyPortalValues()
+        ): PomAssert {
+            val assertValues = PomAssertValues().apply {
+                assertValuesFunction()
+            }
+
+            return assertThatHasEazyPortalValues(pom, assertValues)
+        }
 
         fun assertThatHasEazyPortalValues(
             pom: Path,
             assertValuesFunction: PomAssertValues.() -> Unit = { },
         ): PomAssert =
-            assertThat(pom, assertValuesFunction)
-                .hasEazyPortalValues()
+            assertThatHasEazyPortalValues(pom.toFile(), assertValuesFunction)
+
+        fun assertThatHasEazyPortalValues(
+            pom: File,
+            assertValues: PomAssertValues,
+        ): PomAssert =
+            assertThat(pom, assertValues)
+                .hasEazyPortalValues(assertValues.rootProjectName)
 
         private fun parsePom(pom: File): Document =
             DocumentBuilderFactory.newInstance()
